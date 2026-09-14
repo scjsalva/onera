@@ -14,12 +14,13 @@
                  }),
                  consolidated: vue_json({
                    estimated: @consolidation.estimated?,
+                   missing_rates: @consolidation.missing_rates.map(&:code),
                    target: CurrencyPresenter.new(@target_currency).as_json,
                    lines: @consolidation.lines.map { |line|
                      { currency: CurrencyPresenter.new(line.currency).as_json,
-                       rate: line.rate.to_s("F"), locked: line.locked?,
+                       rate: line.rate&.to_s("F"), locked: line.locked?,
                        source: MoneyAmount.new(line.source_total_minor, line.currency).format,
-                       converted: MoneyAmount.new(line.converted_minor, @target_currency).format }
+                       converted: line.converted_minor && MoneyAmount.new(line.converted_minor, @target_currency).format }
                    },
                    transfers: @consolidation.suggested_transfers.map { |d| debt_json(d) }
                  }),

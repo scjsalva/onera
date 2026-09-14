@@ -214,19 +214,30 @@ class DashboardCalculator
                 .map { |month| [ month, buckets[month] || MoneyAmount.zero(display_currency) ] }
   end
 
+  # Currencies left out of the totals above because nothing could convert them
+  # yet. Populated as the totals are worked out, so read it after them.
+  def unconvertible = @unconvertible ||= Set.new
+
   private
 
   def personal_spend_minor
     @personal_spend_minor ||= personal_expenses.group(:currency_code).sum(:amount_minor)
-                                               .sum { |code, minor| convert_to_display(minor, code) }
+                                               .sum { |code, minor| convert_to_display(minor, code).to_i }
   end
 
+  # Nil when there is no rate to convert with. A fresh database has no rates in
+  # it at all, so this is the ordinary state on day one, not an exotic one -
+  # and a total that cannot be worked out is left out and named rather than
+  # quietly counted as zero.
   def convert_to_display(minor, currency_code)
     currency = currency_cache[currency_code]
     return 0 if currency.nil?
     return minor.to_i if currency.code == display_currency.code
 
     CurrencyConverter.call(amount_minor: minor.to_i, from: currency, to: display_currency).amount_minor
+  rescue ArgumentError
+    unconvertible << currency.code
+    nil
   end
 
   # Rows come back keyed by [something, currency_code]; fold them into the
@@ -236,13 +247,10 @@ class DashboardCalculator
       currency = currency_cache[currency_code]
       next if currency.nil?
 
-      key = yield(dimension, currency_code)
-      converted = if currency.code == display_currency.code
-        minor.to_i
-      else
-        CurrencyConverter.call(amount_minor: minor.to_i, from: currency, to: display_currency).amount_minor
-      end
+      converted = convert_to_display(minor, currency_code)
+      next if converted.nil?
 
+      key = yield(dimension, currency_code)
       memo[key] = MoneyAmount.new((memo[key]&.minor).to_i + converted, display_currency)
     end
   end

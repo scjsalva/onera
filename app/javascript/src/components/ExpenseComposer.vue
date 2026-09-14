@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import BottomSheet from './BottomSheet.vue';
 import MoneyField from './MoneyField.vue';
 import SegmentedControl from './SegmentedControl.vue';
@@ -45,6 +45,9 @@ const step = ref(1);
 const saving = ref(false);
 const preview = ref(null);
 const previewing = ref(false);
+// Set when the server could not be reached. Saving needs a server-checked
+// split, so without this the button simply stays dead and says nothing.
+const offline = ref(null);
 
 const form = ref({
   group_id: existing?.group_id ?? (props.groupId ? Number(props.groupId) : null),
@@ -118,7 +121,15 @@ watch(
     // overwrite what the expense was saved with.
     if (existing && memberList.value.length) return;
 
-    const { data } = await http.get(`/groups/${groupId}/memberships.json`);
+    let data;
+    try {
+      ({ data } = await http.get(`/groups/${groupId}/memberships.json`));
+    } catch {
+      offline.value = "Could not load who is in this group.";
+      return;
+    }
+
+    offline.value = null;
     memberList.value = data.members;
     if (existing) return;
 
@@ -128,6 +139,18 @@ watch(
   },
   { immediate: true }
 );
+
+function retry() {
+  offline.value = null;
+  if (form.value.group_id && !memberList.value.length) {
+    // Re-run the members fetch by nudging the watcher.
+    const id = form.value.group_id;
+    form.value.group_id = null;
+    nextTick(() => (form.value.group_id = id));
+    return;
+  }
+  fetchPreview();
+}
 
 function togglePayer(userId) {
   const index = form.value.payers.findIndex((p) => p.user_id === userId);
@@ -190,6 +213,10 @@ async function fetchPreview() {
       payers: personal.value ? [] : form.value.payers,
     });
     preview.value = data;
+    offline.value = null;
+  } catch {
+    preview.value = null;
+    offline.value = "Could not check the split just now.";
   } finally {
     previewing.value = false;
   }
@@ -424,6 +451,15 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
     </form>
 
     <template #footer>
+      <Transition name="fade-slide">
+        <div v-if="offline" class="hairline-t flex items-center gap-3 px-5 py-2.5 text-xs text-negative-600">
+          <span class="min-w-0 flex-1">{{ offline }} Check your connection.</span>
+          <button type="button" class="shrink-0 font-semibold underline underline-offset-2" @click="retry">
+            Try again
+          </button>
+        </div>
+      </Transition>
+
       <div class="sheet-actions">
         <button v-if="step === 2" type="button" class="sheet-action sheet-action-quiet" @click="step = 1">
           Back

@@ -10,6 +10,14 @@
       = render "shared/stat", label: "Just you", money: @dashboard.personal_spend, tone: :muted, size: :base
       = render "shared/stat", label: "All groups", money: @dashboard.total_spend, tone: :muted, size: :base
 
+  - if @dashboard.unconvertible.any?
+    %p.flex.items-start.gap-2.rounded-xl.bg-sand-50.px-4.py-3.text-xs.text-sand-600{ data: { reveal: true } }
+      %svg.icon-md.mt-px.shrink-0{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" }
+      %span
+        = "Leaves out #{@dashboard.unconvertible.to_a.sort.to_sentence} — no #{@dashboard.display_currency.code} rate on file yet."
+        Set one when you settle up and these figures fill in.
+
   - if @by_month.any?
     %section.card.card-pad{ data: { reveal: true } }
       %h2.mb-3.text-sm.font-semibold.text-ink-900 Last six months

@@ -45,6 +45,15 @@ const modes = [
 const foreignLines = computed(() => summary.lines.filter((line) => line.currency.code !== target.value));
 const anyUnlocked = computed(() => foreignLines.value.some((line) => !line.locked));
 
+// A brand new database has no rates in it at all, so a rate the server could
+// not supply is the ordinary first case rather than an exotic one. Nothing is
+// converted until every one of them has a number.
+const rateFor = (code) => Number(String(rates[code] ?? '').trim());
+const needsRate = computed(() =>
+  foreignLines.value.filter((line) => !line.locked && !(rateFor(line.currency.code) > 0))
+);
+const canLock = computed(() => anyUnlocked.value && needsRate.value.length === 0);
+
 // A local preview of what a rate does. The figures that get written are
 // recomputed by Rails when the rates are locked.
 function previewFor(line) {
@@ -183,7 +192,19 @@ const token = document.querySelector('meta[name="csrf-token"]')?.content;
           </ul>
         </section>
 
-        <button v-if="anyUnlocked" type="button" class="btn-primary w-full" @click="confirming = true">
+        <p v-if="needsRate.length" class="rounded-xl bg-sand-50 px-4 py-3 text-sm text-sand-600">
+          No rate on file for
+          {{ needsRate.map((l) => l.currency.code).join(', ') }} yet — put one in above, or pay each
+          currency on its own and convert nothing.
+        </p>
+
+        <button
+          v-if="anyUnlocked"
+          type="button"
+          class="btn-primary w-full"
+          :disabled="!canLock"
+          @click="confirming = true"
+        >
           Lock these rates
         </button>
         <p v-else class="rounded-xl bg-positive-50 px-4 py-3 text-sm text-positive-700">

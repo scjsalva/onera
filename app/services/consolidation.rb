@@ -42,8 +42,17 @@ class Consolidation
     override = @rates[currency.code]
     return BigDecimal(override.to_s) if override.present?
 
-    locked_rate_for(currency) || ExchangeRateProvider.new(from: currency, to: target_currency).rate
+    locked_rate_for(currency) || provider_rate(currency)
   end
+
+  # The currencies the group has spent in that nobody can convert yet: no rate
+  # on file, none locked, and none typed in. A fresh database has no rates at
+  # all, so this is the ordinary state on day one rather than an exotic one.
+  def missing_rates
+    @missing_rates ||= source_currencies.reject { |currency| rate_for(currency) }
+  end
+
+  def convertible? = missing_rates.empty?
 
   def locked?(currency)
     return true if currency.code == target_currency.code
@@ -56,18 +65,23 @@ class Consolidation
   def lines
     @lines ||= source_currencies.map do |currency|
       total = calculator.total_spend(currency).minor
+      rate = rate_for(currency)
       Line.new(
         currency:,
-        rate: rate_for(currency),
+        rate:,
         locked: locked?(currency),
         source_total_minor: total,
-        converted_minor: convert(total, currency)
+        converted_minor: rate ? convert(total, currency) : nil
       )
     end
   end
 
   # One entry per member: their whole position in the group, in one currency.
+  # Nothing is consolidated until every currency has a rate. Half a conversion
+  # is not an estimate, it is a wrong number.
   def entries
+    return @entries ||= [] unless convertible?
+
     @entries ||= begin
       raw = calculator.standings.to_h do |standing|
         converted = standing.positions.sum { |position| convert(position.net_minor, position.currency) }
@@ -109,7 +123,7 @@ class Consolidation
   end
 
   def total_spend
-    MoneyAmount.new(lines.sum(&:converted_minor), target_currency)
+    MoneyAmount.new(lines.sum { |line| line.converted_minor.to_i }, target_currency)
   end
 
   private
@@ -119,10 +133,19 @@ class Consolidation
   def convert(minor, currency)
     return minor if minor.zero? || currency.code == target_currency.code
 
+    rate = rate_for(currency)
+    return 0 if rate.nil?
+
     sign = minor.negative? ? -1 : 1
     sign * CurrencyConverter.call(
-      amount_minor: minor.abs, from: currency, to: target_currency, rate: rate_for(currency)
+      amount_minor: minor.abs, from: currency, to: target_currency, rate:
     ).amount_minor
+  end
+
+  def provider_rate(currency)
+    ExchangeRateProvider.new(from: currency, to: target_currency).rate
+  rescue ArgumentError
+    nil
   end
 
   def locked_rate_for(currency)
