@@ -9,11 +9,11 @@ class UserSelectionController < ApplicationController
   layout "plain"
 
   def new
-    @users = User.ordered
+    @users = User.active.ordered
   end
 
   def create
-    user = User.find_by(id: params[:user_id])
+    user = User.active.find_by(id: params[:user_id])
 
     if user.nil?
       redirect_to user_selection_path, alert: "Pick who you are to continue."

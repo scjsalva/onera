@@ -9,6 +9,8 @@ const props = defineProps({
   currencies: { type: Array, default: () => [] },
   autofocus: { type: Boolean, default: false },
   size: { type: String, default: 'lg' },
+  // Off wherever the currency is already decided, such as a per-payer amount.
+  currencyPicker: { type: Boolean, default: true },
 });
 const emit = defineEmits(['update:modelValue', 'update:currency']);
 
@@ -21,7 +23,9 @@ function onInput(event) {
 
 <template>
   <div class="flex items-stretch gap-2">
-    <div class="relative flex-1">
+    <!-- min-w-0 so the amount can shrink instead of pushing the row wider than
+         its container - flex items default to min-width:auto. -->
+    <div class="relative min-w-0 flex-1">
       <span
         class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-ink-400"
         :class="size === 'lg' ? 'text-2xl font-semibold' : 'text-base'"
@@ -42,6 +46,7 @@ function onInput(event) {
     </div>
 
     <select
+      v-if="currencyPicker"
       :value="currency"
       class="input w-[7.25rem] shrink-0 font-medium"
       :class="size === 'lg' ? 'text-base' : 'text-sm'"

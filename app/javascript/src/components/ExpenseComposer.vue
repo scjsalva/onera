@@ -175,8 +175,17 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
     <form ref="formEl" :action="action" method="post" class="space-y-5 pt-1">
       <input type="hidden" name="authenticity_token" :value="token" />
       <input v-if="method !== 'post'" type="hidden" name="_method" :value="method" />
+      <!-- The authoritative fields. Kept outside the step branches: a v-if
+           removes its inputs from the DOM, so anything named inside step one
+           would simply not be submitted from step two. -->
       <input type="hidden" name="expense[group_id]" :value="form.group_id || ''" />
       <input type="hidden" name="expense[split_method]" :value="form.split_method" />
+      <input type="hidden" name="expense[description]" :value="form.description" />
+      <input type="hidden" name="expense[amount]" :value="form.amount" />
+      <input type="hidden" name="expense[currency_code]" :value="form.currency_code" />
+      <input type="hidden" name="expense[spent_on]" :value="form.spent_on" />
+      <input type="hidden" name="expense[category_id]" :value="form.category_id ?? ''" />
+      <input type="hidden" name="expense[notes]" :value="form.notes ?? ''" />
       <template v-for="(payer, index) in form.payers" :key="`p${payer.user_id}`">
         <input type="hidden" :name="`expense[payers][${index}][user_id]`" :value="payer.user_id" />
         <input type="hidden" :name="`expense[payers][${index}][amount]`" :value="payer.amount" />
@@ -196,7 +205,6 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
           <div>
             <input
               v-model="form.description"
-              name="expense[description]"
               placeholder="What was it for?"
               autocomplete="off"
               class="input border-0 border-b border-ink-200 px-0 text-lg font-medium shadow-none focus:border-brand-500 focus:ring-0"
@@ -209,9 +217,6 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
               v-model:currency="form.currency_code"
               :currencies="currencyList"
             />
-            <input type="hidden" name="expense[amount]" :value="form.amount" />
-            <input type="hidden" name="expense[currency_code]" :value="form.currency_code" />
-
             <!-- The guide figure. Deliberately quiet, and honest about being an
                  estimate: the rate that counts is chosen at settle-up. -->
             <Transition name="fade-slide">
@@ -233,11 +238,11 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="label">Date</label>
-              <input v-model="form.spent_on" type="date" name="expense[spent_on]" class="input" />
+              <input v-model="form.spent_on" type="date" class="input" />
             </div>
             <div>
               <label class="label">Category</label>
-              <select v-model="form.category_id" name="expense[category_id]" class="input">
+              <select v-model="form.category_id" class="input">
                 <option :value="null">None</option>
                 <option v-for="category in categoryList" :key="category.id" :value="category.id">
                   {{ category.name }}
@@ -285,7 +290,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                 </svg>
               </span>
             </summary>
-            <textarea v-model="form.notes" name="expense[notes]" rows="2" class="input mt-2" placeholder="Anything worth remembering" />
+            <textarea v-model="form.notes" rows="2" class="input mt-2" placeholder="Anything worth remembering" />
           </details>
         </div>
 
@@ -305,14 +310,15 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                   :key="payer.user_id"
                   class="flex items-center gap-3 rounded-xl bg-ink-50 px-3 py-2"
                 >
-                  <span class="flex-1 text-sm font-medium text-ink-700">
+                  <span class="min-w-0 flex-1 truncate text-sm font-medium text-ink-700">
                     {{ memberList.find((m) => m.id === payer.user_id)?.name }}
                   </span>
-                  <div class="w-32">
+                  <div class="w-28 shrink-0">
                     <MoneyField
                       v-model="payer.amount"
                       :currency="form.currency_code"
-                      :currencies="currencyList.filter((c) => c.code === form.currency_code)"
+                      :currencies="currencyList"
+                      :currency-picker="false"
                       size="sm"
                     />
                   </div>

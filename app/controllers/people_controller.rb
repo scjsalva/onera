@@ -8,7 +8,7 @@ class PeopleController < ApplicationController
   skip_before_action :require_current_user, only: %i[new create]
 
   def index
-    @people = User.ordered.includes(:groups)
+    @people = User.active.ordered.includes(:groups)
   end
 
   def new

@@ -36,6 +36,13 @@ class User < ApplicationRecord
   validate :date_of_birth_is_in_the_past
 
   scope :ordered, -> { order(:name, :id) }
+  # Anonymized people are excluded from everywhere you pick a person. They
+  # still resolve through their associations, so expenses and group
+  # membership keep working.
+  scope :active, -> { where(archived_at: nil) }
+  scope :archived, -> { where.not(archived_at: nil) }
+
+  def archived? = archived_at.present?
 
   # Derived, never stored - a stored age is wrong the day after it is written.
   def age(on: Date.current)
@@ -45,6 +52,10 @@ class User < ApplicationRecord
   end
 
   def initials
+    # Anonymized people all share a name, so their initials come from their
+    # number instead - two of them must never look like the same person.
+    return "R#{archived_ordinal}" if archived?
+
     name.split.first(2).map { |part| part[0] }.join.upcase
   end
 

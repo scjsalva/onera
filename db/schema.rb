@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120017) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120018) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -154,8 +154,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120017) do
     t.check_constraint "exchange_rate > 0::numeric", name: "expenses_rate_positive"
     t.check_constraint "group_id IS NOT NULL OR owner_id IS NOT NULL", name: "expenses_have_a_home"
     t.check_constraint "length(btrim(description::text)) > 0", name: "expenses_description_present"
-    t.check_constraint "rate_source::text = ANY (ARRAY['indicative'::character varying, 'locked'::character varying, 'native'::character varying]::text[])", name: "expenses_rate_source_valid"
-    t.check_constraint "split_method::text = ANY (ARRAY['equal'::character varying, 'percentage'::character varying, 'fixed'::character varying, 'shares'::character varying]::text[])", name: "expenses_split_method_valid"
+    t.check_constraint "rate_source::text = ANY (ARRAY['indicative'::character varying::text, 'locked'::character varying::text, 'native'::character varying::text])", name: "expenses_rate_source_valid"
+    t.check_constraint "split_method::text = ANY (ARRAY['equal'::character varying::text, 'percentage'::character varying::text, 'fixed'::character varying::text, 'shares'::character varying::text])", name: "expenses_split_method_valid"
   end
 
   create_table "group_memberships", force: :cascade do |t|
@@ -241,7 +241,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120017) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "preferred_currency_code", limit: 3, default: "PHP", null: false
+    t.datetime "archived_at"
+    t.integer "archived_ordinal"
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "(email IS NOT NULL)"
+    t.index ["archived_at"], name: "index_users_on_archived_at"
+    t.index ["archived_ordinal"], name: "index_users_on_archived_ordinal", unique: true, where: "(archived_ordinal IS NOT NULL)"
     t.index ["preferred_currency_code"], name: "index_users_on_preferred_currency_code"
     t.check_constraint "length(btrim(name::text)) > 0", name: "users_name_present"
   end

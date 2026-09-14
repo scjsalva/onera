@@ -6,7 +6,7 @@ class MembershipsController < ApplicationController
   def index
     @memberships = @group.group_memberships.ordered.includes(:user)
     @calculator = BalanceCalculator.new(@group)
-    @candidates = User.ordered.where.not(id: @group.group_memberships.select(:user_id))
+    @candidates = User.active.ordered.where.not(id: @group.group_memberships.select(:user_id))
 
     respond_to do |format|
       format.html
@@ -20,7 +20,7 @@ class MembershipsController < ApplicationController
   end
 
   def create
-    users = User.where(id: Array(params[:user_ids]).reject(&:blank?))
+    users = User.active.where(id: Array(params[:user_ids]).reject(&:blank?))
     added = users.reject { |user| user.member_of?(@group) }
 
     added.each do |user|

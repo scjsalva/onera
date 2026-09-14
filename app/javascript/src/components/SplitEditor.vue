@@ -28,6 +28,12 @@ const units = computed(() => {
   return props.currency?.symbol ?? '';
 });
 
+// The unit sits inside the field, so the field has to reserve room for it.
+// A fixed padding worked for "%" and "₱" but "shares" ran straight under the
+// typed value. Deriving it from the label keeps every unit clear, including
+// three-character symbols like CN¥.
+const unitPadding = computed(() => `calc(${units.value.length}ch + 1.4rem)`);
+
 const shares = computed(() => {
   const map = {};
   (props.preview?.splits || []).forEach((split) => (map[split.user_id] = split));
@@ -58,12 +64,13 @@ function personFor(id) {
             {{ personFor(row.user_id)?.name }}
           </span>
 
-          <div v-if="method !== 'equal'" class="relative w-28">
+          <div v-if="method !== 'equal'" class="relative" :class="method === 'shares' ? 'w-32' : 'w-28'">
             <input
               v-model="row.split_value"
               inputmode="decimal"
               placeholder="0"
-              class="input tnum py-1.5 pl-2.5 pr-9 text-right text-sm"
+              class="input tnum py-1.5 pl-2.5 text-right text-sm"
+              :style="{ paddingRight: unitPadding }"
             />
             <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-ink-400">
               {{ units }}

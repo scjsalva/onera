@@ -11,7 +11,7 @@ class ApplicationController < ActionController::Base
   # The single seam between "who is looking" and the rest of the app. Real
   # authentication would replace the body of this method and nothing else.
   def set_current_user
-    Current.user = User.find_by(id: session[:current_user_id])
+    Current.user = User.active.find_by(id: session[:current_user_id])
     session.delete(:current_user_id) if Current.user.nil?
   end
 

@@ -18,7 +18,7 @@
 
   .card.card-pad{ data: { reveal: true } }
     %p.label Who's in?
-    %member-selector{ people: vue_json(UserPresenter.collection(User.ordered.where.not(id: current_user.id))),
+    %member-selector{ people: vue_json(UserPresenter.collection(User.active.ordered.where.not(id: current_user.id))),
                       field: "member_ids[]",
                       "new-person-path" => new_person_path }
     %p.mt-3.text-xs.text-ink-500 You're included automatically.

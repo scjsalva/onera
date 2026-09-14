@@ -20,3 +20,10 @@
         Used for your own totals and for personal expenses. Groups keep their own currency.
 
   = form.submit "Save", class: "btn-primary w-full"
+
+.mt-8{ data: { reveal: true } }
+  %delete-profile-button{ "action" => profile_path,
+                          "name" => current_user.name,
+                          "archived-label" => next_archived_label,
+                          "group-count" => current_user.groups.active.count,
+                          "expense-count" => current_user.shared_expenses.active.count }
