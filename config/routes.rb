@@ -59,6 +59,8 @@ Rails.application.routes.draw do
       get :expenses, as: :expenses_for
       get :balances, as: :balances_for
       get :activity, as: :activity_for
+      patch :archive
+      patch :restore
     end
 
     resource :settle_up, only: %i[show create], controller: "settle_ups"

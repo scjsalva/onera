@@ -1,0 +1,14 @@
+-# Shown on every tab of an archived group, because the thing people need to
+-# know is why the buttons are gone.
+.rounded-card.border.border-ink-300.px-4.py-3{ class: "bg-ink-200/50", data: { reveal: true } }
+  .flex.items-start.gap-3
+    %span.grid.h-9.w-9.shrink-0.place-items-center.rounded-xl.bg-ink-200.text-ink-500
+      %svg.icon-lg{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M4 7h16M6 7v12a2 2 0 002 2h8a2 2 0 002-2V7M9 11h6" }
+    .min-w-0.flex-1
+      %p.font-semibold.text-ink-900= "#{group.name} is archived"
+      %p.mt-1.text-sm.text-ink-600
+        Everything here is kept and readable. It takes no new expenses or payments, and its balances
+        stay out of your totals until you reopen it.
+      = link_to "Reopen this group", restore_group_path(group), data: { turbo_method: :patch },
+                class: "btn-secondary btn-sm mt-3"

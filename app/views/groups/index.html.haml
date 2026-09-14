@@ -13,7 +13,27 @@
     .grid.gap-3{ class: "sm:grid-cols-2", data: { reveal_group: true } }
       - @summaries.each do |summary|
         = render "groups/summary_card", summary: summary
-  - else
+  - elsif @archived.none?
     = render "shared/empty_state", title: "No groups yet",
              body: "A group is anything you split — a trip, a flat, a night out.",
              action: link_to("Create your first group", new_group_path, class: "btn-primary")
+
+  - if @archived.any?
+    %section
+      %details.group
+        %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
+          %span.text-sm.font-semibold.text-ink-900= "Archived (#{@archived.size})"
+          %svg.icon-md.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+            %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
+        %ul.card.divide-y.divide-ink-200.overflow-hidden
+          - @archived.each do |group|
+            %li
+              = link_to group_path(group), class: "press flex items-center gap-3 px-4 py-3 transition hover:bg-ink-200/40" do
+                %span.min-w-0.flex-1
+                  %span.block.truncate.font-medium.text-ink-600= group.name
+                  %span.block.text-xs.text-ink-400
+                    = "archived #{time_ago_in_words(group.archived_at)} ago · #{pluralize(group.expenses.count, 'expense')}"
+                %svg.icon-md.shrink-0.text-ink-400{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+                  %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M9 5l7 7-7 7" }
+      %p.mt-2.text-xs.text-ink-500
+        Archived groups keep everything and stay readable. Their balances are out of your totals.

@@ -7,6 +7,7 @@ class GroupsController < ApplicationController
   def index
     @dashboard = DashboardCalculator.new(current_user)
     @summaries = @dashboard.group_summaries
+    @archived = current_user.groups.where.not(archived_at: nil).ordered
   end
 
   def new
@@ -75,18 +76,59 @@ class GroupsController < ApplicationController
     end
   end
 
+  # Hidden, not deleted. Everything stays; the group just stops taking new
+  # entries and drops out of what you are owed.
+  def archive
+    return redirect_to @group, alert: "That group is already archived." if @group.archived?
+
+    @group.update!(archived_at: Time.current)
+    record_and_notify(:archived)
+
+    redirect_to groups_path,
+                notice: "#{@group.name} is archived. Nothing was deleted - you can reopen it any time."
+  end
+
+  def restore
+    return redirect_to @group, alert: "That group is not archived." unless @group.archived?
+
+    @group.update!(archived_at: nil)
+    record_and_notify(:restored)
+
+    redirect_to @group, notice: "#{@group.name} is active again."
+  end
+
   def destroy
     if @group.expenses.exists? || @group.settlements.exists?
+      # A group with money in it is never destroyed, whatever was clicked.
       @group.update!(archived_at: Time.current)
+      record_and_notify(:archived)
       redirect_to groups_path, notice: "#{@group.name} was archived. Its records are kept."
     else
       name = @group.name
       @group.destroy!
-      redirect_to groups_path, notice: "#{name} was deleted."
+      redirect_to groups_path, notice: "#{name} was deleted. It had nothing in it."
     end
   end
 
   private
+
+  def record_and_notify(action)
+    summary = action == :archived ? "#{current_user.name} archived #{@group.name}"
+                                  : "#{current_user.name} reopened #{@group.name}"
+    ActivityRecorder.record(action: "group.#{action}", summary:, group: @group,
+                            actor: current_user, subject: @group)
+
+    @group.users.each do |member|
+      Notifier.deliver(
+        user: member, actor: current_user, group: @group, subject: @group,
+        kind: "group.#{action}",
+        title: summary,
+        body: action == :archived ? "It stops taking new expenses, and its balances leave your totals."
+                                  : "It takes expenses again, and its balances are back in your totals.",
+        url: Rails.application.routes.url_helpers.group_path(@group)
+      )
+    end
+  end
 
   def load_group
     @group = current_user.groups.find(params[:id])

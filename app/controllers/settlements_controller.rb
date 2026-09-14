@@ -2,6 +2,7 @@
 
 class SettlementsController < ApplicationController
   before_action :load_group
+  before_action :refuse_when_archived, only: %i[new create edit update void]
   before_action :load_settlement, only: %i[edit update void]
 
   def index
@@ -53,6 +54,15 @@ class SettlementsController < ApplicationController
 
   def load_group
     @group = current_user.groups.find(params[:group_id])
+  end
+
+  # An archived group is a record of what happened, not somewhere to keep
+  # recording.
+  def refuse_when_archived
+    return unless @group.archived?
+
+    redirect_to group_path(@group),
+                alert: "#{@group.name} is archived. Reopen it from its settings to record payments."
   end
 
   def load_settlement

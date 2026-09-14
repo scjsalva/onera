@@ -4,6 +4,9 @@
 
 = render "groups/tabs", group: @group
 
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
+
 .space-y-5
   %section
     %h2.mb-2.text-sm.font-semibold.text-ink-900= pluralize(@memberships.size, "person")

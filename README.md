@@ -148,6 +148,20 @@ as something that happened *between* the expenses rather than as one of them.
 Filters that describe an expense (a category, a currency, who paid) hide the
 settlements, since those filters have no meaning for a payment.
 
+## Archiving a group
+
+For a trip that is over. From **Settings** inside a group:
+
+- It moves to Archived in your groups list and stays readable.
+- Nobody can add expenses or record payments in it.
+- Anything still unsettled stops counting towards what you owe or are owed.
+- Its spending still appears in your insights — it happened, after all.
+- Everyone in the group is told.
+- You can reopen it from the same place, and everything comes back.
+
+A group holding any money is archived rather than deleted, whichever button
+was pressed. Only a group with nothing in it can actually be deleted.
+
 ## Nothing is deleted
 
 Expenses and settlements are **voided**, not destroyed. A voided record keeps

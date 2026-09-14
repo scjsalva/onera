@@ -4,6 +4,9 @@
 
 = render "groups/tabs", group: @group
 
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
+
 .space-y-5
   = render "groups/currency_totals", group: @group, calculator: @calculator
 

@@ -1,26 +1,59 @@
-- page_title "Edit #{@group.name}"
-- content_for :heading, "Group settings"
+- page_title "#{@group.name} settings"
+- content_for :heading, @group.name
 - content_for :back_path, group_path(@group)
+
+= render "groups/tabs", group: @group
+
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
 
 = form_with model: @group, class: "space-y-5" do |form|
   .card.card-pad.space-y-4{ data: { reveal: true } }
+    %h2.text-sm.font-semibold.text-ink-900 Details
     %div
       = form.label :name, "Group name", class: "label"
       = form.text_field :name, class: "input"
     %div
-      = form.label :description, "Description", class: "label"
-      = form.text_area :description, rows: 2, class: "input"
+      = form.label :description, "What's it for?", class: "label"
+      = form.text_area :description, rows: 2, class: "input", placeholder: "Optional"
     %div
       = form.label :base_currency_code, "Group currency", class: "label"
       = form.select :base_currency_code, currency_options, {}, class: "input"
       %p.mt-1.text-xs.text-ink-500
-        Changing this changes what totals are shown in. Expenses keep the currency they were entered in.
+        Totals here are shown in this currency. Expenses keep whatever currency they were entered in,
+        and any rate you have already locked stays locked.
 
   = form.submit "Save changes", class: "btn-primary w-full"
 
-.mt-8.card.card-pad{ data: { reveal: true } }
-  %p.font-semibold.text-ink-900 Archive this group
-  %p.mt-1.text-sm.text-ink-500
-    Hides it from your list. Nothing is deleted — expenses, payments and history are kept.
-  = button_to "Archive group", group_path(@group), method: :delete, class: "btn-danger mt-3 w-full",
-              form: { data: { confirm: "Archive #{@group.name}?", confirm_detail: "It disappears from your list. Every expense, payment and balance is kept.", confirm_label: "Archive" } }
+- unless @group.archived?
+  .mt-8.card.card-pad{ data: { reveal: true } }
+    %h2.font-semibold.text-ink-900 Archive this group
+    %p.mt-1.text-sm.text-ink-600
+      For a trip that's over. Nothing is deleted and you can reopen it whenever you like.
+    %ul.mt-3.space-y-2.text-sm.text-ink-600
+      %li.flex.gap-2
+        %span.text-ink-400 ·
+        %span It moves out of your groups list into Archived, and stays readable.
+      %li.flex.gap-2
+        %span.text-ink-400 ·
+        %span Nobody can add expenses or record payments in it.
+      %li.flex.gap-2
+        %span.text-ink-400 ·
+        %span Anything still unsettled here stops counting towards what you owe or are owed.
+      %li.flex.gap-2
+        %span.text-ink-400 ·
+        %span Its spending still appears in your insights — it happened, after all.
+      %li.flex.gap-2
+        %span.text-ink-400 ·
+        %span Everyone in the group is told.
+    = button_to "Archive group", archive_group_path(@group), method: :patch,
+                class: "btn-secondary mt-4 w-full",
+                form: { data: { confirm: "Archive #{@group.name}?", confirm_detail: "It stops taking expenses and leaves your totals. Nothing is deleted, and you can reopen it from here.", confirm_label: "Archive", confirm_tone: "primary" } }
+
+- if @group.expenses.none? && @group.settlements.none?
+  .mt-6.card.card-pad{ data: { reveal: true } }
+    %h2.font-semibold.text-ink-900 Delete this group
+    %p.mt-1.text-sm.text-ink-500
+      It has nothing in it, so there is nothing to keep.
+    = button_to "Delete group", group_path(@group), method: :delete, class: "btn-danger mt-3 w-full",
+                form: { data: { confirm: "Delete #{@group.name}?", confirm_detail: "This one is empty, so it can go for good.", confirm_label: "Delete" } }

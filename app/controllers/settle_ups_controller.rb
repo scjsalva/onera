@@ -36,6 +36,10 @@ class SettleUpsController < ApplicationController
 
   def load_group
     @group = current_user.groups.find(params[:group_id])
+    return unless @group.archived?
+
+    redirect_to group_path(@group),
+                alert: "#{@group.name} is archived. Reopen it from its settings to settle up."
   end
 
   # Defaults to the group's currency, but the person settling can pick another

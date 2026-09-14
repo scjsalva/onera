@@ -4,6 +4,9 @@
 
 = render "groups/tabs", group: @group
 
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
+
 - if @events.any?
   %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
     - @events.each do |event|

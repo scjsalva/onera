@@ -10,6 +10,10 @@ class Group < ApplicationRecord
   has_many :expenses, dependent: :restrict_with_error
   has_many :settlements, dependent: :restrict_with_error
   has_many :activity_events, dependent: :destroy
+  # Both reference the group, so deleting an empty one failed on a foreign key
+  # rather than on anything the person could see or fix.
+  has_many :invitations, dependent: :destroy
+  has_many :notifications, dependent: :nullify
 
   normalizes :name, with: ->(name) { name.strip }
 

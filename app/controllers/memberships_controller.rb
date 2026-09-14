@@ -59,6 +59,9 @@ class MembershipsController < ApplicationController
 
   def load_group
     @group = current_user.groups.find(params[:group_id])
+    return if !@group.archived? || action_name == "index"
+
+    redirect_to group_path(@group), alert: "#{@group.name} is archived, so its people can't change."
   end
 
   # Removing someone who appears in the ledger would orphan financial records,

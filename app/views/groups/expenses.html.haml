@@ -3,6 +3,9 @@
 - content_for :back_path, group_path(@group)
 
 = render "groups/tabs", group: @group
+
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
 = render "shared/filter_bar", filter: @filter, scope: :group, group: @group
 
 - if @timeline.any?

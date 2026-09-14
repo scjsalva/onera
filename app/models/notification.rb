@@ -4,7 +4,7 @@ class Notification < ApplicationRecord
   KINDS = %w[
     expense.added expense.edited expense.voided
     settlement.received settlement.recorded
-    group.added group.removed
+    group.added group.removed group.archived group.restored
     rates.locked
     friend.requested friend.accepted
     recovery.codes_low

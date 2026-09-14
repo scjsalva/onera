@@ -4,6 +4,9 @@
 
 = render "groups/tabs", group: @group
 
+- if @group.archived?
+  .mb-4= render "groups/archived_banner", group: @group
+
 - actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
 - my_debts = actives.flat_map { |c| @calculator.pairwise_debts(c) }.select { |d| d.from_user.id == current_user.id }
 - owed_to_me = actives.flat_map { |c| @calculator.pairwise_debts(c) }.select { |d| d.to_user.id == current_user.id }

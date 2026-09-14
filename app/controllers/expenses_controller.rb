@@ -34,6 +34,12 @@ class ExpensesController < ApplicationController
   def edit; end
 
   def create
+    group = current_user.groups.find_by(id: expense_params[:group_id].presence)
+    if group&.archived?
+      return redirect_back fallback_location: group_path(group),
+                           alert: "#{group.name} is archived. Reopen it from its settings to add expenses."
+    end
+
     result = ExpenseCreator.call(**writer_args, actor: current_user, params: expense_params)
 
     if result.success?
@@ -44,6 +50,11 @@ class ExpensesController < ApplicationController
   end
 
   def update
+    if @expense.group&.archived?
+      return redirect_to expense_path(@expense),
+                         alert: "#{@expense.group.name} is archived, so its expenses can't be changed."
+    end
+
     result = ExpenseUpdater.call(expense: @expense, actor: current_user, params: expense_params)
 
     if result.success?
@@ -54,6 +65,11 @@ class ExpensesController < ApplicationController
   end
 
   def void
+    if @expense.group&.archived?
+      return redirect_to expense_path(@expense),
+                         alert: "#{@expense.group.name} is archived, so its expenses can't be changed."
+    end
+
     result = ExpenseVoider.new(expense: @expense, actor: current_user, reason: params[:reason]).call
     redirect_to expense_path(@expense),
                 notice: result.success? ? "Expense voided. It stays in the history." : nil,

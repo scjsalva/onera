@@ -53,8 +53,16 @@ class DashboardCalculator
 
   attr_reader :user, :display_currency
 
+  # Active groups only: an archived group's balances leave your totals, which
+  # is the point of archiving one.
   def groups
     @groups ||= user.groups.active.ordered.includes(:base_currency).to_a
+  end
+
+  # Everything the person has ever been in. Archiving hides a group from what
+  # you are owed, but its spending is still part of where your money went.
+  def all_group_ids
+    @all_group_ids ||= user.groups.ids
   end
 
   def group_summaries
@@ -171,7 +179,7 @@ class DashboardCalculator
   # Everything this person can see: their groups' expenses plus their own
   # personal ones.
   def visible_expenses
-    Expense.where(group_id: groups.map(&:id)).or(Expense.where(group_id: nil, owner_id: user.id))
+    Expense.where(group_id: all_group_ids).or(Expense.where(group_id: nil, owner_id: user.id))
   end
 
   # Spending by group, by category and by month, in the display currency.
