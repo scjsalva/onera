@@ -19,6 +19,11 @@ Rails.application.routes.draw do
   # Accounts are created only by accepting an invite link.
   # Tokenless: the first account on a deployment that has none. Declared first
   # so "join" is not swallowed by the token segment.
+  # Served by the app rather than from public/, so the cache headers are ours.
+  # The worker must sit at the root or its scope will not cover the app.
+  get "service-worker.js", to: "pwa#service_worker", as: :pwa_service_worker
+  get "manifest.json",     to: "pwa#manifest",       as: :pwa_manifest
+
   get  "join",        to: "signups#new",    as: :first_signup
   post "join",        to: "signups#create"
   get  "join/:token", to: "signups#new",    as: :signup

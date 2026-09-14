@@ -54,6 +54,15 @@ class OpenSignupTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  # The form has to post back to the tokenless path, or the check below never
+  # runs on the journey a real person takes.
+  test "the bootstrap form posts back to the tokenless path" do
+    get first_signup_path
+
+    assert_response :success
+    assert_match %r{<form[^>]*action="/join"[^>]*>}, response.body
+  end
+
   # Two people opening an empty deployment at once would both have been shown
   # the form, so the check has to hold at the moment of writing too.
   test "a second person racing for the first account is turned away" do

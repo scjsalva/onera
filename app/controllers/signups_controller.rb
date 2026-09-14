@@ -53,9 +53,12 @@ class SignupsController < ApplicationController
     elsif Invitation.bootstrap?
       Invitation.bootstrap!
     end
-    return if @invitation
+    return redirect_to new_user_session_path, alert: no_invitation_message if @invitation.nil?
 
-    redirect_to new_user_session_path, alert: no_invitation_message
+    # Post back to the URL this page was reached by. Sending the bootstrap form
+    # to the tokened path would skip the "is this deployment still empty" check
+    # on the one path that needs it.
+    @post_path = bootstrapping? ? first_signup_path : signup_path(token: @invitation.token)
   end
 
   def bootstrapping? = params[:token].blank?

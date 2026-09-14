@@ -1,0 +1,9 @@
+-# The Onera mark. `animated: false` for the chrome, where it only moves on
+-# hover; the hover class goes on an ancestor so the whole logo is the target.
+- animated = local_assigns.fetch(:animated, true)
+%svg{ class: local_assigns.fetch(:class, "icon-md"), viewBox: "0 0 24 24", fill: "none",
+      role: "img", "aria-label" => "Onera" }
+  %circle{ class: ("onera-mark-right" if animated), cx: "15", cy: "12", r: "6", opacity: "0.55",
+           stroke: "currentColor", "stroke-width" => "2.4", "stroke-linecap" => "round" }
+  %circle{ class: ("onera-mark-left" if animated), cx: "9", cy: "12", r: "6",
+           stroke: "currentColor", "stroke-width" => "2.4" }

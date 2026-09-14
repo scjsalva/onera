@@ -6,9 +6,7 @@
 
   .relative.mx-auto.w-full{ class: "max-w-sm" }
     %span.grid.h-12.w-12.place-items-center.rounded-2xl.backdrop-blur.animate-pop{ class: "bg-white/10" }
-      %svg.icon-lg.text-white{ viewBox: "0 0 24 24", fill: "none" }
-        %circle{ cx: "9", cy: "12", r: "6", stroke: "currentColor", "stroke-width" => "2.4" }
-        %path{ d: "M15 6a6 6 0 010 12", stroke: "currentColor", "stroke-width" => "2.4", "stroke-linecap" => "round", opacity: "0.55" }
+      = render "shared/mark", class: "icon-lg text-white"
 
     %h1.mt-6.text-3xl.font-bold.tracking-tight.text-white Onera
     %p.mt-2{ class: "text-white/70" } Shared costs, settled without the spreadsheet.

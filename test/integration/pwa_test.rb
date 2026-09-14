@@ -22,9 +22,16 @@ class PwaTest < ActionDispatch::IntegrationTest
     assert_installable response.body
   end
 
-  test "the manifest itself is served and says what a browser needs" do
-    manifest = JSON.parse(Rails.root.join("public/manifest.json").read)
+  # Fetched over HTTP rather than read off disk: these are served by the app
+  # now, so the route, the content type and the cache headers are part of what
+  # has to be right.
+  test "the manifest is served with what a browser needs" do
+    get "/manifest.json"
 
+    assert_response :success
+    assert_equal "application/manifest+json", response.media_type
+
+    manifest = JSON.parse(response.body)
     assert_equal "standalone", manifest["display"]
     assert_equal "/", manifest["start_url"]
     assert manifest["name"].present?
@@ -37,31 +44,47 @@ class PwaTest < ActionDispatch::IntegrationTest
     assert manifest["icons"].any? { |icon| icon["purpose"].to_s.include?("maskable") }
 
     manifest["icons"].each do |icon|
-      path = Rails.root.join("public#{icon['src']}")
-      assert path.exist?, "#{icon['src']} is in the manifest but not on disk"
+      assert Rails.root.join("public#{icon['src']}").exist?,
+             "#{icon['src']} is in the manifest but not on disk"
     end
   end
 
   # Chrome will not offer to install a site whose service worker has no fetch
   # handler, which is why a laptop got a prompt and a phone never did.
-  test "the service worker exists and handles fetch" do
-    worker = Rails.root.join("public/service-worker.js")
+  test "the service worker is served, and handles fetch" do
+    get "/service-worker.js"
 
-    assert worker.exist?
-    source = worker.read
-    assert_match(/addEventListener\(['"]fetch['"]/, source)
-    assert_match(/addEventListener\(['"]install['"]/, source)
-    assert_match(/addEventListener\(['"]activate['"]/, source)
+    assert_response :success
+    assert_equal "text/javascript", response.media_type
+    assert_match(/addEventListener\(['"]fetch['"]/, response.body)
+    assert_match(/addEventListener\(['"]install['"]/, response.body)
+    assert_match(/addEventListener\(['"]activate['"]/, response.body)
+  end
+
+  # A worker cached for a year cannot be replaced. Browsers cap that at a day
+  # for the script itself, but a day is still a day.
+  test "the service worker is not cached for a year the way public files are" do
+    get "/service-worker.js"
+
+    cache = response.headers["Cache-Control"].to_s
+    refute_match(/max-age=\d{5,}/, cache, "the worker must not be far-future cached")
+    assert_match(/no-cache|max-age=0|must-revalidate/, cache)
   end
 
   # A cached page would mean somebody reading yesterday's balance, which is
   # worse than being told you are offline.
   test "the service worker caches nothing but immutable assets" do
-    source = Rails.root.join("public/service-worker.js").read
+    get "/service-worker.js"
 
-    # Escaped, because in the worker this is a regex literal.
-    assert_match %r{\\/vite\\/assets\\/}, source, "it should only match Vite's hashed files"
-    assert_match(/request\.method !== ['"]GET['"]/, source, "writes must never be cached")
+    assert_match %r{\\/vite\\/assets\\/}, response.body, "it should only match Vite's hashed files"
+    assert_match(/request\.method !== ['"]GET['"]/, response.body, "writes must never be cached")
+  end
+
+  test "both are reachable without signing in" do
+    [ "/manifest.json", "/service-worker.js" ].each do |path|
+      get path
+      assert_response :success, "#{path} should not need a session"
+    end
   end
 
   private

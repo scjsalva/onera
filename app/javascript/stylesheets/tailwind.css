@@ -329,6 +329,49 @@
     @apply px-3 py-1.5 text-xs;
   }
 
+  /* The mark: two people, one shared cost. They lean together, hold, and part
+     again - a whole loop takes just under four seconds, most of which is the
+     rest at the end so it reads as a breath rather than a fidget.
+
+     Declared here rather than in a <style> block inside the SVG so the
+     keyframes exist once however many marks are on the page. */
+  @keyframes onera-lean-right {
+    0%      { transform: translateX(0); }
+    6.67%   { transform: translateX(3px); }
+    20%     { transform: translateX(3px); }
+    46.67%  { transform: translateX(0); }
+    100%    { transform: translateX(0); }
+  }
+
+  @keyframes onera-lean-left {
+    0%      { transform: translateX(0); }
+    6.67%   { transform: translateX(-3px); }
+    20%     { transform: translateX(-3px); }
+    46.67%  { transform: translateX(0); }
+    100%    { transform: translateX(0); }
+  }
+
+  .onera-mark-left  { animation: onera-lean-right 3.75s ease-in-out infinite; }
+  .onera-mark-right { animation: onera-lean-left  3.75s ease-in-out infinite; }
+
+  /* In the chrome it only moves when you point at it. A logo that never stops
+     moving on every page is not a flourish, it is a distraction. */
+  .onera-mark-hover .onera-mark-left,
+  .onera-mark-hover .onera-mark-right {
+    animation: none;
+  }
+  .onera-mark-hover:hover .onera-mark-left  { animation: onera-lean-right 3.75s ease-in-out infinite; }
+  .onera-mark-hover:hover .onera-mark-right { animation: onera-lean-left  3.75s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .onera-mark-left,
+    .onera-mark-right,
+    .onera-mark-hover:hover .onera-mark-left,
+    .onera-mark-hover:hover .onera-mark-right {
+      animation: none;
+    }
+  }
+
   /* One icon scale for the whole app. Sizes were previously chosen per icon,
      which is why the filter glyph sat larger than everything around it. Use
      these on an svg rather than sizing it with height and width utilities. */

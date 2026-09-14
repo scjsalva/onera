@@ -104,9 +104,9 @@ const canInstall = computed(() => deferred.value !== null);
           class="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-surface px-4 py-3 shadow-lift"
         >
           <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600">
-            <svg class="icon-lg text-white" fill="none" viewBox="0 0 24 24">
-              <circle cx="9" cy="12" r="6" stroke="currentColor" stroke-width="2.4" />
-              <path d="M15 6a6 6 0 010 12" opacity="0.55" stroke="currentColor" stroke-linecap="round" stroke-width="2.4" />
+            <svg class="icon-lg text-white" fill="none" viewBox="0 0 24 24" role="img" aria-label="Onera">
+              <circle class="onera-mark-right" cx="15" cy="12" r="6" opacity="0.55" stroke="currentColor" stroke-linecap="round" stroke-width="2.4" />
+              <circle class="onera-mark-left" cx="9" cy="12" r="6" stroke="currentColor" stroke-width="2.4" />
             </svg>
           </span>
 
