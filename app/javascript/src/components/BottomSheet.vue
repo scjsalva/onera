@@ -65,11 +65,11 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="sheet-backdrop">
+    <Transition name="sheet-backdrop" appear>
       <div v-if="open" class="scrim fixed inset-0 z-50 backdrop-blur-[2px]" @click="close" />
     </Transition>
 
-    <Transition name="sheet">
+    <Transition name="sheet" appear>
       <div
         v-if="open"
         class="fixed inset-x-0 bottom-0 z-50 flex justify-center md:inset-0 md:items-center md:p-6"
@@ -133,23 +133,34 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-.sheet-enter-active {
-  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+.sheet-backdrop-appear-active {
+  transition: opacity 0.24s ease;
 }
-.sheet-leave-active {
-  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+.sheet-backdrop-appear-from {
+  opacity: 0;
 }
+
+.sheet-appear-active > div,
+.sheet-enter-active > div {
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sheet-leave-active > div {
+  transition: transform 0.24s cubic-bezier(0.4, 0, 1, 1);
+}
+.sheet-appear-from > div,
 .sheet-enter-from > div,
 .sheet-leave-to > div {
   transform: translateY(100%);
 }
 
 @media (min-width: 768px) {
+  .sheet-appear-from > div,
   .sheet-enter-from > div,
   .sheet-leave-to > div {
     transform: translateY(12px) scale(0.97);
     opacity: 0;
   }
+  .sheet-appear-active > div,
   .sheet-enter-active > div,
   .sheet-leave-active > div {
     transition:

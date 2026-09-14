@@ -6,6 +6,7 @@ import SegmentedControl from './SegmentedControl.vue';
 import SplitEditor from './SplitEditor.vue';
 import PersonPicker from './PersonPicker.vue';
 import http from '@/lib/http';
+import { formatMinor, toMinor } from '@/lib/money';
 
 // Adding or editing an expense.
 //
@@ -63,6 +64,27 @@ const personal = computed(() => !form.value.group_id);
 const sharedDirectly = computed(() => personal.value && form.value.participants.length > 1);
 const solo = computed(() => personal.value && !sharedDirectly.value);
 const activeCurrency = computed(() => currencyList.find((c) => c.code === form.value.currency_code));
+const exponent = computed(() => activeCurrency.value?.exponent ?? 2);
+
+// More than one payer means the expense total is whatever they actually put in
+// between them, not the figure typed on the first step. Everything downstream -
+// the split preview, the split editor, the amount that gets posted - reads
+// `form.amount`, so keeping that in step is all it takes.
+const manyPayers = computed(() => form.value.payers.length > 1);
+const payerTotalMinor = computed(() =>
+  form.value.payers.reduce((sum, payer) => sum + toMinor(payer.amount, exponent.value), 0)
+);
+const payerTotal = computed(() => formatMinor(payerTotalMinor.value, activeCurrency.value));
+
+// Back to a plain editable figure: no grouping, and no decimals on a currency
+// that has none.
+function minorToInput(minor, places) {
+  if (places === 0) return String(minor);
+
+  const digits = String(Math.abs(minor)).padStart(places + 1, '0');
+  const body = `${digits.slice(0, -places)}.${digits.slice(-places)}`;
+  return minor < 0 ? `-${body}` : body;
+}
 
 const payerIds = computed({
   get: () => form.value.payers.map((p) => p.user_id),
@@ -127,6 +149,19 @@ watch(
   (amount) => {
     if (form.value.payers.length === 1) form.value.payers[0].amount = amount;
   }
+);
+
+watch(
+  [ () => form.value.payers, exponent ],
+  () => {
+    if (!manyPayers.value) return;
+
+    const next = minorToInput(payerTotalMinor.value, exponent.value);
+    if (next !== form.value.amount) form.value.amount = next;
+  },
+  // Immediate as well, so opening an expense whose payers already disagree with
+  // its total shows the figure it is going to be saved with.
+  { deep: true, immediate: true }
 );
 
 let previewTimer = null;
@@ -225,7 +260,11 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
               v-model="form.amount"
               v-model:currency="form.currency_code"
               :currencies="currencyList"
+              :readonly="manyPayers"
             />
+            <p v-if="manyPayers" class="mt-2 pl-1 text-xs text-ink-500">
+              Adds up from what each person paid — change it on the next step.
+            </p>
             <!-- The guide figure. Deliberately quiet, and honest about being an
                  estimate: the rate that counts is chosen at settle-up. -->
             <Transition name="fade-slide">
@@ -348,6 +387,11 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                       size="sm"
                     />
                   </div>
+                </div>
+
+                <div class="flex items-baseline justify-between px-3 pt-0.5">
+                  <span class="text-xs text-ink-500">Total paid</span>
+                  <span class="tnum text-sm font-semibold text-ink-900">{{ payerTotal }}</span>
                 </div>
               </div>
             </Transition>

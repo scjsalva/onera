@@ -11,6 +11,7 @@ const props = defineProps({
   size: { type: String, default: 'lg' },
   // Off wherever the currency is already decided, such as a per-payer amount.
   currencyPicker: { type: Boolean, default: true },
+  readonly: { type: Boolean, default: false },
 });
 const emit = defineEmits(['update:modelValue', 'update:currency']);
 
@@ -37,9 +38,11 @@ function onInput(event) {
         inputmode="decimal"
         placeholder="0"
         :autofocus="autofocus"
+        :readonly="readonly"
         :class="[
           'input tnum w-full',
           size === 'lg' ? 'py-4 pl-12 pr-4 text-2xl font-semibold' : 'py-2.5 pl-9 pr-3',
+          readonly ? 'cursor-default bg-ink-50 text-ink-500' : '',
         ]"
         @input="onInput"
       />

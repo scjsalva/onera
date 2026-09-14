@@ -25,6 +25,11 @@ const LIFT = 56;
 const pull = ref(0);
 let startY = null;
 
+// Where the button was when the sheet took over. Carrying it across means the
+// launch continues the swipe instead of restarting from the resting position.
+const launchedFrom = ref(0);
+const phone = ref(false);
+
 function onTouchStart(event) {
   startY = event.touches[0].clientY;
 }
@@ -37,28 +42,56 @@ function onTouchMove(event) {
 }
 
 function onTouchEnd() {
-  if (pull.value >= LIFT) {
-    try {
-      navigator.vibrate?.(12);
-    } catch {
-      /* not supported, and not important */
-    }
-    open.value = true;
-  }
+  // No haptic here: a swipe is not a tap, so Chrome blocks navigator.vibrate
+  // and logs an intervention every time.
+  if (pull.value >= LIFT) launch();
 
   pull.value = 0;
   startY = null;
 }
 
-// Rises and grows as it is pulled, then springs back past its resting size.
-const pullStyle = computed(() =>
-  pull.value
-    ? {
-        transform: `translate(-50%, ${-pull.value * 0.55}px) scale(${1 + pull.value / 420})`,
-        transition: 'none',
-      }
-    : { transition: 'transform 0.4s cubic-bezier(0.22, 1.4, 0.4, 1)' }
-);
+function launch() {
+  phone.value = !window.matchMedia('(min-width: 768px)').matches;
+  launchedFrom.value = pull.value;
+  open.value = true;
+}
+
+// Three states, and they have to read as one movement: at rest, following the
+// thumb, and handing over to the sheet. The last one keeps travelling up from
+// wherever the swipe ended and dissolves as the sheet arrives underneath it.
+const pullStyle = computed(() => {
+  if (open.value) {
+    const lifted = Math.max(launchedFrom.value, LIFT) * 0.55 + 18;
+    return {
+      transform: phone.value
+        ? `translate(-50%, ${-lifted}px) scale(0.35)`
+        : 'scale(0.94)',
+      opacity: 0,
+      transition:
+        'transform 0.34s cubic-bezier(0.32, 0, 0.2, 1), opacity 0.22s ease-out',
+    };
+  }
+
+  if (pull.value) {
+    return {
+      transform: `translate(-50%, ${-pull.value * 0.55}px) scale(${1 + pull.value / 420})`,
+      transition: 'none',
+    };
+  }
+
+  // Coming back: waits for the sheet to clear, then drops into place with a
+  // little overshoot so the button feels like it was thrown back.
+  return {
+    transition:
+      'transform 0.42s cubic-bezier(0.22, 1.4, 0.4, 1) 0.08s, opacity 0.2s ease 0.08s',
+  };
+});
+
+// The plus keeps turning through the launch rather than unwinding halfway.
+const iconStyle = computed(() => {
+  const turn = open.value ? Math.max(pull.value, LIFT) : pull.value;
+  return turn ? { transform: `rotate(${turn * 1.6}deg)` } : {};
+});
 
 const label = computed(() =>
   props.groupName ? `Add an expense to ${props.groupName}` : 'Add an expense'
@@ -72,7 +105,7 @@ const label = computed(() =>
       class="group absolute -top-6 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full bg-brand-600 text-white shadow-lift transition duration-200 active:scale-90 hover:bg-brand-700 md:static md:h-auto md:w-full md:translate-x-0 md:rounded-xl md:px-3 md:py-2.5 md:shadow-sm"
       :aria-label="label"
       :style="pullStyle"
-      @click="open = true"
+      @click="launch"
       @touchstart.passive="onTouchStart"
       @touchmove.passive="onTouchMove"
       @touchend="onTouchEnd"
@@ -81,7 +114,7 @@ const label = computed(() =>
       <span class="flex items-center gap-2">
         <svg
           class="icon-nav transition-transform duration-300 group-hover:rotate-90"
-          :style="{ transform: pull ? `rotate(${pull * 1.6}deg)` : '' }"
+          :style="iconStyle"
           fill="none"
           stroke="currentColor"
           stroke-width="2.4"
@@ -95,7 +128,7 @@ const label = computed(() =>
       <!-- A grab handle that only shows while the button is being pulled. -->
       <span
         class="pointer-events-none absolute -top-3 left-1/2 h-1 w-6 -translate-x-1/2 rounded-full bg-white/60 transition-opacity md:hidden"
-        :style="{ opacity: pull ? 1 : 0 }"
+        :style="{ opacity: pull && !open ? 1 : 0 }"
       />
     </button>
 
