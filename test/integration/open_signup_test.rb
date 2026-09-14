@@ -2,114 +2,96 @@
 
 require "test_helper"
 
-# Whether strangers can create an account is decided by one thing: does a live
-# invitation with no sender exist. That link is what puts a Create an account
-# button on the sign-in page, so the button can never disagree with whether
-# signing up actually works.
+# Accounts are invite-only and an invitation needs a member to send it, so an
+# empty deployment has no way in at all. The first person walks through the
+# front door; after that the door is not there, and not because of a setting or
+# a date - the condition it depends on can never come back.
 class OpenSignupTest < ActionDispatch::IntegrationTest
-  test "no deployment link means no sign-up button" do
-    get new_user_session_path
-
-    assert_response :success
-    refute_match "Create an account", response.body
-  end
-
-  test "a deployment link puts the button on the sign-in page" do
-    invitation = Invitation.create!(created_by: nil, group: nil)
+  test "an empty deployment offers the first account" do
+    assert Invitation.bootstrap?
 
     get new_user_session_path
     assert_response :success
-    assert_match "Create an account", response.body
-    assert_match "/join/#{invitation.token}", response.body
+    assert_match "Create the first account", response.body
+    assert_match first_signup_path, response.body
   end
 
-  test "a member's own link is not a deployment link and opens nothing" do
-    john = create_user(name: "John", username: "opensignupjohn")
-    Invitation.for(group: nil, creator: john)
+  test "and that account can actually be created" do
+    assert_difference "User.count", 1 do
+      post first_signup_path, params: { user: {
+        name: "John Salva", username: "firstjohn", password: "a-good-password",
+        password_confirmation: "a-good-password"
+      } }
+    end
+
+    assert_redirected_to root_path
+    assert_equal "firstjohn", User.sole.username
+  end
+
+  test "once somebody exists the offer is gone" do
+    create_user(name: "John", username: "alreadyhere")
+
+    refute Invitation.bootstrap?
 
     get new_user_session_path
-    refute_match "Create an account", response.body
-    assert_nil Invitation.open_signup
+    refute_match "Create the first account", response.body
+
+    get first_signup_path
+    assert_redirected_to new_user_session_path
+    follow_redirect!
+    assert_match(/already set up/i, response.body)
   end
 
-  test "the button leads somewhere that actually works" do
-    invitation = Invitation.create!(created_by: nil, group: nil)
+  test "and the door cannot be forced by posting straight at it" do
+    create_user(name: "John", username: "alreadyhere2")
 
-    get signup_path(token: invitation.token)
+    assert_no_difference "User.count" do
+      post first_signup_path, params: { user: {
+        name: "Sneaky", username: "sneaky", password: "a-good-password",
+        password_confirmation: "a-good-password"
+      } }
+    end
+    assert_redirected_to new_user_session_path
+  end
+
+  # Two people opening an empty deployment at once would both have been shown
+  # the form, so the check has to hold at the moment of writing too.
+  test "a second person racing for the first account is turned away" do
+    get first_signup_path
     assert_response :success
+
+    create_user(name: "Faster", username: "faster")
+
+    assert_no_difference "User.count" do
+      post first_signup_path, params: { user: {
+        name: "Slower", username: "slower", password: "a-good-password",
+        password_confirmation: "a-good-password"
+      } }
+    end
+    assert_redirected_to new_user_session_path
+  end
+
+  test "a member's invite link still works after the door has shut" do
+    john = create_user(name: "John", username: "hostjohn")
+    invitation = Invitation.for(group: nil, creator: john)
+
+    refute Invitation.bootstrap?
 
     assert_difference "User.count", 1 do
       post signup_path(token: invitation.token), params: { user: {
-        name: "Stranger", username: "stranger", password: "a-good-password",
-        password_confirmation: "a-good-password"
-      } }
-    end
-    assert_redirected_to root_path
-  end
-
-  # A link on a public sign-in page should stop on its own, whether or not
-  # anyone remembers to revoke it.
-  test "a spent link closes the door and takes the button with it" do
-    invitation = Invitation.create!(created_by: nil, group: nil, max_uses: 2)
-
-    2.times { |n| sign_someone_up(invitation, "stranger#{n}") }
-
-    assert_equal 2, invitation.reload.accepted_count
-    assert invitation.spent?
-    assert_equal 0, invitation.uses_left
-    assert_nil Invitation.open_signup
-
-    get new_user_session_path
-    refute_match "Create an account", response.body
-
-    assert_no_difference "User.count" do
-      post signup_path(token: invitation.token), params: { user: {
-        name: "Too Late", username: "toolate", password: "a-good-password",
+        name: "Guest", username: "guest", password: "a-good-password",
         password_confirmation: "a-good-password"
       } }
     end
   end
 
-  test "an expired link closes the door too" do
-    invitation = Invitation.create!(created_by: nil, group: nil, expires_at: 1.hour.ago)
+  test "the bootstrap link is worth exactly one account" do
+    invitation = Invitation.bootstrap!
 
-    assert invitation.expired?
-    assert_nil Invitation.open_signup
+    assert_equal 1, invitation.max_uses
+    invitation.increment!(:accepted_count)
 
-    get new_user_session_path
-    refute_match "Create an account", response.body
-  end
-
-  test "a link with no cap keeps working" do
-    invitation = Invitation.create!(created_by: nil, group: nil)
-
-    3.times { |n| sign_someone_up(invitation, "unlimited#{n}") }
-
-    refute invitation.reload.spent?
-    assert_nil invitation.uses_left
-    assert_equal invitation, Invitation.open_signup
-  end
-
-  test "revoking the link closes the door and takes the button with it" do
-    invitation = Invitation.create!(created_by: nil, group: nil)
-    invitation.revoke!
-
-    assert_nil Invitation.open_signup
-
-    get new_user_session_path
-    refute_match "Create an account", response.body
-
-    get signup_path(token: invitation.token)
-    assert_response :redirect
-  end
-
-  private
-
-  def sign_someone_up(invitation, username)
-    post signup_path(token: invitation.token), params: { user: {
-      name: username.titleize, username:, password: "a-good-password",
-      password_confirmation: "a-good-password"
-    } }
-    delete destroy_user_session_path
+    refute invitation.reload.usable?
+    assert_nil Invitation.live.find_by(id: invitation.id)
   end
 end

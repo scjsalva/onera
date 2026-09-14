@@ -51,3 +51,6 @@ node_modules
 .env
 .env.*
 !.env.example
+
+# Personal working notes, not team convention.
+CLAUDE.local.md

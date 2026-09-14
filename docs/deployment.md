@@ -48,29 +48,28 @@ request after a quiet spell pays about half a second. Nothing is lost.
 On boot the container runs migrations and loads reference data: currencies,
 categories, exchange rates. **No accounts and no passwords.**
 
-## 3. Letting people in
+## 3. The first account
 
-Accounts are invite-only, so a deployment with nobody in it is a locked door.
-The way through is a link with no sender:
+Accounts are invite-only and an invitation needs a member to send it, so an
+empty deployment has no way in at all. It offers one, once: the sign-in page
+says **Nobody has set this up yet** and lets you create the first account with
+no link and no shell.
 
-    ./bin/rails onera:invite
+That offer disappears the moment an account exists, and not because of a
+setting or a date — the condition it depends on can never come back. Posting
+straight at the URL afterwards is refused too, including by a second person
+racing for it.
 
-That prints a URL and, while it is live, puts a **Create an account** button on
-the sign-in page. Its existence is the whole of the open-signup switch — there
-is no setting to remember, and the button cannot disagree with whether signing
-up actually works.
+Everybody after you comes in on a link you send from **You → People**, or from
+a group's People tab to land them straight in that group.
 
-It is capped at **10 uses** and expires after **7 days**, because the app is on
-a public address and a door that only closes when somebody remembers to close
-it stays open. Change either, or pass 0 to lift the limit:
+If you ever need to let somebody in without sending them a link yourself —
+onboarding a person you have not added — there is still:
 
-    ./bin/rails onera:invite ONERA_INVITE_USES=25 ONERA_INVITE_DAYS=14
+    ./bin/rails onera:invite            # capped at 10 uses, expires in 7 days
+    ./bin/rails onera:revoke_invites    # closes it early
 
-Close it early once everyone is in:
-
-    ./bin/rails onera:revoke_invites
-
-After that the only way in is a link a member sends from **You → People**.
+That prints a link but adds no button to the sign-in page.
 
 ### On verifying accounts
 
@@ -79,24 +78,22 @@ the same cost that put recovery codes in place of a password-reset email. It
 would also buy little: anyone can verify a throwaway address, so it filters
 robots rather than strangers.
 
-What actually limits who gets in is the link: capped, dated, revocable, and off
-by default. A stranger who did sign up would see nothing — visibility is
-friends and shared groups only, both of which need somebody to agree — so the
-cost of one is a junk row, not exposure.
+The real control is that there is no open door. After the first account, the
+only way in is a link somebody chose to send you.
 
 Email is still asked for on every sign-in until given, and is required before
 recovery codes can be issued, because that is the one thing that gets an
 account back.
 
-## 4. The first account
+## 4. Making yourself the owner (alternative)
 
-    Render dashboard → your service → Shell
+If you would rather not use the front door — say you are scripting a deploy —
+the Render **Shell** tab still works:
 
     ./bin/rails onera:owner ONERA_NAME='Your Name' ONERA_USERNAME=yourname
 
 It prints a generated password once. You cannot pass one in, on purpose: a real
-password should never sit in a shell history or a deploy log. Sign in, change
-it, then invite everyone else from **You → People**.
+password should never sit in a shell history or a deploy log.
 
 ## 5. Keeping it awake
 

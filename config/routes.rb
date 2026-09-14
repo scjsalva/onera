@@ -17,6 +17,10 @@ Rails.application.routes.draw do
   resource :recovery_codes, only: %i[show create], controller: "recovery_codes"
 
   # Accounts are created only by accepting an invite link.
+  # Tokenless: the first account on a deployment that has none. Declared first
+  # so "join" is not swallowed by the token segment.
+  get  "join",        to: "signups#new",    as: :first_signup
+  post "join",        to: "signups#create"
   get  "join/:token", to: "signups#new",    as: :signup
   post "join/:token", to: "signups#create"
 

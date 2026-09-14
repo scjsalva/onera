@@ -34,11 +34,11 @@
 
       = form.submit "Sign in", class: "btn-primary w-full"
 
-    - if @open_signup
+    - if @bootstrap
       %p.mt-6.text-center.text-sm{ class: "text-white/60" }
-        New here?
+        Nobody has set this up yet.
         = succeed "" do
-          = link_to "Create an account", signup_path(token: @open_signup.token),
+          = link_to "Create the first account", first_signup_path,
                     class: "font-semibold text-white underline underline-offset-4 transition hover:text-white/80"
 
     = link_to "Forgotten your password?", recovery_path,

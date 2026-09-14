@@ -14,6 +14,13 @@ class SignupsController < ApplicationController
   end
 
   def create
+    # Re-checked here, not just when the page loaded: two people opening an
+    # empty deployment at once would both have been offered the first account.
+    if bootstrapping? && User.exists?
+      return redirect_to new_user_session_path,
+                         alert: "Somebody has already set this up. Ask them for an invite link."
+    end
+
     @user = User.new(signup_params)
 
     if @user.save
@@ -37,12 +44,28 @@ class SignupsController < ApplicationController
 
   private
 
+  # With a token, the link somebody sent. Without one, the first account on a
+  # deployment that has none - which is how anybody gets in at all, since
+  # invitations need a member to send them and an empty install has none.
   def load_invitation
-    @invitation = Invitation.live.find_by(token: params[:token])
+    @invitation = if params[:token].present?
+      Invitation.live.find_by(token: params[:token])
+    elsif Invitation.bootstrap?
+      Invitation.bootstrap!
+    end
     return if @invitation
 
-    redirect_to new_user_session_path,
-                alert: "That invite link isn't valid any more. Ask whoever sent it for a new one."
+    redirect_to new_user_session_path, alert: no_invitation_message
+  end
+
+  def bootstrapping? = params[:token].blank?
+
+  def no_invitation_message
+    if bootstrapping?
+      "Onera is already set up. Ask somebody for an invite link."
+    else
+      "That invite link isn't valid any more. Ask whoever sent it for a new one."
+    end
   end
 
   def join_group

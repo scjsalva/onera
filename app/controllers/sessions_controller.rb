@@ -4,7 +4,7 @@ class SessionsController < Devise::SessionsController
   layout "plain"
 
   def new
-    @open_signup = Invitation.open_signup
+    @bootstrap = Invitation.bootstrap?
     super
   end
 
