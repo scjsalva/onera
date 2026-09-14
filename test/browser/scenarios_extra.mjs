@@ -257,13 +257,13 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     await b.goto(`${BASE}/expenses`);
     await sleep(1200);
 
-    const hasRows = await b.evaluate("return document.querySelectorAll('.relative.overflow-hidden').length > 0");
+    const hasRows = await b.evaluate("return document.querySelectorAll('[data-swipe-content]').length > 0");
     if (!hasRows) return;
 
     // Drive the touch sequence the way a thumb does, since the component
     // listens for touch events rather than pointer ones.
     const moved = await b.evaluate(`
-      const row = document.querySelector('[class*="overflow-hidden"] > div[style*="translateX"], [class*="overflow-hidden"] > div');
+      const row = document.querySelector('[data-swipe-content]');
       if (!row) return null;
 
       const touch = (type, x) => row.dispatchEvent(new TouchEvent(type, {
@@ -273,7 +273,7 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
 
       touch('touchstart', 40);
       touch('touchmove', 130);
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 250));
       const during = row.style.transform;
       touch('touchend', 130);
       return during;

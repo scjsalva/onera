@@ -184,6 +184,7 @@ defineExpose({ close, openEdit, runAction });
     </div>
 
     <div
+      data-swipe-content
       class="relative bg-surface"
       :style="style"
       @touchstart.passive="onTouchStart"
