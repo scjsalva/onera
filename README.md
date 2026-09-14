@@ -54,11 +54,13 @@ verification, no deliverability problems. Only digests are stored.
 
 Lost both password and codes? From a console:
 
-```ruby
-RecoveryCodes.list("scjsalva")     # what they have, and what is spent
-RecoveryCodes.reset!("scjsalva")   # issue a fresh set and print it
-RecoveryCodes.set_password!("scjsalva", "temporary-one")
+```bash
+bin/rails onera:codes ONERA_USERNAME=scjsalva      # what they have, and what is spent
+bin/rails onera:password ONERA_USERNAME=scjsalva   # issue a new password
 ```
+
+The seeded accounts and their `password` password exist in development only.
+A deployed instance starts with no accounts at all — see `docs/deployment.md`.
 
 **Closing an account** anonymizes rather than deletes. Expenses and
 settlements point at the user row, so removing it would either orphan

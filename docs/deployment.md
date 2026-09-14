@@ -43,21 +43,28 @@ categories, exchange rates). It does **not** create any accounts.
 ### 3. The first account
 
 There is no public sign-up — people join through an invite link, and an invite
-link comes from someone already inside. So the first account is made by hand:
+link comes from someone already inside. Accounts are deliberately **not**
+seeded outside development: the starting password is written in this
+repository, which is public, so seeding them would hand a working login to
+anyone who reads it.
+
+So the first account is made by hand, once:
 
 ```bash
 # Render dashboard → your service → Shell
-bin/rails runner '
-  u = User.create!(name: "John Carlo Salva", username: "scjsalva",
-                   password: "change-this-now", password_confirmation: "change-this-now")
-  puts RecoveryCodeIssuer.call(user: u).codes
-'
+bin/rails onera:owner ONERA_NAME="John Carlo Salva" ONERA_USERNAME=scjsalva
 ```
 
-Sign in, change the password, add your email, then invite everyone else from
-**You → People → Invite**.
+It prints a generated password and ten recovery codes. Save both, sign in,
+change the password, add your email, then invite everyone else from
+**You → People**.
 
-To seed the demo dataset instead, set `SEED_DEMO_DATA=1` and redeploy once.
+Two other tasks for when someone is locked out:
+
+```bash
+bin/rails onera:password ONERA_USERNAME=someone   # issue a new password
+bin/rails onera:codes ONERA_USERNAME=someone      # see what codes they have left
+```
 
 ## Environment
 

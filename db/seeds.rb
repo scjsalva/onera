@@ -7,10 +7,20 @@ require_relative "seeds/reference_data"
 Seeds::ReferenceData.load!
 puts "Reference data: #{Currency.count} currencies, #{Category.count} categories, #{ExchangeRate.count} rates"
 
-# Accounts. Always loaded: an app with authentication and no users is a
-# locked door with nobody holding a key.
-require_relative "seeds/people"
-Seeds::People.load!
+# Accounts, in development and test only.
+#
+# The starting password is written in this repository, which is public, so
+# seeding these onto a deployed app would hand anyone who reads it a working
+# login. In production the first account is made by hand:
+#
+#   bin/rails onera:owner ONERA_NAME="Your Name" ONERA_USERNAME=yourname
+#
+if Rails.env.local?
+  require_relative "seeds/people"
+  Seeds::People.load!
+else
+  puts "Accounts not seeded in #{Rails.env} - run: bin/rails onera:owner ONERA_NAME=... ONERA_USERNAME=..."
+end
 
 # Demo data is opt-in. db:prepare runs seeds automatically the first time it
 # creates a database, so defaulting this on would drop sample groups into a
