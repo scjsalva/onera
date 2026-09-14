@@ -48,7 +48,25 @@ request after a quiet spell pays about half a second. Nothing is lost.
 On boot the container runs migrations and loads reference data: currencies,
 categories, exchange rates. **No accounts and no passwords.**
 
-## 3. The first account
+## 3. Letting people in
+
+Accounts are invite-only, so a deployment with nobody in it is a locked door.
+The way through is a link with no sender:
+
+    ./bin/rails onera:invite
+
+That prints a URL and, while it is live, puts a **Create an account** button on
+the sign-in page. Its existence is the whole of the open-signup switch — there
+is no setting to remember, and the button cannot disagree with whether signing
+up actually works.
+
+Close it again once everyone is in:
+
+    ./bin/rails onera:revoke_invites
+
+After that the only way in is a link a member sends from **You → People**.
+
+## 4. The first account
 
     Render dashboard → your service → Shell
 
@@ -58,7 +76,7 @@ It prints a generated password once. You cannot pass one in, on purpose: a real
 password should never sit in a shell history or a deploy log. Sign in, change
 it, then invite everyone else from **You → People**.
 
-## 4. Keeping it awake
+## 5. Keeping it awake
 
 Render spins a free service down after about fifteen minutes idle, and the next
 visitor waits 40–90 seconds for the container to come back.

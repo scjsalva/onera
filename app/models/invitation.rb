@@ -25,6 +25,14 @@ class Invitation < ApplicationRecord
   # deployment rather than from a person.
   def referrer_name = created_by&.name
 
+  # The deployment's own link, if it has one: no sender, no group, still live.
+  #
+  # Its existence is what puts a Create an account button on the sign-in page,
+  # so this is the whole of the open-signup switch. `onera:invite` opens the
+  # door and `onera:revoke_invites` closes it - no setting to remember, and
+  # nothing that can disagree with what the button says.
+  def self.open_signup = live.find_by(created_by: nil, group: nil)
+
   def revoked? = revoked_at.present?
   def expired? = expires_at.present? && expires_at <= Time.current
   def usable? = !revoked? && !expired?
