@@ -80,9 +80,25 @@ Two things that make a keep-alive fail quietly:
 - Scheduled runs are best-effort and can be delayed by ten minutes or more
   under load, so the odd visitor will still meet a cold start.
 
+## Nothing runs on GitHub
+
+The repository is private and under a work-linked account, so nothing is left
+running there on a schedule:
+
+- **The keep-alive** is an external cron, for the reason above.
+- **CI** is `workflow_dispatch` only — run it with `gh workflow run CI` when
+  you want a clean-machine second opinion. `bin/check` is the real gate and
+  does the same work locally in about a minute.
+- **No container registry.** Render builds from the repository, so nothing is
+  pushed to GitHub Packages and no storage quota applies.
+
+Render's own build minutes cover the deploys — 500 a month on the free plan,
+and a build takes a few.
+
 ## Updating
 
-Pushing to `main` deploys. Migrations run on boot.
+Pushing to `main` deploys, using Render's build minutes rather than GitHub's.
+Migrations run on boot.
 
 ## Day to day
 

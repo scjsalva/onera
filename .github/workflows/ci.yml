@@ -1,9 +1,13 @@
 name: CI
 
+# Manual only. This repository is private and lives under a work-linked
+# account, where Actions minutes are metered - so nothing here runs on its own.
+# `bin/check` is the real gate and runs the same suite locally in about a
+# minute; this exists for the times you want a clean-machine second opinion.
+#
+#   gh workflow run CI
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   check:
