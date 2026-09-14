@@ -1,0 +1,32 @@
+# One-click deploy for Render: https://render.com/deploy
+#
+# The free web service sleeps after inactivity and wakes on the next request.
+# The database is deliberately NOT a Render Postgres instance - their free tier
+# expires after a month. Point DATABASE_URL at a Neon or Supabase free database
+# instead and the data persists indefinitely.
+services:
+  - type: web
+    name: onera
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: APP_HOST
+        sync: false
+      # Paste a Neon/Supabase connection string here (include ?sslmode=require).
+      - key: DATABASE_URL
+        sync: false
+      # Set to any value on the very first deploy to load the demo groups.
+      - key: SEED_DEMO_DATA
+        sync: false

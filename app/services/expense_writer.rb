@@ -75,10 +75,20 @@ class ExpenseWriter
     end
   end
 
+  # Nested form fields arrive as an index-keyed hash ({"0" => {...}}) rather
+  # than an array, so both shapes are flattened to a plain list of rows.
+  def rows(value)
+    case value
+    when nil then []
+    when Array then value
+    else value.respond_to?(:values) ? value.values : Array(value)
+    end
+  end
+
   def payer_rows
     return @payer_rows ||= [ { user_id: owner.id, amount_minor: } ] if personal?
 
-    @payer_rows ||= Array(params[:payers]).filter_map do |row|
+    @payer_rows ||= rows(params[:payers]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
       next if user_id.nil?
 
@@ -92,7 +102,7 @@ class ExpenseWriter
   def participant_rows
     return @participant_rows ||= [ { user_id: owner.id, split_value: nil } ] if personal?
 
-    @participant_rows ||= Array(params[:participants]).filter_map do |row|
+    @participant_rows ||= rows(params[:participants]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
       next if user_id.nil?
 

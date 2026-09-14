@@ -9,6 +9,7 @@ class Expense < ApplicationRecord
   belongs_to :category, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :voided_by, class_name: "User", optional: true
+  belongs_to :rate_locked_by, class_name: "User", optional: true
   belongs_to :currency, foreign_key: :currency_code, primary_key: :code, inverse_of: :expenses
   belongs_to :base_currency, class_name: "Currency", foreign_key: :base_currency_code,
                              primary_key: :code, inverse_of: false

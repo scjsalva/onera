@@ -30,8 +30,17 @@ FROM base AS build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config \
+                                               node-gyp python-is-python3 && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Node, only in the build stage - the runtime image never needs it, because
+# Vite compiles to static files that Propshaft then serves.
+ARG NODE_VERSION=22.22.3
+ENV PATH=/usr/local/node/bin:$PATH
+RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
+    /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
+    rm -rf /tmp/node-build-master
 
 # Install application gems
 COPY vendor/* ./vendor/
@@ -40,6 +49,10 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
+# Install JS dependencies before the rest of the source so the layer caches.
+COPY package.json package-lock.json ./
+RUN npm ci
+
 # Copy application code
 COPY . .
 
@@ -47,6 +60,7 @@ COPY . .
 RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# Builds the Vite bundle and the Propshaft manifest in one pass.
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 

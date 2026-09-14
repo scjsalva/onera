@@ -1,0 +1,38 @@
+# Fly.io deploy. `fly launch --no-deploy` then `fly deploy`.
+#
+# auto_stop_machines/min_machines_running=0 keeps a hobby app inside the free
+# allowance: the machine suspends when idle and wakes on the next request.
+# Attach a database with `fly postgres create` or point DATABASE_URL at a free
+# Neon instance - either way the data outlives the machine.
+app = "onera"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  RAILS_ENV = "production"
+  RAILS_LOG_TO_STDOUT = "true"
+  RAILS_SERVE_STATIC_FILES = "true"
+  WEB_CONCURRENCY = "1"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.http_options.response.headers]
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[http_service.checks]]
+  grace_period = "20s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/up"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

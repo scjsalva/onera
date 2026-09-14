@@ -37,8 +37,16 @@ module Api
                     participants: %i[user_id split_value], payers: %i[user_id amount])
     end
 
+    def rows(value)
+      case value
+      when nil then []
+      when Array then value
+      else value.respond_to?(:values) ? value.values : Array(value)
+      end
+    end
+
     def participants
-      Array(preview_params[:participants]).filter_map do |row|
+      rows(preview_params[:participants]).filter_map do |row|
         next if row[:user_id].blank?
 
         { user_id: row[:user_id].to_i, value: row[:split_value] }
@@ -47,15 +55,15 @@ module Api
 
     def payer_error
       currency = Currency.active.find_by(code: preview_params[:currency_code]) || current_user.preferred_currency
-      rows = Array(preview_params[:payers]).filter_map do |row|
+      paid_rows = rows(preview_params[:payers]).filter_map do |row|
         next if row[:user_id].blank?
 
         MoneyAmount.from_major(row[:amount].presence || 0, currency).minor
       end
-      return nil if rows.empty?
+      return nil if paid_rows.empty?
 
       total = MoneyAmount.from_major(preview_params[:amount].presence || 0, currency)
-      paid = rows.sum
+      paid = paid_rows.sum
       return nil if paid == total.minor
 
       "Payers add up to #{MoneyAmount.new(paid, currency).format} of #{total.format}"
