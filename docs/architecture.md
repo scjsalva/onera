@@ -106,6 +106,30 @@ in this group", the other "everything between this pair" — but they apportion
 money with the same `MinorUnitAllocator`, so their answers agree.
 `DashboardCalculator` folds both into one figure per person.
 
+## Turbo
+
+Turbo Drive swaps the body rather than reloading the document. Three things
+about that are easy to get wrong, and all three were:
+
+**Do not unmount Vue on `turbo:before-render`.** By the time a new page
+renders, Turbo has discarded the nodes the previous app was mounted on. Vue's
+unmount walks that DOM, throws on the first missing node, and leaves the page
+blank. A fresh app is mounted per render and the orphan is collected with its
+markup.
+
+**Mount on `turbo:render` as well as `turbo:load`.** A form that comes back
+4xx renders without a load event. Miss it and a rejected sign-in is a blank
+screen with the error invisible behind `v-cloak`.
+
+**Non-GET redirects must be 303.** On a 302 Turbo re-issues the original
+method, so a redirect after DELETE becomes a second DELETE. Handled once in
+`ApplicationController#redirect_to` rather than at every call site.
+
+There is no `@view-transition` rule: that is for cross-document navigation and
+conflicts with Turbo's same-document swap. Turbo starts the transition; the
+`::view-transition-*` rules style it. Note that `view-transition-name` must be
+unique per element — two elements sharing one aborts the whole transition.
+
 ## Frontend conventions
 
 - Components live in `app/javascript/src/components` and are auto-registered by

@@ -119,6 +119,22 @@ be typed in by hand, so nothing in the UI claims they are live. Unseeded pairs
 are triangulated through PHP. Wiring up a provider means implementing one method
 in `ExchangeRateProvider`.
 
+## How it moves
+
+Turbo Drive swaps pages in place, so navigating does not flash white, lose
+your scroll position or re-fetch avatars. Pages cross-fade while the top and
+tab bars stay put.
+
+On a phone it takes gestures, not just taps:
+
+- **Swipe an expense row** left to edit, right to void. A long swipe fires
+  straight away; a short one rests the row open so you can tap the action.
+- **Hold a row** for the same actions, for anyone who would rather not swipe.
+- **Pull the add button upward** to open the composer. It follows your thumb
+  and springs back if you let go early.
+- Haptics where the device offers them, and every animation collapses under
+  `prefers-reduced-motion`.
+
 ## The timeline
 
 A group's Expenses tab and the global list interleave settlements with

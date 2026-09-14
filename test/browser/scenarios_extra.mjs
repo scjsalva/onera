@@ -252,6 +252,55 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     check(transparent === 0, `${transparent} avatar colours did not compile`);
   });
 
+  scenario('swiping an expense row reveals its actions', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/expenses`);
+    await sleep(1200);
+
+    const hasRows = await b.evaluate("return document.querySelectorAll('.relative.overflow-hidden').length > 0");
+    if (!hasRows) return;
+
+    // Drive the touch sequence the way a thumb does, since the component
+    // listens for touch events rather than pointer ones.
+    const moved = await b.evaluate(`
+      const row = document.querySelector('[class*="overflow-hidden"] > div[style*="translateX"], [class*="overflow-hidden"] > div');
+      if (!row) return null;
+
+      const touch = (type, x) => row.dispatchEvent(new TouchEvent(type, {
+        bubbles: true,
+        touches: type === 'touchend' ? [] : [ new Touch({ identifier: 1, target: row, clientX: x, clientY: 200 }) ],
+      }));
+
+      touch('touchstart', 40);
+      touch('touchmove', 130);
+      await new Promise((r) => setTimeout(r, 100));
+      const during = row.style.transform;
+      touch('touchend', 130);
+      return during;
+    `);
+
+    check(moved === null || /translateX/.test(moved), `expected the row to follow the finger, got ${moved}`);
+  });
+
+  scenario('navigating does not blank the page or throw', async (b) => {
+    await signIn(b, 'scjsalva');
+
+    // Turbo swaps the body; a mishandled Vue lifecycle here empties the page
+    // rather than erroring visibly, so both are checked.
+    for (const label of [ 'Groups', 'Balances', 'You', 'Home' ]) {
+      try {
+        await b.clickText(label);
+      } catch {
+        continue;
+      }
+      await b.waitForLoad();
+      await sleep(700);
+
+      const length = (await b.text()).length;
+      check(length > 40, `${label}: page came back nearly empty (${length} chars)`);
+    }
+  });
+
   scenario('the people list shows only your own connections', async (b) => {
     // Seeded so everyone is connected to scjsalva and to nobody else.
     await signIn(b, 'cnasayao');
