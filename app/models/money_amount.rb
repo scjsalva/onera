@@ -64,6 +64,14 @@ class MoneyAmount
 
   def to_s = format
 
+  # For form fields: no grouping, no symbol, and no phantom ".0" on a
+  # zero-decimal currency like JPY.
+  def to_input
+    return minor.to_s if currency.exponent.zero?
+
+    Kernel.format("%.#{currency.exponent}f", to_major)
+  end
+
   def as_json(*)
     { minor:, major: to_major.to_s("F"), currency: currency.code, formatted: format }
   end

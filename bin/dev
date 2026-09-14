@@ -1,2 +1,17 @@
-#!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+#!/usr/bin/env bash
+# Runs Rails and the Vite dev server together. Uses foreman when it's
+# installed, otherwise starts both directly so there's nothing to install
+# before the app will boot.
+set -e
+
+cd "$(dirname "$0")/.."
+
+if command -v foreman > /dev/null 2>&1; then
+  exec foreman start -f Procfile.dev "$@"
+fi
+
+./bin/vite dev &
+VITE_PID=$!
+trap 'kill $VITE_PID 2>/dev/null' EXIT INT TERM
+
+./bin/rails server "$@"

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import BottomSheet from './BottomSheet.vue';
 import MoneyField from './MoneyField.vue';
 import SegmentedControl from './SegmentedControl.vue';
@@ -144,6 +144,10 @@ async function fetchPreview() {
   }
 }
 
+onMounted(() => {
+  if (form.value.amount) fetchPreview();
+});
+
 const conversion = computed(() => preview.value?.conversion);
 
 const canContinue = computed(() => form.value.description.trim() && Number(form.value.amount) > 0);
@@ -204,17 +208,17 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
             <!-- The guide figure. Deliberately quiet, and honest about being an
                  estimate: the rate that counts is chosen at settle-up. -->
             <Transition name="fade-slide">
-              <p v-if="conversion?.applicable" class="mt-2 flex items-center gap-1.5 pl-1 text-xs text-ink-500">
-                <svg class="h-3.5 w-3.5 shrink-0 text-ink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <p v-if="conversion?.applicable" class="mt-2 flex items-start gap-1.5 pl-1 text-xs leading-relaxed text-ink-500">
+                <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-3-3m3 3l-3 3M16 17H4m0 0l3 3m-3-3l3-3" />
                 </svg>
-                <template v-if="conversion.unavailable">
+                <span v-if="conversion.unavailable">
                   No {{ conversion.target.code }} rate on file yet — set one when you settle up.
-                </template>
-                <template v-else>
+                </span>
+                <span v-else>
                   About <span class="font-semibold text-ink-700">{{ conversion.amount.formatted }}</span>
                   at {{ conversion.rate }} — estimate only, locked when you settle up.
-                </template>
+                </span>
               </p>
             </Transition>
           </div>

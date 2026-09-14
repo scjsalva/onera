@@ -15,13 +15,13 @@
                    expense: vue_json({
                      group_id: @expense.group_id,
                      description: @expense.description,
-                     amount: @expense.amount.to_major.to_s("F"),
+                     amount: @expense.amount.to_input,
                      currency_code: @expense.currency_code,
                      spent_on: @expense.spent_on.to_s,
                      category_id: @expense.category_id,
                      notes: @expense.notes,
                      split_method: @expense.split_method,
-                     payers: @expense.expense_payers.map { |p| { user_id: p.user_id, amount: p.amount.to_major.to_s("F") } },
+                     payers: @expense.expense_payers.map { |p| { user_id: p.user_id, amount: p.amount.to_input } },
                      participants: @expense.expense_participants.map { |p| { user_id: p.user_id, split_value: p.split_value&.to_s("F") } }
                    }),
                    "@close" => "window.location = '#{expense_path(@expense)}'" }

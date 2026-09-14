@@ -14,7 +14,7 @@
     %div
       = form.label :amount, "Amount", class: "label"
       .flex.gap-2
-        = form.text_field :amount, value: settlement.persisted? ? settlement.amount.to_major.to_s("F") : nil,
+        = form.text_field :amount, value: settlement.persisted? ? settlement.amount.to_input : nil,
                           class: "input tnum flex-1", inputmode: "decimal", placeholder: "0.00"
         = form.select :currency_code, currency_options, { selected: settlement.currency_code || @group.base_currency_code },
                       class: "input w-32"

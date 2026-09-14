@@ -38,4 +38,15 @@ export function startRevealObserver(root = document) {
   );
 
   targets.forEach((el) => observer.observe(el));
+
+  // Safety net. Elements start at opacity 0, so anything the observer never
+  // fires for - offscreen in a headless render, a browser that throttles the
+  // callback - would stay invisible. Nothing may be permanently hidden by an
+  // animation, so release the rest shortly after load.
+  setTimeout(() => {
+    root.querySelectorAll('[data-reveal]:not(.is-revealed)').forEach((el) => {
+      el.classList.add('is-revealed');
+      observer.unobserve(el);
+    });
+  }, 1200);
 }
