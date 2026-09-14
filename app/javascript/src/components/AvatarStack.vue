@@ -17,7 +17,7 @@ const overflow = computed(() => Math.max(0, props.users.length - props.limit));
     <AvatarBubble v-for="user in shown" :key="user.id" :user="user" :size="size" ring />
     <span
       v-if="overflow"
-      class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-200 text-xs font-semibold text-ink-600 ring-2 ring-white"
+      class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink-200 text-xs font-semibold text-ink-600 ring-2 ring-surface"
     >
       +{{ overflow }}
     </span>

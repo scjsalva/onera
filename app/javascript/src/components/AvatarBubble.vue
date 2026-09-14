@@ -19,7 +19,7 @@ const sizes = {
       'inline-flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-white',
       sizes[size],
       user.tone || 'bg-brand-600',
-      ring ? 'ring-2 ring-white' : '',
+      ring ? 'ring-2 ring-surface' : '',
     ]"
     :title="user.name"
   >

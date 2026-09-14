@@ -20,7 +20,7 @@ const emit = defineEmits(['toggle']);
         'flex items-center gap-2 rounded-full border py-1.5 pl-1.5 pr-3.5 text-sm font-medium transition active:scale-95',
         selected.includes(person.id)
           ? 'border-brand-600 bg-brand-50 text-brand-800 shadow-sm'
-          : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300',
+          : 'border-ink-200 bg-surface text-ink-600 hover:border-ink-300',
       ]"
       @click="emit('toggle', person.id)"
     >

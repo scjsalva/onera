@@ -79,11 +79,13 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
       </p>
 
       <template #footer>
-        <form :action="action" method="post" class="flex gap-3">
+        <form :action="action" method="post" class="sheet-actions">
           <input type="hidden" name="_method" value="delete" />
           <input type="hidden" name="authenticity_token" :value="token" />
-          <button type="button" class="btn-secondary flex-1" @click="open = false">Keep my profile</button>
-          <button type="submit" class="btn-danger flex-1">Yes, delete it</button>
+          <button type="button" class="sheet-action sheet-action-quiet" @click="open = false">
+            Keep my profile
+          </button>
+          <button type="submit" class="sheet-action sheet-action-danger">Yes, delete it</button>
         </form>
       </template>
     </BottomSheet>

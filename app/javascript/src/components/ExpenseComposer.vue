@@ -258,7 +258,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                 type="button"
                 :class="[
                   'press rounded-full border px-3.5 py-1.5 text-sm font-medium',
-                  !form.group_id ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-ink-200 bg-white text-ink-600',
+                  !form.group_id ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-ink-200 bg-surface text-ink-600',
                 ]"
                 @click="form.group_id = null"
               >
@@ -272,7 +272,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                   'press rounded-full border px-3.5 py-1.5 text-sm font-medium',
                   form.group_id === group.id
                     ? 'border-brand-600 bg-brand-50 text-brand-800'
-                    : 'border-ink-200 bg-white text-ink-600',
+                    : 'border-ink-200 bg-surface text-ink-600',
                 ]"
                 @click="form.group_id = group.id"
               >
@@ -354,25 +354,35 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
     </form>
 
     <template #footer>
-      <div class="flex items-center gap-3">
-        <button v-if="step === 2" type="button" class="btn-secondary" @click="step = 1">Back</button>
+      <div class="sheet-actions">
+        <button v-if="step === 2" type="button" class="sheet-action sheet-action-quiet" @click="step = 1">
+          Back
+        </button>
 
         <button
           v-if="step === 1 && !personal"
           type="button"
-          class="btn-primary flex-1"
+          class="sheet-action sheet-action-primary"
           :disabled="!canContinue"
           @click="step = 2"
         >
           Continue
         </button>
 
-        <button v-else type="button" class="btn-primary flex-1" :disabled="!canSave || saving" @click="submit">
-          <svg v-if="saving" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
-            <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
-          </svg>
-          {{ existing ? 'Save changes' : 'Add expense' }}
+        <button
+          v-else
+          type="button"
+          class="sheet-action sheet-action-primary"
+          :disabled="!canSave || saving"
+          @click="submit"
+        >
+          <span class="inline-flex items-center justify-center gap-2">
+            <svg v-if="saving" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
+              <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
+            </svg>
+            {{ existing ? 'Save changes' : 'Add expense' }}
+          </span>
         </button>
       </div>
     </template>

@@ -6,9 +6,11 @@ module ApplicationHelper
   end
 
   # A stable colour per person so avatars stay recognisable across screens.
+  # Fixed hues, not part of the inverting ramp: a person should be the same
+  # colour in both themes, and these always sit under white text.
   AVATAR_TONES = %w[
-    bg-brand-600 bg-sand-600 bg-positive-600 bg-negative-600
-    bg-ink-700 bg-brand-800 bg-brand-400 bg-ink-500
+    bg-avatar-1 bg-avatar-2 bg-avatar-3 bg-avatar-4
+    bg-avatar-5 bg-avatar-6 bg-avatar-7 bg-avatar-8
   ].freeze
 
   def avatar_tone(user) = AVATAR_TONES[user.id % AVATAR_TONES.length]

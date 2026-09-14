@@ -3,12 +3,12 @@
 
 .space-y-5
   -# Headline position. One number, large, with the two halves that make it up.
-  %section.relative.overflow-hidden.rounded-card.bg-brand-800.px-5.py-6.text-white.shadow-lift{ data: { reveal: true } }
-    .pointer-events-none.absolute.-right-16.-top-16.h-48.w-48.rounded-full.bg-brand-500.opacity-40.blur-2xl
-    .pointer-events-none.absolute.-bottom-20.-left-10.h-40.w-40.rounded-full.bg-brand-950.opacity-40.blur-2xl
+  %section.relative.overflow-hidden.rounded-card.px-5.py-6.text-white.shadow-lift{ class: "bg-gradient-to-br from-brand-solid to-brand-solid-deep", data: { reveal: true } }
+    .pointer-events-none.absolute.-right-16.-top-16.h-48.w-48.rounded-full.opacity-40.blur-2xl{ class: "bg-white/30" }
+    .pointer-events-none.absolute.-bottom-20.-left-10.h-40.w-40.rounded-full.opacity-30.blur-2xl{ class: "bg-black/40" }
 
     .relative
-      %p.text-xs.font-medium.uppercase.tracking-wide.text-brand-200
+      %p.text-xs.font-medium.uppercase.tracking-wide{ class: "text-white/70" }
         - if @dashboard.net_balance.positive?
           You're owed overall
         - elsif @dashboard.net_balance.negative?
@@ -20,16 +20,16 @@
 
       .mt-5.grid.grid-cols-2.gap-3
         .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
-          %p.font-medium.uppercase.tracking-wide.text-brand-200{ class: "text-[11px]" } Owed to you
+          %p.font-medium.uppercase.tracking-wide{ class: "text-[11px] text-white/70" } Owed to you
           %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
             %animated-money{ minor: @dashboard.owed_to_you.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
         .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
-          %p.font-medium.uppercase.tracking-wide.text-brand-200{ class: "text-[11px]" } You owe
+          %p.font-medium.uppercase.tracking-wide{ class: "text-[11px] text-white/70" } You owe
           %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
             %animated-money{ minor: @dashboard.you_owe.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
 
       - if @dashboard.estimated?
-        %p.mt-4.flex.items-start.text-xs.text-brand-200{ class: "gap-1.5" }
+        %p.mt-4.flex.items-start.text-xs{ class: "gap-1.5 text-white/70" }
           %svg.shrink-0{ class: "mt-0.5 h-3.5 w-3.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
             %circle{ cx: "12", cy: "12", r: "9" }
             %path{ "stroke-linecap" => "round", d: "M12 8v5m0 3.5v.01" }

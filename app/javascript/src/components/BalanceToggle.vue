@@ -34,7 +34,7 @@ const options = [
       <li
         v-for="debt in rows"
         :key="`${mode}-${debt.from.id}-${debt.to.id}`"
-        class="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2.5"
+        class="flex items-center gap-2 rounded-xl border border-ink-200 bg-surface px-3 py-2.5"
       >
         <AvatarBubble :user="debt.from" size="xs" />
         <span class="min-w-0 flex-1 truncate text-sm">

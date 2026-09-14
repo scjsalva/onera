@@ -1,4 +1,4 @@
-%header.sticky.top-0.z-30.border-b.border-ink-200.bg-ink-100{ class: "backdrop-blur supports-[backdrop-filter]:bg-ink-100/85 md:pl-64" }
+%header.sticky.top-0.z-30.hairline-b{ class: "bg-ink-100/75 backdrop-blur-glass supports-[backdrop-filter]:bg-ink-100/60 md:pl-64", style: "backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);" }
   .mx-auto.flex.h-14.w-full.max-w-5xl.items-center.gap-3.px-4
     - if content_for?(:back_path)
       = link_to yield(:back_path), class: "-ml-2 grid h-9 w-9 place-items-center rounded-full text-ink-600 transition active:scale-90 hover:bg-ink-200/70" do

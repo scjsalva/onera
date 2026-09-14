@@ -1,7 +1,7 @@
 - share = expense.base_share_for(current_user.id)
 - involved = expense.expense_splits.any? { |split| split.user_id == current_user.id }
 
-= link_to expense_path(expense), class: "press flex items-center gap-3 bg-white px-4 py-3 transition hover:bg-ink-50", data: { reveal: true } do
+= link_to expense_path(expense), class: "press flex items-center gap-3 bg-surface px-4 py-3 transition hover:bg-ink-50", data: { reveal: true } do
   %span.grid.h-10.w-10.shrink-0.place-items-center.rounded-xl.text-sm.font-semibold{ class: expense.voided? ? "bg-ink-100 text-ink-400" : "bg-brand-50 text-brand-700" }
     = expense.spent_on.strftime("%-d")
     %span.sr-only= expense.spent_on.strftime("%B")

@@ -107,7 +107,7 @@ function setPeriod(value) {
 
       <button
         type="button"
-        class="press relative grid h-[42px] w-[42px] shrink-0 place-items-center rounded-lg border border-ink-300 bg-white text-ink-600"
+        class="press relative grid h-[42px] w-[42px] shrink-0 place-items-center rounded-lg border border-ink-300 bg-surface text-ink-600"
         aria-label="More filters"
         @click="sheetOpen = true"
       >
@@ -132,7 +132,7 @@ function setPeriod(value) {
           'press shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium',
           state.period === period.value
             ? 'border-brand-600 bg-brand-600 text-white'
-            : 'border-ink-200 bg-white text-ink-600',
+            : 'border-ink-200 bg-surface text-ink-600',
         ]"
         @click="setPeriod(period.value)"
       >
@@ -223,9 +223,9 @@ function setPeriod(value) {
       </div>
 
       <template #footer>
-        <div class="flex gap-3">
-          <button type="button" class="btn-secondary flex-1" @click="clearAll">Clear</button>
-          <button type="button" class="btn-primary flex-1" @click="apply">Show results</button>
+        <div class="sheet-actions">
+          <button type="button" class="sheet-action sheet-action-quiet" @click="clearAll">Clear</button>
+          <button type="button" class="sheet-action sheet-action-primary" @click="apply">Show results</button>
         </div>
       </template>
     </BottomSheet>

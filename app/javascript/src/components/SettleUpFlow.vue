@@ -204,12 +204,12 @@ const token = document.querySelector('meta[name="csrf-token"]')?.content;
       </p>
 
       <template #footer>
-        <form :action="settlePath" method="post" class="flex gap-3">
+        <form :action="settlePath" method="post" class="sheet-actions">
           <input type="hidden" name="authenticity_token" :value="token" />
           <input type="hidden" name="currency" :value="target" />
           <input v-for="(rate, code) in rates" :key="code" type="hidden" :name="`rates[${code}]`" :value="rate" />
-          <button type="button" class="btn-secondary flex-1" @click="confirming = false">Not yet</button>
-          <button type="submit" class="btn-primary flex-1">Lock rates</button>
+          <button type="button" class="sheet-action sheet-action-quiet" @click="confirming = false">Not yet</button>
+          <button type="submit" class="sheet-action sheet-action-primary">Lock rates</button>
         </form>
       </template>
     </BottomSheet>

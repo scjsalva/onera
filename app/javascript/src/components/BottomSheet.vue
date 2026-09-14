@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <Transition name="sheet-backdrop">
-      <div v-if="open" class="fixed inset-0 z-50 bg-ink-950/45 backdrop-blur-[2px]" @click="close" />
+      <div v-if="open" class="scrim fixed inset-0 z-50 backdrop-blur-[2px]" @click="close" />
     </Transition>
 
     <Transition name="sheet">
@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
       >
         <div
           :class="[
-            'pointer-events-auto flex w-full flex-col overflow-hidden bg-white shadow-lift',
+            'pointer-events-auto flex w-full flex-col overflow-hidden bg-surface shadow-lift',
             'max-h-[92dvh] rounded-t-3xl md:max-h-[86dvh] md:rounded-3xl',
             maxWidth,
           ]"
@@ -114,11 +114,7 @@ onBeforeUnmount(() => {
             <slot />
           </div>
 
-          <div
-            v-if="$slots.footer"
-            data-no-drag
-            class="shrink-0 border-t border-ink-200 bg-white/95 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6"
-          >
+          <div v-if="$slots.footer" data-no-drag class="sheet-footer hairline-t shrink-0">
             <slot name="footer" />
           </div>
         </div>

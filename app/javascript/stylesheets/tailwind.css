@@ -2,6 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Palette
+   One set of class names, two sets of values. The neutral ramp inverts between
+   themes - text-ink-900 is the primary text colour in both - while the accent
+   stays blue and only brightens for dark, where a mid-blue on near-black is
+   hard to read.
+--------------------------------------------------------------------------- */
+
+:root {
+  --ink-50: 247 248 249;
+  --ink-100: 241 243 245;
+  --ink-200: 228 231 235;
+  --ink-300: 207 212 218;
+  --ink-400: 162 170 180;
+  --ink-500: 117 126 138;
+  --ink-600: 90 98 109;
+  --ink-700: 68 74 83;
+  --ink-800: 47 52 59;
+  --ink-900: 29 33 38;
+  --ink-950: 15 18 22;
+
+  --brand-50: 238 244 255;
+  --brand-100: 222 233 255;
+  --brand-200: 196 216 255;
+  --brand-300: 157 189 255;
+  --brand-400: 111 153 255;
+  --brand-500: 74 118 255;
+  --brand-600: 43 98 240;
+  --brand-700: 32 74 204;
+  --brand-800: 31 60 158;
+  --brand-900: 30 52 122;
+  --brand-950: 20 33 79;
+
+  --positive-50: 236 253 245;
+  --positive-100: 209 250 229;
+  --positive-600: 5 150 105;
+  --positive-700: 4 120 87;
+  --positive-900: 6 78 59;
+
+  --negative-50: 255 241 242;
+  --negative-100: 255 228 230;
+  --negative-600: 225 29 72;
+  --negative-700: 190 18 60;
+  --negative-900: 136 19 55;
+
+  --sand-50: 253 249 239;
+  --sand-100: 250 240 215;
+  --sand-200: 244 223 174;
+  --sand-400: 232 185 85;
+  --sand-600: 180 126 30;
+
+  /* Materials. Cards are translucent over the page, so the blur has something
+     to pick up as you scroll. */
+  --brand-solid: 37 84 214;
+  --brand-solid-deep: 24 48 133;
+
+  --surface: 255 255 255;
+  --surface-raised: 255 255 255;
+  --surface-sunken: 245 246 248;
+  --hairline: 17 24 39;
+  --hairline-alpha: 0.08;
+  --shadow: 15 23 42;
+  --glass-alpha: 0.72;
+  --scrim: 8 11 16;
+  --scrim-alpha: 0.42;
+}
+
+.dark {
+  --ink-50: 11 13 16;
+  --ink-100: 16 18 22;
+  --ink-200: 32 36 43;
+  --ink-300: 47 53 62;
+  --ink-400: 116 125 137;
+  --ink-500: 148 157 169;
+  --ink-600: 176 185 196;
+  --ink-700: 203 211 220;
+  --ink-800: 226 231 237;
+  --ink-900: 242 245 248;
+  --ink-950: 255 255 255;
+
+  --brand-50: 22 31 58;
+  --brand-100: 27 41 79;
+  --brand-200: 33 55 112;
+  --brand-300: 47 79 165;
+  --brand-400: 86 126 240;
+  --brand-500: 110 150 255;
+  --brand-600: 88 133 255;
+  --brand-700: 130 168 255;
+  --brand-800: 168 195 255;
+  --brand-900: 205 220 255;
+  --brand-950: 232 239 255;
+
+  --positive-50: 6 40 30;
+  --positive-100: 8 56 42;
+  --positive-600: 52 211 153;
+  --positive-700: 110 231 183;
+  --positive-900: 209 250 229;
+
+  --negative-50: 55 14 26;
+  --negative-100: 76 19 36;
+  --negative-600: 251 113 133;
+  --negative-700: 253 164 175;
+  --negative-900: 255 228 230;
+
+  --sand-50: 48 36 12;
+  --sand-100: 64 48 16;
+  --sand-200: 92 70 24;
+  --sand-400: 234 191 106;
+  --sand-600: 245 214 152;
+
+  /* Same deep blue as light: a filled panel is a filled panel. */
+  --brand-solid: 33 74 196;
+  --brand-solid-deep: 19 38 110;
+
+  --surface: 23 26 31;
+  --surface-raised: 30 34 40;
+  --surface-sunken: 13 15 18;
+  --hairline: 255 255 255;
+  --hairline-alpha: 0.10;
+  --shadow: 0 0 0;
+  --glass-alpha: 0.62;
+  --scrim: 0 0 0;
+  --scrim-alpha: 0.62;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -9,6 +134,11 @@
 
   body {
     @apply bg-ink-100 text-ink-900 font-sans antialiased;
+    /* A faint wash so translucent surfaces have something to lift off. */
+    background-image:
+      radial-gradient(60rem 40rem at 15% -10%, rgb(var(--brand-500) / 0.10), transparent 60%),
+      radial-gradient(50rem 36rem at 100% 0%, rgb(var(--brand-400) / 0.07), transparent 55%);
+    background-attachment: fixed;
   }
 
   /* Tabular figures everywhere money is shown keeps columns aligned. */
@@ -22,8 +152,33 @@
 }
 
 @layer components {
+  /* The core material: translucent, blurred, with a hairline edge rather than
+     a solid border. */
   .card {
-    @apply bg-white rounded-card shadow-card border border-ink-200/70;
+    @apply rounded-card shadow-card;
+    background-color: rgb(var(--surface) / var(--glass-alpha));
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgb(var(--hairline) / var(--hairline-alpha));
+  }
+
+  .glass {
+    background-color: rgb(var(--surface) / var(--glass-alpha));
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgb(var(--hairline) / var(--hairline-alpha));
+  }
+
+  .hairline-b {
+    border-bottom: 1px solid rgb(var(--hairline) / var(--hairline-alpha));
+  }
+
+  .scrim {
+    background-color: rgb(var(--scrim) / var(--scrim-alpha));
+  }
+
+  .hairline-t {
+    border-top: 1px solid rgb(var(--hairline) / var(--hairline-alpha));
   }
 
   .card-pad {
@@ -35,9 +190,15 @@
   }
 
   .input {
-    @apply block w-full rounded-lg border-ink-300 bg-white text-ink-900 shadow-sm
+    @apply block w-full rounded-xl bg-surface text-ink-900
            placeholder:text-ink-400
            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 sm:text-sm;
+    border: 1px solid rgb(var(--hairline) / calc(var(--hairline-alpha) * 2));
+  }
+
+  select.input {
+    /* Room for the native chevron so long option text never sits under it. */
+    @apply pr-9;
   }
 
   .btn {
@@ -52,7 +213,10 @@
   }
 
   .btn-secondary {
-    @apply btn bg-white text-ink-800 border border-ink-300 hover:bg-ink-50 focus-visible:ring-brand-500;
+    @apply btn text-ink-800 hover:bg-ink-200/60 focus-visible:ring-brand-500;
+    background-color: rgb(var(--surface) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(var(--hairline) / calc(var(--hairline-alpha) * 2));
   }
 
   .btn-ghost {
@@ -60,7 +224,48 @@
   }
 
   .btn-danger {
-    @apply btn bg-white text-negative-700 border border-negative-600/30 hover:bg-negative-50 focus-visible:ring-negative-600;
+    @apply btn bg-negative-50 text-negative-700 border border-negative-600/25
+           hover:bg-negative-100 focus-visible:ring-negative-600;
+  }
+
+  /* A sheet's footer IS its action bar. Buttons run edge to edge and fill it
+     rather than floating inside a tray, which is what made the old footer
+     read as bolted on. */
+  .sheet-footer {
+    background-color: rgb(var(--surface) / 0.85);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .sheet-actions {
+    @apply flex items-stretch;
+  }
+
+  .sheet-action {
+    @apply flex-1 py-4 text-center text-sm font-semibold transition
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .sheet-action:active {
+    @apply opacity-75;
+  }
+
+  .sheet-action + .sheet-action {
+    border-left: 1px solid rgb(var(--hairline) / var(--hairline-alpha));
+  }
+
+  .sheet-action-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700;
+  }
+
+  .sheet-action-danger {
+    @apply bg-negative-600 text-white hover:bg-negative-700;
+  }
+
+  .sheet-action-quiet {
+    @apply text-ink-600 hover:bg-ink-200/50;
   }
 
   .btn-sm {

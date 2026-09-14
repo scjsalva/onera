@@ -14,8 +14,8 @@ onMounted(() => {
 });
 
 const tones = {
-  positive: 'bg-ink-900 text-white',
-  negative: 'bg-negative-600 text-white',
+  positive: 'bg-ink-900 text-ink-50',
+  negative: 'bg-negative-600 text-ink-50 dark:text-ink-100',
 };
 </script>
 
@@ -33,7 +33,7 @@ const tones = {
             tones[props.tone] || tones.positive,
           ]"
         >
-          <span class="grid h-5 w-5 place-items-center rounded-full bg-white/20">
+          <span class="grid h-5 w-5 place-items-center rounded-full bg-ink-50/20">
             <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
               <path v-if="tone === 'positive'" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               <path v-else stroke-linecap="round" d="M12 8v5m0 3.5v.01" />

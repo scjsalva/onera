@@ -27,7 +27,7 @@ watch(() => props.options, reposition, { deep: true });
 <template>
   <div ref="root" class="relative flex overflow-x-auto rounded-xl bg-ink-200/70 p-1">
     <span
-      class="absolute inset-y-1 rounded-lg bg-white shadow-sm transition-all duration-300"
+      class="absolute inset-y-1 rounded-lg bg-surface shadow-sm transition-all duration-300"
       :style="{ left: `${indicator.left}px`, width: `${indicator.width}px` }"
       style="transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1)"
     />

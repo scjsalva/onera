@@ -28,12 +28,12 @@ const token = document.querySelector('meta[name="csrf-token"]')?.content;
       <input v-model="reason" class="input" placeholder="Refunded, duplicate, entered by mistake…" />
 
       <template #footer>
-        <form :action="action" method="post" class="flex gap-3">
+        <form :action="action" method="post" class="sheet-actions">
           <input type="hidden" name="_method" value="patch" />
           <input type="hidden" name="authenticity_token" :value="token" />
           <input type="hidden" name="reason" :value="reason" />
-          <button type="button" class="btn-secondary flex-1" @click="open = false">Keep it</button>
-          <button type="submit" class="btn-danger flex-1">Void expense</button>
+          <button type="button" class="sheet-action sheet-action-quiet" @click="open = false">Keep it</button>
+          <button type="submit" class="sheet-action sheet-action-danger">Void expense</button>
         </form>
       </template>
     </BottomSheet>
