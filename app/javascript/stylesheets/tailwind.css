@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-100 text-ink-900 font-sans antialiased;
+  }
+
+  /* Tabular figures everywhere money is shown keeps columns aligned. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  [v-cloak] {
+    display: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-card shadow-card border border-ink-200/70;
+  }
+
+  .card-pad {
+    @apply p-5 sm:p-6;
+  }
+
+  .label {
+    @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5;
+  }
+
+  .input {
+    @apply block w-full rounded-lg border-ink-300 bg-white text-ink-900 shadow-sm
+           placeholder:text-ink-400
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 sm:text-sm;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+           text-sm font-semibold transition
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 focus-visible:ring-brand-500;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-ink-800 border border-ink-300 hover:bg-ink-50 focus-visible:ring-brand-500;
+  }
+
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-200/60 focus-visible:ring-brand-500;
+  }
+
+  .btn-danger {
+    @apply btn bg-white text-negative-700 border border-negative-600/30 hover:bg-negative-50 focus-visible:ring-negative-600;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .stat-label {
+    @apply text-xs font-medium uppercase tracking-wide text-ink-500;
+  }
+
+  .stat-value {
+    @apply text-2xl font-semibold text-ink-900 tnum;
+  }
+}
