@@ -9,9 +9,10 @@ puts "Reference data: #{Currency.count} currencies, #{Category.count} categories
 
 # Accounts, in development and test only.
 #
-# The starting password is written in this repository, which is public, so
-# seeding these onto a deployed app would hand anyone who reads it a working
-# login. In production the first account is made by hand:
+# The starting password is written in this repository, so seeding these onto a
+# deployed app would hand anyone who can read it a working login - and a repo
+# being private today is not a reason to depend on it staying private. In
+# production the first account is made by hand:
 #
 #   bin/rails onera:owner ONERA_NAME="Your Name" ONERA_USERNAME=yourname
 #

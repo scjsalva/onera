@@ -247,11 +247,15 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     await sleep(900);
     check(await b.has('Save these now'), 'the fresh codes should be shown once');
 
+    // Matched by shape rather than by stripping the row number off the front:
+    // codes can start with a digit, and stripping ate the first character of
+    // one about a third of the time.
     const code = await b.evaluate(`
       const li = document.querySelector('.grid.grid-cols-2 li');
-      return li ? li.innerText.replace(/^\\d+\\s*/, '').trim() : null;
+      const found = li && li.innerText.match(/[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/);
+      return found ? found[0] : null;
     `);
-    check(!!code && code.includes('-'), `expected a readable code, got ${code}`);
+    check(!!code, `expected a readable code, got ${code}`);
 
     await signOut(b);
     await b.goto(`${BASE}/recover`);
