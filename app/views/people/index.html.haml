@@ -1,0 +1,29 @@
+- page_title "People"
+- content_for :heading, "People"
+- content_for :back_path, profile_path
+
+.space-y-4
+  .flex.items-center.justify-between
+    %p.text-sm.text-ink-500= pluralize(@people.size, "person")
+    = link_to new_person_path, class: "btn-primary btn-sm" do
+      %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
+        %path{ "stroke-linecap" => "round", d: "M12 5v14M5 12h14" }
+      Add person
+
+  %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+    - @people.each do |person|
+      %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+        = avatar_tag(person)
+        %span.min-w-0.flex-1
+          %span.flex.items-center.gap-2
+            %span.truncate.font-medium.text-ink-900= person.name
+            - if person.id == current_user.id
+              %span.pill.bg-brand-50.text-brand-700 you
+          %span.block.truncate.text-xs.text-ink-500
+            - details = [ person.email.presence, person.preferred_currency_code, pluralize(person.groups.size, "group") ].compact
+            = details.join(" · ")
+        - if person.id == current_user.id
+          = link_to "Edit", edit_profile_path, class: "btn-secondary btn-sm shrink-0"
+
+  %p.text-xs.text-ink-500
+    One person, one record. Adding someone to a group reuses them rather than making a copy, so their balances follow them everywhere.

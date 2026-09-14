@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   delete "welcome", to: "user_selection#destroy", as: :switch_user
 
   resource  :profile, only: %i[show edit update]
-  resources :people,  only: %i[new create]
+  resources :people,  only: %i[index new create]
 
   # Expenses live at the top level whether or not they belong to a group -
   # expense[group_id] decides, and a blank one means a personal expense.

@@ -3,6 +3,10 @@
 # Creating a new global person. A User is created once and then referenced
 # from every group they join - adding someone to a group never duplicates them.
 class PeopleController < ApplicationController
+  def index
+    @people = User.ordered.includes(:groups)
+  end
+
   def new
     @user = User.new(preferred_currency_code: "PHP")
     @group = current_user.groups.find_by(id: params[:group_id])
@@ -28,7 +32,7 @@ class PeopleController < ApplicationController
         )
         redirect_to group_memberships_path(@group), notice: "#{@user.name} joined #{@group.name}."
       else
-        redirect_to root_path, notice: "#{@user.name} was added."
+        redirect_to people_path, notice: "#{@user.name} was added."
       end
     else
       flash.now[:alert] = @user.errors.full_messages.to_sentence
