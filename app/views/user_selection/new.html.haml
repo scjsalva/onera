@@ -24,7 +24,7 @@
             %span.block.truncate.font-semibold.text-white= user.name
             - if user.email.present?
               %span.block.truncate.text-sm{ class: "text-white/70" }= user.email
-          %svg.h-5.w-5.transition-transform{ class: "text-white/50" }{ class: "group-hover:translate-x-0.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %svg.h-5.w-5.transition-transform{ class: "text-white/50 group-hover:translate-x-0.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
             %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M9 5l7 7-7 7" }
 
     - if @users.empty?

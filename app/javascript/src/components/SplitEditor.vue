@@ -69,7 +69,7 @@ function personFor(id) {
               v-model="row.split_value"
               inputmode="decimal"
               placeholder="0"
-              class="input tnum py-1.5 pl-2.5 text-right text-sm"
+              class="input tnum py-2 pl-3 text-right text-sm"
               :style="{ paddingRight: unitPadding }"
             />
             <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-ink-400">

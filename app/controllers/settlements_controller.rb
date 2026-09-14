@@ -11,6 +11,13 @@ class SettlementsController < ApplicationController
 
   def new
     @calculator = BalanceCalculator.new(@group)
+    @settlement = @group.settlements.new(
+      payer_id: params[:payer_id].presence || current_user.id,
+      recipient_id: params[:recipient_id].presence,
+      currency_code: params[:currency_code].presence || @group.base_currency_code,
+      settled_on: Date.current
+    )
+    @prefill_amount = params[:amount].presence
   end
 
   def create

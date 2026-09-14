@@ -4,25 +4,82 @@
 
 = render "groups/tabs", group: @group
 
+- actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
+- my_debts = actives.flat_map { |c| @calculator.pairwise_debts(c) }.select { |d| d.from_user.id == current_user.id }
+- owed_to_me = actives.flat_map { |c| @calculator.pairwise_debts(c) }.select { |d| d.to_user.id == current_user.id }
+- others = actives.flat_map { |c| @calculator.pairwise_debts(c) }.reject { |d| d.from_user.id == current_user.id || d.to_user.id == current_user.id }
+
 .space-y-5
   - if @pending_rates.any?
     = render "groups/rate_lock_prompt", group: @group, pending: @pending_rates
 
-  - actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
-  - actives.each do |currency|
-    %section{ data: { reveal: true } }
-      .mb-2.flex.items-center.justify-between
-        %h2.text-sm.font-semibold.text-ink-900
-          Balances in #{currency.code}
-        %span.pill.bg-ink-200.text-ink-600{ class: "bg-ink-200/70" }= currency.name
+  -# Your position, first and largest. Everything else in this group is
+  -# context for it.
+  %section.card.card-pad{ data: { reveal: true } }
+    %p.stat-label Your position here
+    - my_positions = actives.filter_map { |c| @calculator.standing_for(current_user.id)&.position_in(c.code) }.reject(&:settled?)
+    - if my_positions.any?
+      .mt-1.flex.flex-wrap.items-baseline.gap-x-4.gap-y-1
+        - my_positions.each do |position|
+          %span.text-2xl.font-semibold.tnum{ class: position.owed? ? "text-positive-600" : "text-negative-600" }
+            = position.net.format(sign: true)
+      %p.mt-1.text-sm.text-ink-500
+        - if my_positions.all?(&:owed?)
+          You're owed overall in this group.
+        - elsif my_positions.all?(&:owing?)
+          You owe overall in this group.
+        - else
+          You're owed in one currency and owe in another.
+    - else
+      %p.mt-1.text-2xl.font-semibold.text-ink-400 All settled
+      %p.mt-1.text-sm.text-ink-500 Nothing outstanding between you and this group.
 
-      .card.divide-y.divide-ink-100.overflow-hidden
-        - @calculator.positions_in(currency).select(&:any_activity?).each do |position|
-          = render "groups/position_row", position: position
+  - if my_debts.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 You owe
+      .card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - my_debts.each do |debt|
+          = render "groups/settle_row", group: @group, debt: debt, direction: :you_owe
 
-      %balance-toggle{ pairwise: vue_json(@calculator.pairwise_debts(currency).map { |d| debt_json(d) }),
-                       simplified: vue_json(@calculator.simplified_debts(currency).map { |d| debt_json(d) }),
-                       currency: currency.code }
+  - if owed_to_me.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Owes you
+      .card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - owed_to_me.each do |debt|
+          = render "groups/settle_row", group: @group, debt: debt, direction: :owes_you
+
+  - if my_debts.empty? && owed_to_me.empty? && actives.any?
+    = render "shared/empty_state", title: "You're square here",
+             body: "Nothing outstanding between you and anyone in this group."
+
+  -# Everyone else's business, out of the way but still available.
+  - if others.any?
+    %section
+      %details.group
+        %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
+          %span.text-sm.font-semibold.text-ink-900= "Between other people (#{others.size})"
+          %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+            %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
+        .card.divide-y.divide-ink-200.overflow-hidden
+          - others.each do |debt|
+            = render "groups/debt_row", debt: debt
+
+  %section
+    %details.group
+      %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
+        %span.text-sm.font-semibold.text-ink-900 Everyone's totals
+        %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
+      .space-y-4
+        - actives.each do |currency|
+          %div
+            %p.mb-1.text-xs.font-medium.uppercase.tracking-wide.text-ink-500= currency.code
+            .card.divide-y.divide-ink-200.overflow-hidden
+              - @calculator.positions_in(currency).select(&:any_activity?).each do |position|
+                = render "groups/position_row", position: position
+            %balance-toggle{ pairwise: vue_json(@calculator.pairwise_debts(currency).map { |d| debt_json(d) }),
+                             simplified: vue_json(@calculator.simplified_debts(currency).map { |d| debt_json(d) }),
+                             currency: currency.code }
 
   = link_to group_settle_up_path(@group), class: "btn-primary w-full" do
     Settle up

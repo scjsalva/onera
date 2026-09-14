@@ -99,7 +99,7 @@ function setPeriod(value) {
           v-model="state.q"
           type="search"
           placeholder="Search expenses, people, notes…"
-          class="input py-2.5 pl-9 pr-3 text-sm"
+          class="input py-2.5 pl-10 pr-3 text-sm"
           @input="onSearch"
           @keydown.enter.prevent="apply"
         />

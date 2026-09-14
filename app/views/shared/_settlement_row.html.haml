@@ -5,7 +5,14 @@
 
   %span.min-w-0.flex-1
     %span.flex.items-center{ class: "gap-1.5" }
-      %span.truncate.font-medium{ class: settlement.voided? ? "text-ink-400 line-through" : "text-ink-900" }= settlement.summary
+      - mine = [settlement.payer_id, settlement.recipient_id].include?(current_user.id)
+      - label = if settlement.payer_id == current_user.id
+        "You paid #{settlement.recipient.name}"
+      - elsif settlement.recipient_id == current_user.id
+        "#{settlement.payer.name} paid you"
+      - else
+        settlement.summary
+      %span.truncate.font-medium{ class: settlement.voided? ? "text-ink-400 line-through" : (mine ? "text-ink-900" : "text-ink-600") }= label
       - if settlement.voided?
         %span.pill.bg-ink-200.text-ink-600 Voided
     %span.block.truncate.text-xs.text-ink-500{ class: "mt-0.5" }

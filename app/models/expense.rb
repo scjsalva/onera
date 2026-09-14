@@ -78,6 +78,24 @@ class Expense < ApplicationRecord
     split ? split.base_amount : MoneyAmount.zero(base_currency)
   end
 
+  def paid_minor_for(user_id)
+    expense_payers.select { |payer| payer.user_id == user_id }.sum(&:amount_minor)
+  end
+
+  def share_minor_for(user_id)
+    expense_splits.select { |split| split.user_id == user_id }.sum(&:amount_minor)
+  end
+
+  # Positive: you are owed this much from this expense. Negative: you owe it.
+  def net_for(user_id)
+    MoneyAmount.new(paid_minor_for(user_id) - share_minor_for(user_id), currency)
+  end
+
+  def involves?(user_id)
+    expense_payers.any? { |p| p.user_id == user_id } ||
+      expense_splits.any? { |s| s.user_id == user_id }
+  end
+
   def paid_by_label
     names = expense_payers.map { |payer| payer.user.name }
     case names.length

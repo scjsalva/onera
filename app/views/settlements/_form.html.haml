@@ -1,20 +1,23 @@
 - members = @group.users.ordered
-- suggested = defined?(suggestion) ? suggestion : nil
+- prefill_amount = defined?(prefill_amount) ? prefill_amount : nil
+- amount_value = settlement.persisted? ? settlement.amount.to_input : prefill_amount
 
 = form_with model: [@group, settlement], class: "space-y-5" do |form|
   .card.card-pad.space-y-4{ data: { reveal: true } }
     .grid.grid-cols-2.gap-3
       %div
         = form.label :payer_id, "Who paid", class: "label"
-        = form.collection_select :payer_id, members, :id, :name, { selected: settlement.payer_id || current_user.id }, class: "input"
+        = form.collection_select :payer_id, members, :id, ->(u) { u.id == current_user.id ? "You (#{u.name})" : u.name },
+                                 { selected: settlement.payer_id || current_user.id }, class: "input"
       %div
         = form.label :recipient_id, "Paid to", class: "label"
-        = form.collection_select :recipient_id, members, :id, :name, { include_blank: "Choose…" }, class: "input"
+        = form.collection_select :recipient_id, members, :id, ->(u) { u.id == current_user.id ? "You (#{u.name})" : u.name },
+                                 { include_blank: "Choose…", selected: settlement.recipient_id }, class: "input"
 
     %div
       = form.label :amount, "Amount", class: "label"
       .flex.gap-2
-        = form.text_field :amount, value: settlement.persisted? ? settlement.amount.to_input : nil,
+        = form.text_field :amount, value: amount_value,
                           class: "input tnum flex-1", inputmode: "decimal", placeholder: "0.00"
         = form.select :currency_code, currency_options, { selected: settlement.currency_code || @group.base_currency_code },
                       class: "input w-32"

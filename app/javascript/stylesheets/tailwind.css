@@ -189,16 +189,30 @@
     @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5;
   }
 
+  /* Fields carry their own padding. There is no forms plugin here, so without
+     this they fall back to the browser's own cramped defaults. Call sites
+     that want a tighter field override with a utility, which wins over a
+     component class regardless of source order. */
   .input {
-    @apply block w-full rounded-xl bg-surface text-ink-900
+    @apply block w-full rounded-xl bg-surface px-3.5 py-3 text-ink-900
            placeholder:text-ink-400
            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 sm:text-sm;
     border: 1px solid rgb(var(--hairline) / calc(var(--hairline-alpha) * 2));
   }
 
+  /* Native date and time controls sit differently in the box to text inputs. */
+  input[type='date'].input,
+  input[type='time'].input {
+    @apply py-[0.6875rem];
+  }
+
+  textarea.input {
+    @apply py-3 leading-relaxed;
+  }
+
   select.input {
-    /* Room for the native chevron so long option text never sits under it. */
-    @apply pr-9;
+    /* Room for the chevron, so a long option never runs under it. */
+    @apply py-3 pr-10;
   }
 
   .btn {

@@ -1,0 +1,21 @@
+-# One outstanding balance involving the viewer, with the payment it implies
+-# already filled in. Recording it should be one tap, not a blank form.
+- other = direction == :you_owe ? debt.to_user : debt.from_user
+- payer = direction == :you_owe ? current_user : other
+- recipient = direction == :you_owe ? other : current_user
+- action = direction == :you_owe ? "Pay" : "Record"
+
+.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+  = avatar_tag(other, size: :sm)
+  %span.min-w-0.flex-1
+    %span.block.truncate.font-medium.text-ink-900= other.name
+    %span.block.text-xs.text-ink-500
+      - if direction == :you_owe
+        = "you owe them"
+      - else
+        = "owes you"
+  %span.shrink-0.font-semibold.tnum{ class: direction == :you_owe ? "text-negative-600" : "text-positive-600" }
+    = debt.amount.format
+  = link_to action, new_group_settlement_path(group, payer_id: payer.id, recipient_id: recipient.id,
+                                               amount: debt.amount.to_input, currency_code: debt.currency.code),
+            class: "btn-secondary btn-sm shrink-0"

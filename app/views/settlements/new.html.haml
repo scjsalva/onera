@@ -3,13 +3,28 @@
 - content_for :back_path, group_settlements_path(@group)
 
 - actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
-- debts = actives.flat_map { |currency| @calculator.pairwise_debts(currency) }.select { |d| d.from_user.id == current_user.id || d.to_user.id == current_user.id }
+- all_debts = actives.flat_map { |currency| @calculator.pairwise_debts(currency) }
+- mine = all_debts.select { |d| d.from_user.id == current_user.id || d.to_user.id == current_user.id }
 
-- if debts.any?
+- if mine.any?
   %section.mb-5{ data: { reveal: true } }
-    %h2.mb-2.text-sm.font-semibold.text-ink-900 Outstanding
-    .card.divide-y.divide-ink-100.overflow-hidden
-      - debts.each do |debt|
-        = render "groups/debt_row", debt: debt
+    %h2.mb-2.text-sm.font-semibold.text-ink-900 Your outstanding balances
+    %p.mb-2.text-xs.text-ink-500 Tap one to fill this form in.
+    .card.divide-y.divide-ink-200.overflow-hidden
+      - mine.each do |debt|
+        - direction = debt.from_user.id == current_user.id ? :you_owe : :owes_you
+        = render "groups/settle_row", group: @group, debt: debt, direction: direction
 
-= render "settlements/form", settlement: @group.settlements.new
+= render "settlements/form", settlement: @settlement, prefill_amount: @prefill_amount
+
+- others = all_debts - mine
+- if others.any?
+  %section.mt-6{ data: { reveal: true } }
+    %details.group
+      %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
+        %span.text-sm.font-semibold.text-ink-900= "Balances between other people (#{others.size})"
+        %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
+      .card.divide-y.divide-ink-200.overflow-hidden
+        - others.each do |debt|
+          = render "groups/debt_row", debt: debt

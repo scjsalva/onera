@@ -39,7 +39,7 @@ function onInput(event) {
         :autofocus="autofocus"
         :class="[
           'input tnum w-full',
-          size === 'lg' ? 'py-3.5 pl-11 pr-4 text-2xl font-semibold' : 'py-2.5 pl-9 pr-3',
+          size === 'lg' ? 'py-4 pl-12 pr-4 text-2xl font-semibold' : 'py-2.5 pl-9 pr-3',
         ]"
         @input="onInput"
       />

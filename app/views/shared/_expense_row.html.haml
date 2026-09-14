@@ -1,8 +1,8 @@
-- share = expense.base_share_for(current_user.id)
-- involved = expense.expense_splits.any? { |split| split.user_id == current_user.id }
+- net = expense.net_for(current_user.id)
+- involved = expense.involves?(current_user.id)
 
-= link_to expense_path(expense), class: "press flex items-center gap-3 bg-surface px-4 py-3 transition hover:bg-ink-50", data: { reveal: true } do
-  %span.grid.h-10.w-10.shrink-0.place-items-center.rounded-xl.text-sm.font-semibold{ class: expense.voided? ? "bg-ink-100 text-ink-400" : "bg-brand-50 text-brand-700" }
+= link_to expense_path(expense), class: "press flex items-center gap-3 px-4 py-3 transition hover:bg-ink-200/40", data: { reveal: true } do
+  %span.grid.h-10.w-10.shrink-0.place-items-center.rounded-xl.text-sm.font-semibold{ class: expense.voided? ? "bg-ink-200 text-ink-400" : "bg-brand-50 text-brand-700" }
     = expense.spent_on.strftime("%-d")
     %span.sr-only= expense.spent_on.strftime("%B")
 
@@ -12,8 +12,8 @@
       - if expense.voided?
         %span.pill.bg-ink-200.text-ink-600 Voided
       - if expense.personal?
-        %span.pill.bg-ink-100.text-ink-500 Just you
-    %span.flex.items-center.text-xs.text-ink-500{ class: "mt-0.5 gap-1.5" }
+        %span.pill.bg-ink-200.text-ink-500 Just you
+    %span.flex.items-center.text-xs.text-ink-500{ class: "gap-1.5 mt-0.5" }
       - if expense.group
         %span.truncate= expense.group.name
         %span ·
@@ -22,7 +22,21 @@
         %span ·
         %span.text-sand-600{ title: "Converted at an estimated rate until you settle up" } est. rate
 
+  -# Your position first, the total second: the question is almost always
+  -# "what did this cost me?", not "what did it cost".
   %span.shrink-0.text-right
-    %span.block.font-semibold.tnum{ class: expense.voided? ? "text-ink-400" : "text-ink-900" }= expense.amount.format
-    - if involved && !expense.personal?
-      %span.block.text-xs.text-ink-500 your share #{share.format}
+    - if expense.personal? || !involved
+      %span.block.font-semibold.tnum{ class: expense.voided? ? "text-ink-400" : "text-ink-900" }= expense.amount.format
+      - unless involved
+        %span.block.text-xs.text-ink-400 not involved
+    - elsif expense.voided?
+      %span.block.font-semibold.text-ink-400.tnum= expense.amount.format
+    - elsif net.positive?
+      %span.block.font-semibold.text-positive-600.tnum= "+#{net.format}"
+      %span.block.text-xs.text-ink-400= "you lent · #{expense.amount.format}"
+    - elsif net.negative?
+      %span.block.font-semibold.text-negative-600.tnum= net.format
+      %span.block.text-xs.text-ink-400= "you owe · #{expense.amount.format}"
+    - else
+      %span.block.font-semibold.text-ink-900.tnum= expense.amount.format
+      %span.block.text-xs.text-ink-400 settled

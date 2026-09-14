@@ -4,9 +4,25 @@ class ApplicationController < ActionController::Base
   before_action :set_current_user
   before_action :require_current_user
 
+  # Every group and expense lookup is scoped to what the current user can see,
+  # so a record that is missing and one that belongs to someone else fail the
+  # same way - deliberately, since telling them apart would leak whether it
+  # exists. Either way it is a dead end for this person, not an error.
+  rescue_from ActiveRecord::RecordNotFound, with: :record_out_of_reach
+
   helper_method :current_user, :signed_in?, :current_groups, :contextual_group
 
   private
+
+  def record_out_of_reach
+    respond_to do |format|
+      format.html do
+        redirect_to root_path, alert: "That isn't available - it may have been removed, or it belongs to a group you're not in."
+      end
+      format.json { head :not_found }
+      format.any  { head :not_found }
+    end
+  end
 
   # The single seam between "who is looking" and the rest of the app. Real
   # authentication would replace the body of this method and nothing else.

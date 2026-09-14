@@ -4,17 +4,43 @@
 
 = render "groups/tabs", group: @group
 
-.space-y-4
+- actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
+- outstanding = actives.flat_map { |c| @calculator.pairwise_debts(c) }.select { |d| d.from_user.id == current_user.id || d.to_user.id == current_user.id }
+- mine, others = @settlements.partition { |s| [s.payer_id, s.recipient_id].include?(current_user.id) }
+
+.space-y-5
+  - if outstanding.any?
+    %section{ data: { reveal: true } }
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Still to settle
+      .card.divide-y.divide-ink-200.overflow-hidden
+        - outstanding.each do |debt|
+          - direction = debt.from_user.id == current_user.id ? :you_owe : :owes_you
+          = render "groups/settle_row", group: @group, debt: debt, direction: direction
+  - else
+    %section.card.card-pad.text-center{ data: { reveal: true } }
+      %p.font-medium.text-ink-800 You're all settled here.
+      %p.text-sm.text-ink-500 Nothing outstanding between you and anyone in this group.
+
   = link_to "Record a payment", new_group_settlement_path(@group), class: "btn-primary w-full"
 
-  - if @settlements.any?
-    .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
-      - @settlements.each do |settlement|
-        .relative
-          = render "shared/settlement_row", settlement: settlement
-          - unless settlement.voided?
-            .absolute.inset-y-0.right-3.flex.items-center.gap-1.opacity-0.transition{ class: "hover:opacity-100 focus-within:opacity-100" }
-              = link_to "Edit", edit_group_settlement_path(@group, settlement), class: "btn-secondary btn-sm"
-  - else
+  - if mine.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Your payments
+      .card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - mine.each do |settlement|
+          = render "settlements/row_with_actions", group: @group, settlement: settlement
+
+  - if others.any?
+    %section
+      %details.group
+        %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
+          %span.text-sm.font-semibold.text-ink-900= "Payments between other people (#{others.size})"
+          %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+            %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
+        .card.divide-y.divide-ink-200.overflow-hidden
+          - others.each do |settlement|
+            = render "settlements/row_with_actions", group: @group, settlement: settlement
+
+  - if mine.empty? && others.empty?
     = render "shared/empty_state", title: "No payments yet",
              body: "When someone pays another person back, record it here and the balances update."

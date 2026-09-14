@@ -152,7 +152,7 @@ const token = document.querySelector('meta[name="csrf-token"]')?.content;
                 v-model="rates[line.currency.code]"
                 inputmode="decimal"
                 :disabled="line.locked"
-                class="input tnum flex-1 py-1.5 text-sm disabled:bg-ink-100 disabled:text-ink-500"
+                class="input tnum flex-1 py-2 text-sm disabled:bg-ink-100 disabled:text-ink-500"
               />
               <span class="shrink-0 text-xs text-ink-500">{{ target }}</span>
             </div>
