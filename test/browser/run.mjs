@@ -16,16 +16,11 @@ export function check(condition, message) {
   if (!condition) currentFailures.push(message);
 }
 
-// Idempotent: an already-authenticated session is bounced off /sign-in, so
-// drop the current one first rather than typing into a page that isn't there.
+// Always starts from no session. Scenarios used to inherit whoever the last
+// one left signed in, which made failures depend on the order they ran in.
 export async function signIn(b, login, password = 'password') {
+  await signOut(b);
   await b.goto(`${BASE}/sign-in`);
-
-  const hasForm = await b.evaluate("return !!document.querySelector('#user_login')");
-  if (!hasForm) {
-    await signOut(b);
-    await b.goto(`${BASE}/sign-in`);
-  }
 
   await b.fill('#user_login', login);
   await b.fill('#user_password', password);
@@ -33,8 +28,8 @@ export async function signIn(b, login, password = 'password') {
   await b.waitForLoad();
   await sleep(700);
 
-  // Email is optional and asked for once; dismiss it so journeys aren't
-  // interrupted by a prompt they aren't about.
+  // Email is optional and asked for once per sign-in; dismiss it so journeys
+  // are not interrupted by a prompt they are not about.
   if ((await b.url()).startsWith('/email/edit')) {
     await b.clickText('Not now');
     await b.waitForLoad();
@@ -60,10 +55,10 @@ export async function signOut(b) {
     return true;
   `);
   await b.waitForLoad();
-  await sleep(600);
+  await sleep(500);
 }
 
-for (const file of ['./scenarios.mjs', './scenarios_extra.mjs']) {
+for (const file of [ './scenarios.mjs', './scenarios_extra.mjs' ]) {
   const { default: register } = await import(file);
   register({ scenario, check, signIn, signOut, BASE, sleep });
 }
