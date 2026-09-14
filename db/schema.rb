@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -132,12 +132,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
     t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "rate_locked_at"
+    t.string "rate_source", default: "indicative", null: false
+    t.bigint "rate_locked_by_id"
     t.index ["category_id"], name: "index_expenses_on_category_id"
     t.index ["created_by_id"], name: "index_expenses_on_created_by_id"
     t.index ["currency_code"], name: "index_expenses_on_currency_code"
+    t.index ["group_id", "rate_locked_at"], name: "index_expenses_on_group_id_and_rate_locked_at"
     t.index ["group_id", "spent_on"], name: "index_expenses_on_group_id_and_spent_on"
     t.index ["group_id", "voided_at"], name: "index_expenses_on_group_id_and_voided_at"
     t.index ["group_id"], name: "index_expenses_on_group_id"
+    t.index ["rate_locked_by_id"], name: "index_expenses_on_rate_locked_by_id"
     t.index ["spent_on"], name: "index_expenses_on_spent_on"
     t.index ["voided_at"], name: "index_expenses_on_voided_at"
     t.index ["voided_by_id"], name: "index_expenses_on_voided_by_id"
@@ -145,6 +150,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
     t.check_constraint "base_amount_minor > 0", name: "expenses_base_amount_positive"
     t.check_constraint "exchange_rate > 0::numeric", name: "expenses_rate_positive"
     t.check_constraint "length(btrim(description::text)) > 0", name: "expenses_description_present"
+    t.check_constraint "rate_source::text = ANY (ARRAY['indicative'::character varying, 'locked'::character varying, 'native'::character varying]::text[])", name: "expenses_rate_source_valid"
     t.check_constraint "split_method::text = ANY (ARRAY['equal'::character varying, 'percentage'::character varying, 'fixed'::character varying, 'shares'::character varying]::text[])", name: "expenses_split_method_valid"
   end
 
@@ -207,6 +213,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
     t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "settles_currency_code", limit: 3
     t.index ["created_by_id"], name: "index_settlements_on_created_by_id"
     t.index ["group_id", "settled_on"], name: "index_settlements_on_group_id_and_settled_on"
     t.index ["group_id"], name: "index_settlements_on_group_id"
@@ -214,6 +221,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
     t.index ["payer_id"], name: "index_settlements_on_payer_id"
     t.index ["recipient_id"], name: "index_settlements_on_recipient_id"
     t.index ["settled_on"], name: "index_settlements_on_settled_on"
+    t.index ["settles_currency_code"], name: "index_settlements_on_settles_currency_code"
     t.index ["voided_at"], name: "index_settlements_on_voided_at"
     t.index ["voided_by_id"], name: "index_settlements_on_voided_by_id"
     t.check_constraint "amount_minor > 0", name: "settlements_amount_positive"
@@ -228,7 +236,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
     t.date "date_of_birth"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "preferred_currency_code", limit: 3, default: "PHP", null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "(email IS NOT NULL)"
+    t.index ["preferred_currency_code"], name: "index_users_on_preferred_currency_code"
     t.check_constraint "length(btrim(name::text)) > 0", name: "users_name_present"
   end
 
@@ -247,6 +257,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
   add_foreign_key "expenses", "currencies", column: "currency_code", primary_key: "code"
   add_foreign_key "expenses", "groups"
   add_foreign_key "expenses", "users", column: "created_by_id"
+  add_foreign_key "expenses", "users", column: "rate_locked_by_id"
   add_foreign_key "expenses", "users", column: "voided_by_id"
   add_foreign_key "group_memberships", "groups"
   add_foreign_key "group_memberships", "users"
@@ -255,9 +266,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120013) do
   add_foreign_key "revisions", "users", column: "actor_id"
   add_foreign_key "settlements", "currencies", column: "base_currency_code", primary_key: "code"
   add_foreign_key "settlements", "currencies", column: "currency_code", primary_key: "code"
+  add_foreign_key "settlements", "currencies", column: "settles_currency_code", primary_key: "code"
   add_foreign_key "settlements", "groups"
   add_foreign_key "settlements", "users", column: "created_by_id"
   add_foreign_key "settlements", "users", column: "payer_id"
   add_foreign_key "settlements", "users", column: "recipient_id"
   add_foreign_key "settlements", "users", column: "voided_by_id"
+  add_foreign_key "users", "currencies", column: "preferred_currency_code", primary_key: "code"
 end

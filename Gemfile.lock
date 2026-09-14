@@ -143,8 +143,6 @@ GEM
     minitest (6.0.6)
       drb (~> 2.0)
       prism (~> 1.5)
-    money (6.19.0)
-      i18n (>= 0.6.4, <= 2)
     msgpack (1.8.5)
     mutex_m (0.3.0)
     net-imap (0.6.7)
@@ -332,7 +330,6 @@ DEPENDENCIES
   haml-rails
   json (~> 2.9)
   listen
-  money (~> 6.19)
   pg (~> 1.5)
   propshaft
   puma (>= 5.0)
@@ -394,7 +391,6 @@ CHECKSUMS
   marcel (1.2.1) sha256=1678e9360e32f9eafa917c80029e2f6d10b2715c66a4b87b6d0da9b9cd1f859f
   mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
   minitest (6.0.6) sha256=153ea36d1d987a62942382b61075745042a2b3123b1cd48f4c3675af9cc7d6f1
-  money (6.19.0) sha256=ec936fa1e42f2783719241ed9fd52725d0efa628f928feea1eb5c37d5de7daf3
   msgpack (1.8.5) sha256=97419eaa7b35dfe3e462c0e6c1a3dfdcbfc8756605c09e46e4c6daef127517ba
   mutex_m (0.3.0) sha256=cfcb04ac16b69c4813777022fdceda24e9f798e48092a2b817eb4c0a782b0751
   net-imap (0.6.7) sha256=b5c9573be975d856de252ee851871724da66aa2d449b2482d5690bd12bc23660

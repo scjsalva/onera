@@ -12,8 +12,6 @@ gem "puma", ">= 5.0"
 gem "haml-rails"
 gem "vite_rails"
 
-# Domain
-gem "money", "~> 6.19"
 
 # Performance / boot
 gem "bootsnap", require: false
