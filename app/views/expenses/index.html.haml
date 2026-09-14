@@ -5,5 +5,9 @@
 
 - if @timeline.any?
   = render "shared/timeline", timeline: @timeline, show_group: true
+- elsif @filter.any?
+  = render "shared/empty_state", title: "Nothing to show", body: "No expenses match these filters.",
+                                 action: link_to("Clear filters", expenses_path, class: "btn-secondary btn-sm")
 - else
-  = render "shared/empty_state", title: "Nothing to show", body: "No expenses match these filters."
+  = render "shared/empty_state", title: "No expenses yet",
+                                 body: "Add one and it lands here, with everything you're part of."

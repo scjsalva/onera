@@ -10,5 +10,9 @@
 
 - if @timeline.any?
   = render "shared/timeline", timeline: @timeline
+- elsif @filter.any?
+  = render "shared/empty_state", title: "Nothing here", body: "No expenses match these filters.",
+                                 action: link_to("Clear filters", expenses_for_group_path(@group), class: "btn-secondary btn-sm")
 - else
-  = render "shared/empty_state", title: "Nothing here", body: "No expenses match these filters."
+  = render "shared/empty_state", title: "Nothing in #{@group.name} yet",
+                                 body: "The first expense anyone adds shows up here."

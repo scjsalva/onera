@@ -47,6 +47,29 @@ class User < ApplicationRecord
   has_many :settlements_received, class_name: "Settlement", foreign_key: :recipient_id,
                                   inverse_of: :recipient, dependent: :restrict_with_error
 
+  # The bookkeeping columns. Nobody is destroyed in normal use - see
+  # UserAnonymizer - but every foreign key still needs an owner here, or a
+  # destroy from the console dies at the database instead of saying why.
+  # Money is restricted; a byline is nulled; an invite goes with its sender.
+  has_many :owned_expenses, class_name: "Expense", foreign_key: :owner_id,
+                            inverse_of: :owner, dependent: :restrict_with_error
+  has_many :created_expenses, class_name: "Expense", foreign_key: :created_by_id,
+                              inverse_of: :created_by, dependent: :restrict_with_error
+  has_many :voided_expenses, class_name: "Expense", foreign_key: :voided_by_id,
+                             inverse_of: :voided_by, dependent: :nullify
+  has_many :rate_locked_expenses, class_name: "Expense", foreign_key: :rate_locked_by_id,
+                                  inverse_of: :rate_locked_by, dependent: :nullify
+  has_many :created_settlements, class_name: "Settlement", foreign_key: :created_by_id,
+                                 inverse_of: :created_by, dependent: :restrict_with_error
+  has_many :voided_settlements, class_name: "Settlement", foreign_key: :voided_by_id,
+                                inverse_of: :voided_by, dependent: :nullify
+  has_many :sent_invitations, class_name: "Invitation", foreign_key: :created_by_id,
+                              inverse_of: :created_by, dependent: :destroy
+  has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id,
+                                 inverse_of: :actor, dependent: :nullify
+  has_many :activity_events, foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
+  has_many :revisions, foreign_key: :actor_id, inverse_of: :actor, dependent: :nullify
+
   normalizes :email, with: ->(email) { email.strip.downcase.presence }
   normalizes :name, with: ->(name) { name.strip }
   normalizes :username, with: ->(username) { username.strip.downcase.presence }

@@ -12,6 +12,18 @@ class ExpenseFlowTest < ActionDispatch::IntegrationTest
     sign_in_as @john
   end
 
+  # A new account has no expenses and no filters, and telling them nothing
+  # matched their filters is the first thing they would read.
+  test "an empty list says what is actually true" do
+    get expenses_path
+    assert_match "No expenses yet", response.body
+    refute_match "match these filters", response.body
+
+    get expenses_path(period: "week")
+    assert_match "match these filters", response.body
+    assert_match "Clear filters", response.body
+  end
+
   def sign_in_as(user)
     get "/sign-in"
     token = response.body[/name="authenticity_token" value="([^"]+)"/, 1]
