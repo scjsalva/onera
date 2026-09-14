@@ -34,20 +34,19 @@
     - if @friends.any?
       %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
         - @friends.each do |person|
-          - owed = @ledger.debts_for_me.select { |d| [d.from_user.id, d.to_user.id].include?(person.id) }
+          - line = @debts[person.id]
           %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
             = avatar_tag(person)
             %span.min-w-0.flex-1
               %span.block.truncate.font-medium.text-ink-900= person.name
               %span.block.truncate.text-xs.text-ink-500
-                - if owed.any?
-                  - line = owed.first
+                - if line
                   - mine = line.from_user.id == current_user.id
                   %span{ class: mine ? "text-negative-600" : "text-positive-600" }
                     = mine ? "you owe #{line.amount.format}" : "owes you #{line.amount.format}"
                 - else
                   = "@#{person.username}"
-            - friendship = Friendship.between(current_user, person)
+            - friendship = @friendships[person.id]
             = button_to friendship_path(friendship), method: :delete,
                         class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
                         form: { data: { confirm: "Remove #{person.name}?", confirm_detail: "You will not see each other outside a shared group, and cannot split anything new directly. Everything you already share stays exactly as it is.", confirm_label: "Remove" } },

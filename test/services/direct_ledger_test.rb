@@ -99,6 +99,31 @@ class DirectLedgerTest < ActiveSupport::TestCase
     assert_empty DirectLedger.new(@a).debts_for_me
   end
 
+  test "the ledger is computed once, not once per person asking" do
+    direct(owner: @a, with: @b)
+    ledger = DirectLedger.new(@a)
+
+    ledger.debts_for_me
+    # The People page reads this per row; a second walk per friend was a real
+    # query multiplier on that page.
+    queries = 0
+    counter = ->(*, payload) { queries += 1 unless payload[:name].to_s.include?("SCHEMA") }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      3.times { ledger.debts_for_me }
+    end
+
+    assert_equal 0, queries
+  end
+
+  test "debts can be looked up by the other person" do
+    direct(owner: @a, with: @b)
+
+    by_person = DirectLedger.new(@a).debts_by_person
+
+    assert_equal 25_000, by_person[@b.id].amount_minor
+    assert_nil by_person[@c.id]
+  end
+
   test "a single minor unit is absorbed by whoever paid, not half-owed" do
     # ₱0.01 between two people: the odd unit goes to the first participant,
     # who is also the payer, so nobody owes a fraction of a centavo.

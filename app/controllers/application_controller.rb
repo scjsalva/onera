@@ -14,6 +14,15 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_groups, :contextual_group
 
+  # Turbo re-issues the original method when a form's redirect comes back as
+  # 302, which turns a redirect after a DELETE into a second DELETE. 303 tells
+  # it to follow with GET. Doing it here rather than adding status: :see_other
+  # to sixty call sites.
+  def redirect_to(options = {}, response_options = {})
+    response_options[:status] ||= :see_other unless request.get? || request.head?
+    super
+  end
+
   private
 
   # Sign-in accepts a username or an email through one field, so Devise has

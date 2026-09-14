@@ -16,10 +16,23 @@ class MoneyAmount
   def self.zero(currency) = new(0, currency)
 
   # Builds from a human-entered decimal ("8400.50"), never from a Float.
+  #
+  # People type "1,234" and "₱1 234.50", and a form can be posted without the
+  # JavaScript that would have cleaned it. Unparseable input becomes zero,
+  # which the writers reject with a readable message - far better than the
+  # ArgumentError that used to reach the browser as a 500.
   def self.from_major(value, currency)
-    decimal = value.is_a?(BigDecimal) ? value : BigDecimal(value.to_s)
+    decimal = value.is_a?(BigDecimal) ? value : parse(value)
     new((decimal * currency.subunit_factor).round(0, :half_up).to_i, currency)
   end
+
+  def self.parse(value)
+    cleaned = value.to_s.strip.gsub(/[\s,_]/, "")
+    return BigDecimal(0) unless cleaned.match?(/\A-?\d*\.?\d+\z/)
+
+    BigDecimal(cleaned)
+  end
+  private_class_method :parse
 
   def initialize(minor, currency)
     @minor = minor.to_i

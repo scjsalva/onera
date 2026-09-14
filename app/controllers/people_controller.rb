@@ -10,5 +10,12 @@ class PeopleController < ApplicationController
     @outgoing = current_user.outgoing_friend_requests
     @invitation = Invitation.for(group: nil, creator: current_user)
     @ledger = DirectLedger.new(current_user)
+
+    # Looked up once and indexed, rather than a query per row for the
+    # friendship and a full ledger walk per row for the balance.
+    @friendships = Friendship.accepted.involving(current_user).index_by do |friendship|
+      friendship.other_than(current_user).id
+    end
+    @debts = @ledger.debts_by_person
   end
 end

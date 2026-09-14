@@ -1,0 +1,12 @@
+-# Swipe left to edit, right to void - and hold, for anyone who would rather
+-# not swipe and for pointer devices, which cannot.
+- voided = expense.voided?
+
+%swipe-row{ "edit-path" => (voided ? nil : edit_expense_path(expense)),
+            "action-path" => (voided ? restore_expense_path(expense) : void_expense_path(expense)),
+            "action-label" => (voided ? "Restore" : "Void"),
+            "action-tone" => (voided ? "brand" : "danger"),
+            "action-method" => "patch",
+            confirm: (voided ? nil : "Void #{expense.description}? It stays in the history and stops counting."),
+            "@longpress" => "$root.userMenuOpen = false" }
+  = render "shared/expense_row", expense: expense

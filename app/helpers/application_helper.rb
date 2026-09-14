@@ -30,8 +30,11 @@ module ApplicationHelper
       initials = tag.span(user.initials, class: "avatar-initials")
       next initials if url.nil?
 
-      initials + tag.img(src: url, alt: "", loading: "lazy", aria: { hidden: true },
-                         class: "absolute inset-0 h-full w-full object-cover",
+      # Not lazy: these are small, cached, and mostly above the fold, and
+      # lazy-loading them is what made them appear a beat after the page.
+      initials + tag.img(src: url, alt: "", decoding: "async", fetchpriority: "high",
+                         aria: { hidden: true },
+                         class: "avatar-image absolute inset-0 h-full w-full object-cover",
                          onload: "this.parentNode.classList.add('avatar-loaded')",
                          onerror: "this.remove()")
     end

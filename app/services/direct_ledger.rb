@@ -28,7 +28,13 @@ class DirectLedger
 
   # Debts involving this person only. Someone else's direct expenses are none
   # of their business, and they can't see them anyway.
+  # Memoized: the People page asks per row, and recomputing the whole ledger
+  # for each friend walked every direct expense once per person on screen.
   def debts
+    @debts ||= build_debts
+  end
+
+  def build_debts
     matrix = Hash.new(0)
 
     expenses.each do |expense|
@@ -55,7 +61,14 @@ class DirectLedger
   end
 
   # What this person owes, or is owed, per counterparty and currency.
-  def debts_for_me = debts.select { |d| [ d.from_user.id, d.to_user.id ].include?(@user.id) }
+  def debts_for_me
+    @debts_for_me ||= debts.select { |d| [ d.from_user.id, d.to_user.id ].include?(@user.id) }
+  end
+
+  # Indexed by the other person, which is how the People page reads it.
+  def debts_by_person
+    @debts_by_person ||= debts_for_me.index_by { |d| d.from_user.id == @user.id ? d.to_user.id : d.from_user.id }
+  end
 
   def spend_minor_by_currency
     expenses.group_by(&:currency_code).transform_values { |list| list.sum(&:amount_minor) }

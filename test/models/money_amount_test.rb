@@ -36,6 +36,26 @@ class MoneyAmountTest < ActiveSupport::TestCase
     assert_equal 101, MoneyAmount.from_major("1.005", php).minor
   end
 
+  test "thousands separators and spaces are tolerated" do
+    assert_equal 123_400, MoneyAmount.from_major("1,234", php).minor
+    assert_equal 123_450, MoneyAmount.from_major(" 1 234.50 ", php).minor
+    assert_equal 123_400, MoneyAmount.from_major("1_234", php).minor
+  end
+
+  test "unparseable input becomes zero rather than raising" do
+    # A form can be posted without the JavaScript that would have cleaned it,
+    # and an ArgumentError here used to reach the browser as a 500.
+    assert_equal 0, MoneyAmount.from_major("abc", php).minor
+    assert_equal 0, MoneyAmount.from_major("", php).minor
+    assert_equal 0, MoneyAmount.from_major(nil, php).minor
+    assert_equal 0, MoneyAmount.from_major("12.34.56", php).minor
+    assert_equal 0, MoneyAmount.from_major("<script>", php).minor
+  end
+
+  test "a negative typed amount is preserved, for the writers to reject" do
+    assert_equal(-500, MoneyAmount.from_major("-5", php).minor)
+  end
+
   test "to_input gives a plain value for a form field" do
     assert_equal "12.34", MoneyAmount.new(1234, php).to_input
     assert_equal "8400", MoneyAmount.new(8400, jpy).to_input

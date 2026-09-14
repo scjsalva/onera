@@ -39,18 +39,26 @@ function proceed() {
   form.requestSubmit ? form.requestSubmit() : form.submit();
 }
 
-document.addEventListener(
-  'submit',
-  (event) => {
-    const form = event.target;
-    if (!form.dataset?.confirm || form.dataset.confirmed === 'true') return;
+// Registered on the document, which survives Turbo visits, so it is attached
+// once and pointed at whichever dialog is currently mounted.
+window.__oneraConfirm = ask;
 
-    event.preventDefault();
-    event.stopPropagation();
-    ask(form);
-  },
-  true
-);
+if (!window.__oneraConfirmBound) {
+  window.__oneraConfirmBound = true;
+
+  document.addEventListener(
+    'submit',
+    (event) => {
+      const form = event.target;
+      if (!form.dataset?.confirm || form.dataset.confirmed === 'true') return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      window.__oneraConfirm?.(form);
+    },
+    true
+  );
+}
 </script>
 
 <template>
