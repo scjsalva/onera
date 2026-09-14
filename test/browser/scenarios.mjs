@@ -235,9 +235,16 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     await sleep(500);
 
     await b.goto(`${BASE}/recovery_codes`);
-    await b.clickText('Generate new codes');
+
+    // First generation asks nothing; a replacement asks before wiping the set.
+    const replacing = await b.has('Replace my codes');
+    await b.clickText(replacing ? 'Replace my codes' : 'Generate my codes');
+    await sleep(700);
+    if (replacing) {
+      await b.clickText('Replace them');
+    }
     await b.waitForLoad();
-    await sleep(800);
+    await sleep(900);
     check(await b.has('Save these now'), 'the fresh codes should be shown once');
 
     const code = await b.evaluate(`

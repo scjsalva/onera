@@ -53,9 +53,16 @@
               %span.pill.bg-positive-50.text-positive-700 Ready
 
   %section.card.card-pad{ data: { reveal: true } }
-    %p.font-semibold.text-ink-900 Generate a new set
+    %p.font-semibold.text-ink-900= current_user.recovery_codes_issued? ? "Generate a new set" : "Generate your codes"
     %p.mt-1.text-sm.text-ink-500
-      Replaces all #{@codes.size} codes with ten fresh ones. Anything you saved before stops working.
-    = button_to "Generate new codes", recovery_codes_path, method: :post,
-                class: "btn-secondary mt-3 w-full", disabled: current_user.email.blank?,
-                form: { data: { confirm: "Replace your recovery codes?", confirm_detail: "The ten you have now stop working immediately. Save the new ones when they appear.", confirm_label: "Replace them" } }
+      - if current_user.recovery_codes_issued?
+        = "Replaces all #{@codes.size} codes with ten fresh ones. Anything you saved before stops working."
+      - else
+        Ten single-use codes, shown once. Save them somewhere you can reach without this app.
+    -# Only a replacement needs confirming. There is nothing to lose the first
+    -# time, and asking anyway trains people to dismiss the question.
+    - replacing = current_user.recovery_codes_issued?
+    - confirmation = replacing ? { confirm: "Replace your recovery codes?", confirm_detail: "The ones you have now stop working immediately. Save the new ones when they appear.", confirm_label: "Replace them" } : {}
+    = button_to (replacing ? "Replace my codes" : "Generate my codes"), recovery_codes_path,
+                method: :post, class: "btn-secondary mt-3 w-full",
+                disabled: current_user.email.blank?, form: { data: confirmation }
