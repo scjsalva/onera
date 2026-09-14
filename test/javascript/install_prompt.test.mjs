@@ -43,16 +43,44 @@ describe('InstallPrompt', () => {
     wrapper.unmount();
   });
 
-  // Only Safari can add to the home screen on iOS, so telling anyone else how
-  // to do it would be pointing at a button that is not there.
-  it('says nothing in Chrome on iOS, which cannot install at all', async () => {
+  // Add to Home Screen comes from the iOS share sheet, which every browser on
+  // the platform presents - so Chrome gets the hint too. What it must not do
+  // is tell people to look in the wrong place.
+  it('helps Chrome on iOS as well, pointing at its own menu', async () => {
     setPlatform({ ua: CHROME_IPHONE });
     const wrapper = mount(InstallPrompt, { attachTo: document.body });
 
-    vi.advanceTimersByTime(10000);
+    vi.advanceTimersByTime(4000);
     await wrapper.vm.$nextTick();
 
-    expect(document.body.textContent).not.toContain('Add to Home Screen');
+    expect(document.body.textContent).toContain('Add to Home Screen');
+    expect(document.body.textContent).toContain('menu');
+    expect(document.body.textContent).not.toContain('button at the bottom');
+    wrapper.unmount();
+  });
+
+  it('points Safari at the bar along the bottom instead', async () => {
+    setPlatform({ ua: SAFARI_IPHONE });
+    const wrapper = mount(InstallPrompt, { attachTo: document.body });
+
+    vi.advanceTimersByTime(4000);
+    await wrapper.vm.$nextTick();
+
+    expect(document.body.textContent).toContain('share button at the bottom');
+    wrapper.unmount();
+  });
+
+  // It is below the fold of the share sheet, which is the whole reason people
+  // cannot find it.
+  it('says the option needs scrolling to, and is hidden in private browsing', async () => {
+    setPlatform({ ua: SAFARI_IPHONE });
+    const wrapper = mount(InstallPrompt, { attachTo: document.body });
+
+    vi.advanceTimersByTime(4000);
+    await wrapper.vm.$nextTick();
+
+    expect(document.body.textContent).toContain('scroll down');
+    expect(document.body.textContent).toContain('Private Browsing');
     wrapper.unmount();
   });
 

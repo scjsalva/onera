@@ -219,10 +219,33 @@
     border: 1px solid rgb(var(--hairline) / calc(var(--hairline-alpha) * 2));
   }
 
-  /* Native date and time controls sit differently in the box to text inputs. */
+  /* Native date and time controls sit differently in the box to text inputs.
+     iOS also gives them an intrinsic width from the native control, which
+     ignores the container and pushes the field past its edge - resetting the
+     appearance is what stops that, and the explicit max-width is the belt to
+     its braces. */
   input[type='date'].input,
   input[type='time'].input {
     @apply py-[0.6875rem];
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Left-aligned like every other field. Safari centres the value inside the
+     control otherwise, which reads as a different kind of input. */
+  input[type='date'].input::-webkit-date-and-time-value,
+  input[type='time'].input::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  /* The picker glyph is the only affordance left once the appearance is reset,
+     so it should not be crowded against the edge. */
+  input[type='date'].input::-webkit-calendar-picker-indicator,
+  input[type='time'].input::-webkit-calendar-picker-indicator {
+    margin-left: 0.25rem;
+    cursor: pointer;
   }
 
   textarea.input {

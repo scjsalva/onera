@@ -13,7 +13,9 @@ const DISMISSED = 'onera:install-dismissed';
 
 const deferred = ref(null);
 const visible = ref(false);
-const ios = ref(false);
+// Which iOS browser, because the share button is in a different place in each
+// and "tap the share icon" is useless if you cannot see one.
+const iosBrowser = ref(null);
 
 // Already installed: opened from the home screen, or Safari's older flag.
 function installed() {
@@ -57,12 +59,16 @@ onMounted(() => {
   // iPadOS reports itself as a Mac, so a touch-capable "Mac" is really an iPad.
   const apple = /iPhone|iPod/.test(ua) ||
     (/iPad|Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  // Chrome and Firefox on iOS cannot add to the home screen at all; only
-  // Safari can, so telling anyone else how to do it would be a lie.
-  const safari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
 
-  if (apple && safari) {
-    ios.value = true;
+  if (apple) {
+    // Add to Home Screen comes from the iOS share sheet, which every browser
+    // on the platform presents - so this is not Safari-only, as it first
+    // appeared. What differs is where the share button lives.
+    if (/CriOS/.test(ua)) iosBrowser.value = 'chrome';
+    else if (/FxiOS/.test(ua)) iosBrowser.value = 'firefox';
+    else if (/EdgiOS/.test(ua)) iosBrowser.value = 'edge';
+    else iosBrowser.value = 'safari';
+
     // Not the instant the page loads. Let them see the app first.
     timer = window.setTimeout(() => (visible.value = true), 4000);
   }
@@ -91,6 +97,15 @@ async function install() {
 }
 
 const canInstall = computed(() => deferred.value !== null);
+
+// Named precisely, because "tap share" sends people hunting. In Safari it is
+// in the bar along the bottom; the others keep it behind their own menu.
+const shareLocation = computed(() => ({
+  safari: 'the share button at the bottom',
+  chrome: 'the ⋯ menu, then Share',
+  firefox: 'the ⋯ menu, then Share',
+  edge: 'the ⋯ menu, then Share',
+}[iosBrowser.value] ?? 'the share button'));
 </script>
 
 <template>
@@ -117,11 +132,13 @@ const canInstall = computed(() => deferred.value !== null);
             </template>
             <template v-else>
               <span class="font-medium text-ink-900">Add Onera to your home screen.</span>
-              Tap
+              Open
               <svg class="mx-0.5 inline h-4 w-4 -translate-y-px" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3" />
               </svg>
-              then <span class="font-medium text-ink-900">Add to Home Screen</span>.
+              {{ shareLocation }}, then scroll down to
+              <span class="font-medium text-ink-900">Add to Home Screen</span>.
+              <span class="block text-ink-500">It is below the row of apps — and hidden in Private Browsing.</span>
             </template>
           </p>
 
