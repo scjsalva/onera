@@ -1,12 +1,13 @@
 name: CI
 
-# Manual only. This repository is private and lives under a work-linked
-# account, where Actions minutes are metered - so nothing here runs on its own.
-# `bin/check` is the real gate and runs the same suite locally in about a
-# minute; this exists for the times you want a clean-machine second opinion.
-#
-#   gh workflow run CI
+# `bin/check` is still the real gate - it runs this same suite locally in about
+# a minute, and every bug this app has had was caught there. This is the
+# clean-machine second opinion: no stale database, no node_modules from three
+# branches ago.
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 jobs:

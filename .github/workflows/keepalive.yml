@@ -1,0 +1,49 @@
+# Keeps the free Render instance from idling out during the hours anyone is
+# awake to use it.
+#
+# Render spins a free service down after about fifteen minutes idle, and the
+# next visitor waits 40-90 seconds for the container to come back. A request
+# to the health check resets that timer.
+#
+# It deliberately does not run around the clock. Render's free plan allows 750
+# instance-hours a month; continuous running through a 31-day month is 744,
+# leaving six hours of margin - shared with the second instance a deploy
+# briefly runs - and going over suspends the service until the month turns.
+# Seven in the morning to midnight is 527 hours, a third of the allowance
+# spare. The cost is one slow visit each morning, and nobody records an expense
+# at 4am.
+name: Keep awake
+
+on:
+  schedule:
+    # Every 10 minutes, 07:00-24:00 Manila. PHT is UTC+8, so that is 23:00 UTC
+    # through 15:59 UTC the following day.
+    - cron: "*/10 23,0-15 * * *"
+  workflow_dispatch:
+
+# A late run should not pile up behind the one before it.
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the health check
+        env:
+          URL: ${{ vars.ONERA_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "ONERA_URL is not set. Add it under"
+            echo "Settings > Secrets and variables > Actions > Variables,"
+            echo "for example https://onera.onrender.com"
+            exit 1
+          fi
+
+          # Generous timeout: a cold start is the very thing this exists to
+          # absorb, and failing the job for it would be reporting success as
+          # failure.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 120 "$URL/up")
+          echo "$URL/up -> $code"
+          [ "$code" = "200" ]

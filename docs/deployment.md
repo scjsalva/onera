@@ -61,39 +61,41 @@ it, then invite everyone else from **You → People**.
 ## 4. Keeping it awake
 
 Render spins a free service down after about fifteen minutes idle, and the next
-visitor waits 40–90 seconds for it to come back.
+visitor waits 40–90 seconds for the container to come back.
 
 `.github/workflows/keepalive.yml` pings `/up` every ten minutes between 07:00
-and 23:00 Manila. Set the URL it pings under **Settings → Secrets and variables
-→ Actions → Variables**, as `ONERA_URL` — e.g. `https://onera.onrender.com`.
+and midnight, Manila. Point it at the app under **Settings → Secrets and
+variables → Actions → Variables**, as `ONERA_URL` — e.g.
+`https://onera.onrender.com`.
 
-Sixteen hours a day is 496 instance-hours in a 31-day month against a free
-allowance of 750. Round-the-clock would be 744, and exceeding the allowance
-suspends the service until the month rolls over, so the overnight gap is what
-buys the margin. The cost is one slow visit each morning.
+Seventeen hours a day is **527 instance-hours** in a 31-day month against a
+free allowance of **750**. Round the clock would be 744 — six hours of margin,
+shared with the second instance a deploy briefly runs — and exceeding the
+allowance suspends the service until the month turns. The overnight gap is what
+buys the margin, and the cost is one slow visit each morning.
 
-Two things that make a keep-alive fail quietly:
+This only works because the repository is public: Actions minutes are free and
+unlimited for public repositories, and a private one gets 2,000 a month, which
+a ten-minute ping would exhaust three times over. If it ever goes private
+again, move the ping to an external cron such as cron-job.org and take CI off
+`push`.
 
-- GitHub disables scheduled workflows after 60 days with no repository
-  activity. If nothing has been pushed in two months, the pings stop and the
-  app goes back to sleeping without telling anyone.
-- Scheduled runs are best-effort and can be delayed by ten minutes or more
-  under load, so the odd visitor will still meet a cold start.
+Two ways it fails quietly, worth knowing:
 
-## Nothing runs on GitHub
+- Scheduled runs are best-effort and can be delayed ten minutes or more under
+  load, so the odd visitor still meets a cold start.
+- GitHub disables schedules after 60 days with no repository activity. If
+  nothing is pushed for two months the pings stop and nothing says so.
 
-The repository is private and under a work-linked account, so nothing is left
-running there on a schedule:
+## A region note
 
-- **The keep-alive** is an external cron, for the reason above.
-- **CI** is `workflow_dispatch` only — run it with `gh workflow run CI` when
-  you want a clean-machine second opinion. `bin/check` is the real gate and
-  does the same work locally in about a minute.
-- **No container registry.** Render builds from the repository, so nothing is
-  pushed to GitHub Packages and no storage quota applies.
+Keep the database in the same region as the web service — `render.yaml` says
+Singapore, so the Neon project should be Singapore too.
 
-Render's own build minutes cover the deploys — 500 a month on the free plan,
-and a build takes a few.
+Your latency to the app is one round trip per page. The app's latency to the
+database is multiplied by every query on that page: at 36 queries, a database
+one ocean away turns a 70 ms page into an eight-second one. Co-locating the two
+matters far more than either being near you.
 
 ## Updating
 
