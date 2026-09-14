@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120028) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120029) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -170,7 +170,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120028) do
     t.index ["requester_id", "addressee_id"], name: "index_friendships_on_requester_id_and_addressee_id", unique: true
     t.index ["requester_id"], name: "index_friendships_on_requester_id"
     t.check_constraint "requester_id <> addressee_id", name: "friendships_distinct_people"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying]::text[])", name: "friendships_status_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'accepted'::character varying::text])", name: "friendships_status_valid"
   end
 
   create_table "group_memberships", force: :cascade do |t|
@@ -200,7 +200,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120028) do
 
   create_table "invitations", force: :cascade do |t|
     t.string "token", null: false
-    t.bigint "created_by_id", null: false
+    t.bigint "created_by_id"
     t.bigint "group_id"
     t.datetime "revoked_at"
     t.datetime "expires_at"

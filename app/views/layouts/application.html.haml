@@ -8,7 +8,13 @@
     %link{ rel: "icon", href: "/icon.png", type: "image/png", sizes: "512x512" }
     %link{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" }
     %link{ rel: "mask-icon", href: "/icon-mask.svg", color: "#2b62f0" }
+    -# Installed to a home screen it runs without browser chrome, which is the
+    -# difference between a website you visit and an app you open.
+    %link{ rel: "manifest", href: "/manifest.json" }
     %meta{ name: "apple-mobile-web-app-capable", content: "yes" }
+    %meta{ name: "mobile-web-app-capable", content: "yes" }
+    %meta{ name: "apple-mobile-web-app-title", content: "Onera" }
+    %meta{ name: "apple-mobile-web-app-status-bar-style", content: "default" }
     %title= [ yield(:title).presence, "Onera" ].compact.join(" · ")
     :javascript
       (function () {
@@ -42,3 +48,4 @@
         = render "shared/bottom_nav"
         = render "shared/account_sheet"
         %confirm-dialog
+        %install-prompt

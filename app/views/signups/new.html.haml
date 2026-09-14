@@ -7,10 +7,14 @@
   .relative.mx-auto.w-full{ class: "max-w-sm" }
     %h1.text-3xl.font-bold.tracking-tight.text-white Join Onera
     %p.mt-2.text-sm{ class: "text-white/70" }
-      - if @invitation.group
-        = "#{@invitation.created_by.name} invited you to #{@invitation.group.name}."
+      - if @invitation.referrer_name && @invitation.group
+        = "#{@invitation.referrer_name} invited you to #{@invitation.group.name}."
+      - elsif @invitation.referrer_name
+        = "#{@invitation.referrer_name} invited you."
+      - elsif @invitation.group
+        = "You have been invited to #{@invitation.group.name}."
       - else
-        = "#{@invitation.created_by.name} invited you."
+        Split expenses with the people you actually split them with.
 
     = render "shared/auth_flash"
 

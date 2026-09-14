@@ -6,7 +6,9 @@
 # somebody new gets in: a member sends them a link. An invitation can carry a
 # group, in which case accepting it also joins that group.
 class Invitation < ApplicationRecord
-  belongs_to :created_by, class_name: "User"
+  # Optional: a fresh deployment has nobody to have sent the link, and the
+  # first person through the door needs one anyway.
+  belongs_to :created_by, class_name: "User", optional: true
   belongs_to :group, optional: true
 
   before_validation :assign_token, on: :create
@@ -18,6 +20,10 @@ class Invitation < ApplicationRecord
   def self.for(group:, creator:)
     live.find_by(group:, created_by: creator) || create!(group:, created_by: creator)
   end
+
+  # Who to credit on the join page. Nil for a link that came with the
+  # deployment rather than from a person.
+  def referrer_name = created_by&.name
 
   def revoked? = revoked_at.present?
   def expired? = expires_at.present? && expires_at <= Time.current

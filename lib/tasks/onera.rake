@@ -49,4 +49,27 @@ namespace :onera do
 
     RecoveryCodes.list(username)
   end
+
+  desc "Print a signup link for a deployment with nobody in it yet (optional ONERA_URL=)"
+  task invite: :environment do
+    # No creator: on a fresh deployment there is nobody to have sent it. This
+    # is how the first person gets an account without a shell on the server.
+    invitation = Invitation.live.find_by(created_by: nil, group: nil) ||
+                 Invitation.create!(created_by: nil, group: nil)
+
+    base = ENV["ONERA_URL"].presence ||
+           (ENV["APP_HOST"].presence && "https://#{ENV['APP_HOST']}") ||
+           "http://localhost:3000"
+
+    puts invitation.share_url(base)
+    puts
+    puts "Anyone with that link can create an account. Revoke it with:"
+    puts "  bin/rails onera:revoke_invites"
+  end
+
+  desc "Revoke every signup link that has no sender"
+  task revoke_invites: :environment do
+    count = Invitation.live.where(created_by: nil).update_all(revoked_at: Time.current)
+    puts "Revoked #{count} #{'link'.pluralize(count)}."
+  end
 end
