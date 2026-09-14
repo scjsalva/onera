@@ -50,7 +50,7 @@
             - friendship = Friendship.between(current_user, person)
             = button_to friendship_path(friendship), method: :delete,
                         class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
-                        form: { data: { turbo_confirm: "Remove #{person.name}? Shared expenses stay as they are." } },
+                        form: { data: { confirm: "Remove #{person.name}?", confirm_detail: "You will not see each other outside a shared group, and cannot split anything new directly. Everything you already share stays exactly as it is.", confirm_label: "Remove" } },
                         "aria-label" => "Remove #{person.name}" do
               %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
                 %path{ "stroke-linecap" => "round", d: "M6 6l12 12M18 6L6 18" }

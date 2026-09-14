@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120027) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120028) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -322,7 +322,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120027) do
     t.index ["archived_at"], name: "index_users_on_archived_at"
     t.index ["archived_ordinal"], name: "index_users_on_archived_ordinal", unique: true, where: "(archived_ordinal IS NOT NULL)"
     t.index ["preferred_currency_code"], name: "index_users_on_preferred_currency_code"
-    t.check_constraint "avatar_tone IS NULL OR avatar_tone >= 1 AND avatar_tone <= 8", name: "users_avatar_tone_range"
+    t.check_constraint "avatar_tone IS NULL OR avatar_tone >= 1 AND avatar_tone <= 16", name: "users_avatar_tone_range"
     t.check_constraint "length(btrim(name::text)) > 0", name: "users_name_present"
   end
 

@@ -203,6 +203,55 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     check((await b.url()).startsWith('/groups'), `expected the group, landed on ${await b.url()}`);
   });
 
+  scenario('a destructive action asks before it acts, and cancel means cancel', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/people`);
+
+    if (!(await b.has('Christian Nasayao'))) return; // nothing to remove in this run
+
+    await b.clickLabel('Remove Christian Nasayao');
+    await sleep(900);
+    check(await b.has('Remove Christian Nasayao?'), 'a confirmation should appear');
+    check(await b.has('stays exactly as it is'), 'it should say what survives');
+
+    await b.clickText('Cancel');
+    await sleep(700);
+    check(await b.has('Christian Nasayao'), 'cancelling must not remove them');
+  });
+
+  scenario('every avatar is the illustrated one, not just initials', async (b) => {
+    await signIn(b, 'scjsalva');
+
+    for (const path of ['/', '/people', '/activity', '/notifications', '/profile']) {
+      await b.goto(`${BASE}${path}`);
+      await sleep(1200);
+
+      const missing = await b.evaluate(`
+        const circles = [...document.querySelectorAll('[class*="bg-avatar"]')]
+          .filter((el) => el.title);           // colour swatches carry no title
+        return circles.filter((el) => !el.querySelector('img')).length;
+      `);
+      check(missing === 0, `${path}: ${missing} avatars are initials only`);
+    }
+  });
+
+  scenario('avatar colours are actually painted', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/profile/edit`);
+    await sleep(1200);
+
+    // Built from a number at runtime, so they only exist in the stylesheet if
+    // they were safelisted.
+    const transparent = await b.evaluate(`
+      return [...document.querySelectorAll('[class*="bg-avatar"]')]
+        .filter((el) => {
+          const bg = getComputedStyle(el).backgroundColor;
+          return bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent';
+        }).length;
+    `);
+    check(transparent === 0, `${transparent} avatar colours did not compile`);
+  });
+
   scenario('the people list shows only your own connections', async (b) => {
     // Seeded so everyone is connected to scjsalva and to nobody else.
     await signIn(b, 'cnasayao');

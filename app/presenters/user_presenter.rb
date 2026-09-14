@@ -15,6 +15,7 @@ class UserPresenter
       name: @user.name,
       initials: @user.initials,
       tone: @user.tone_class,
+      toneText: @user.tone_text_class,
       avatar: @user.avatar_url(size: 80)
     }
   end

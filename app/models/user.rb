@@ -105,10 +105,10 @@ class User < ApplicationRecord
 
   DEFAULT_AVATAR_STYLE = "notionists-neutral"
 
-  # Eight fixed identity colours. Fixed rather than themed, because a person
-  # should be the same colour in light and dark, and they always carry white
-  # text.
-  AVATAR_TONES = (1..8).to_a.freeze
+  # Sixteen fixed identity colours - eight deep, eight pale. Fixed rather than
+  # themed, because a person should be the same colour in light and dark.
+  AVATAR_TONES = (1..16).to_a.freeze
+  DARK_TEXT_TONES = (9..16).to_a.freeze
 
   validates :avatar_style, inclusion: { in: AVATAR_STYLES.keys }
   validates :avatar_tone, inclusion: { in: AVATAR_TONES }, allow_nil: true
@@ -117,6 +117,9 @@ class User < ApplicationRecord
   def tone_number = avatar_tone || (id % AVATAR_TONES.length) + 1
 
   def tone_class = "bg-avatar-#{tone_number}"
+
+  # Pale backgrounds cannot carry white initials.
+  def tone_text_class = DARK_TEXT_TONES.include?(tone_number) ? "text-ink-900" : "text-white"
 
   # Deterministic from the seed, so the same person is the same face on every
   # device with nothing stored anywhere. If the service is unreachable the

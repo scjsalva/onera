@@ -22,7 +22,7 @@
           - if membership.user_id != current_user.id
             = button_to group_membership_path(@group, membership), method: :delete,
                         class: "press grid h-9 w-9 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
-                        form: { data: { turbo_confirm: "Remove #{membership.user.name} from #{@group.name}?" } } do
+                        form: { data: { confirm: "Remove #{membership.user.name}?", confirm_detail: "They leave #{@group.name}. Anything they are already on stays exactly as it is.", confirm_label: "Remove" } } do
               %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
                 %path{ "stroke-linecap" => "round", d: "M6 6l12 12M18 6L6 18" }
 

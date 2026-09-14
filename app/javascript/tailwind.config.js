@@ -17,6 +17,11 @@ module.exports = {
     './app/presenters/**/*.rb',
     './app/javascript/**/*.{js,vue}',
   ],
+  // Avatar colours are chosen at runtime, so the class name is built from a
+  // number in Ruby and in Vue. Tailwind only compiles classes it can see as
+  // literal text, so without this the swatches and every avatar background
+  // come out transparent.
+  safelist: [ ...Array.from({ length: 16 }, (_, i) => `bg-avatar-${i + 1}`) ],
   theme: {
     extend: {
       fontFamily: {
@@ -49,9 +54,13 @@ module.exports = {
         // Identity colours for avatars. Fixed on purpose: they must stay the
         // same person's colour in both themes, and they always carry white
         // text, so they can't be part of an inverting ramp.
+        // 1-8 are deep enough for white initials; 9-16 are pastels that need
+        // dark ones. User#tone_text_class picks the right pairing.
         avatar: {
           1: '#2f6bed', 2: '#12a594', 3: '#c2410c', 4: '#7c3aed',
           5: '#0891b2', 6: '#be123c', 7: '#4d7c0f', 8: '#9333ea',
+          9: '#bfdbfe', 10: '#a7f3d0', 11: '#fed7aa', 12: '#ddd6fe',
+          13: '#a5f3fc', 14: '#fecdd3', 15: '#d9f99d', 16: '#fde68a',
         },
       },
       boxShadow: {

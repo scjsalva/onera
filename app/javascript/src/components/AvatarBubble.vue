@@ -24,9 +24,10 @@ const sizes = {
 <template>
   <span
     :class="[
-      'relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full font-semibold text-white',
+      'relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full font-semibold',
       sizes[size],
       user.tone || 'bg-brand-600',
+      user.toneText || 'text-white',
       ring ? 'ring-2 ring-surface' : '',
     ]"
     :title="user.name"

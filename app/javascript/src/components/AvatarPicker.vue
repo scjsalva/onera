@@ -69,7 +69,7 @@ function chooseTone(value) {
       </ul>
 
       <p class="label mt-4">Colour</p>
-      <ul class="flex flex-wrap gap-2">
+      <ul class="grid grid-cols-8 gap-2">
         <li v-for="tone in toneOptions" :key="tone">
           <button
             type="button"

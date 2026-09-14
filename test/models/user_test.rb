@@ -123,6 +123,33 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.avatar_url, "stable"
   end
 
+  test "the colour is derived until someone picks one" do
+    user = create_user(name: "Toned", username: "toneduser")
+
+    assert_includes User::AVATAR_TONES, user.tone_number
+    assert_equal "bg-avatar-#{user.tone_number}", user.tone_class
+
+    user.update!(avatar_tone: 12)
+    assert_equal "bg-avatar-12", user.reload.tone_class
+  end
+
+  test "pale colours pair with dark initials and deep ones with white" do
+    user = create_user(name: "Pale", username: "paleuser")
+
+    user.update!(avatar_tone: 3)
+    assert_equal "text-white", user.tone_text_class
+
+    user.update!(avatar_tone: 12)
+    assert_equal "text-ink-900", user.tone_text_class
+  end
+
+  test "a colour outside the set is refused" do
+    user = create_user(name: "Bad", username: "baduser")
+
+    user.avatar_tone = 99
+    refute user.valid?
+  end
+
   test "the avatar style must be one of the offered set" do
     user = create_user(name: "Styled", username: "styled")
 

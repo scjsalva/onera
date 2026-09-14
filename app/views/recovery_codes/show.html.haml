@@ -58,4 +58,4 @@
       Replaces all #{@codes.size} codes with ten fresh ones. Anything you saved before stops working.
     = button_to "Generate new codes", recovery_codes_path, method: :post,
                 class: "btn-secondary mt-3 w-full", disabled: current_user.email.blank?,
-                form: { data: { turbo_confirm: "Replace your recovery codes? The current ones stop working." } }
+                form: { data: { confirm: "Replace your recovery codes?", confirm_detail: "The ten you have now stop working immediately. Save the new ones when they appear.", confirm_label: "Replace them" } }

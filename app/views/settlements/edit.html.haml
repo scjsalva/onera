@@ -9,4 +9,4 @@
   %p.mt-1.text-sm.text-ink-500
     Reverses its effect on balances. The record stays in the history.
   = button_to "Void payment", void_group_settlement_path(@group, @settlement), method: :patch,
-              class: "btn-danger mt-3 w-full", form: { data: { turbo_confirm: "Void this payment?" } }
+              class: "btn-danger mt-3 w-full", form: { data: { confirm: "Void this payment?", confirm_detail: "Balances go back to what they were before it. The record stays in the history.", confirm_label: "Void payment" } }

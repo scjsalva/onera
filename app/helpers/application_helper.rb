@@ -8,15 +8,33 @@ module ApplicationHelper
   # A stable colour per person so avatars stay recognisable across screens.
   def avatar_tone(user) = user.tone_class
 
-  def avatar_tag(user, size: :md, ring: false)
-    dimensions = { xs: "h-6 w-6 text-[10px]", sm: "h-8 w-8 text-xs",
-                   md: "h-10 w-10 text-sm", lg: "h-14 w-14 text-base" }.fetch(size)
+  AVATAR_PIXELS = { xs: 48, sm: 64, md: 80, lg: 112 }.freeze
+  AVATAR_SIZES = {
+    xs: "h-6 w-6 text-[10px]", sm: "h-8 w-8 text-xs",
+    md: "h-10 w-10 text-sm", lg: "h-14 w-14 text-base"
+  }.freeze
 
-    tag.span(user.initials,
-             class: class_names("inline-flex shrink-0 items-center justify-center rounded-full",
-                                "font-semibold text-white select-none", dimensions,
-                                avatar_tone(user), "ring-2 ring-white" => ring),
-             title: user.name)
+  # Initials are painted first and the illustration sits on top of them. The
+  # illustration is transparent, so the initials are hidden once it loads and
+  # left showing if it never does - which is the whole point of having them.
+  def avatar_tag(user, size: :md, ring: false)
+    classes = class_names(
+      "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
+      "font-semibold select-none", AVATAR_SIZES.fetch(size),
+      avatar_tone(user), user.tone_text_class, "ring-2 ring-surface" => ring
+    )
+
+    url = user.avatar_url(size: AVATAR_PIXELS.fetch(size))
+
+    tag.span(class: classes, title: user.name) do
+      initials = tag.span(user.initials, class: "avatar-initials")
+      next initials if url.nil?
+
+      initials + tag.img(src: url, alt: "", loading: "lazy", aria: { hidden: true },
+                         class: "absolute inset-0 h-full w-full object-cover",
+                         onload: "this.parentNode.classList.add('avatar-loaded')",
+                         onerror: "this.remove()")
+    end
   end
 
   def money_tag(money, tone: :auto, size: :base, sign: false)
