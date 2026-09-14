@@ -231,6 +231,19 @@
     appearance: none;
     min-width: 0;
     max-width: 100%;
+    /* Resetting the appearance costs the control its intrinsic height as well
+       as its intrinsic width, and an empty date input has no text to stand in
+       for it - so on iOS the field collapsed to its padding and sat shorter
+       than every input around it. These are what a text input in this form
+       measures, and they hold whether or not a date has been picked. */
+    min-height: 3.125rem;
+  }
+
+  @media (min-width: 640px) {
+    input[type='date'].input,
+    input[type='time'].input {
+      min-height: 2.875rem;
+    }
   }
 
   /* Left-aligned like every other field. Safari centres the value inside the
@@ -501,9 +514,50 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Waiting.
+
+   A visit spends almost all of its time on the network - around 700ms on the
+   deployed instance - and none of it on rendering. So the job is not a faster
+   page, it is a page that admits it heard you.
+--------------------------------------------------------------------------- */
+
+/* Turbo paints a cached copy of a page you have already seen while the fresh
+   one is fetched. That is what makes tapping between tabs feel instant, but a
+   balance from a minute ago must not be mistaken for the current one, so the
+   figures sit back until the real answer lands. */
+html[data-turbo-preview] .tnum,
+html[data-turbo-preview] animated-money,
+html[data-turbo-preview] money-amount {
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+html[data-turbo-preview] [data-reveal] {
+  /* Do not replay the reveal on a preview - it would animate twice, once for
+     the cached copy and again for the real one. */
+  animation: none !important;
+  opacity: 1;
+  transform: none;
+}
+
+/* The tapped link answers immediately, 700ms before its page exists. */
+.is-navigating {
+  opacity: 0.65;
+  transition: opacity 0.12s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-turbo-preview] .tnum,
+  html[data-turbo-preview] animated-money,
+  .is-navigating {
+    transition: none;
+  }
+}
+
 @layer utilities {
-  /* Turbo's progress bar, restyled. It only appears when a visit takes long
-     enough to notice, which is the point: fast navigation shows nothing. */
+  /* Turbo's progress bar, restyled. Now shown after 100ms rather than the
+     default 500 - see application.js. */
   .turbo-progress-bar {
     height: 2px;
     background: linear-gradient(90deg, rgb(var(--brand-500)), rgb(var(--brand-700)));

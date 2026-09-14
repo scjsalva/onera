@@ -78,6 +78,32 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Feedback at a hundred milliseconds rather than five hundred. A visit to this
+// app spends most of its time waiting on the network - measured at ~700ms on
+// the deployed instance - and the default delay meant half a second of nothing
+// at all before the bar appeared. Under 100ms is genuinely instant and shows
+// nothing; past it, something should move.
+Turbo.setProgressBarDelay(100);
+
+// The tapped thing responds now, not when the page arrives. Turbo emits
+// turbo:click the moment a link is followed, which is 700ms before the new
+// page exists.
+document.addEventListener('turbo:click', (event) => {
+  const link = event.target.closest('a');
+  if (link) link.classList.add('is-navigating');
+});
+
+// Cleared once the new page is actually here. Not on turbo:visit, which fires
+// two milliseconds after the click and took the mark straight back off again.
+const clearNavigating = () => {
+  document.querySelectorAll('.is-navigating').forEach((el) => el.classList.remove('is-navigating'));
+};
+document.addEventListener('turbo:load', clearNavigating);
+document.addEventListener('turbo:render', clearNavigating);
+// A visit that is cancelled or fails leaves the mark on otherwise.
+document.addEventListener('turbo:before-cache', clearNavigating);
+document.addEventListener('turbo:fetch-request-error', clearNavigating);
+
 Turbo.start();
 
 window.Onera = { http, Turbo };

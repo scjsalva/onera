@@ -380,4 +380,46 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
 
     check(await b.has('Nothing yet') || await b.has('unread'), 'should render either way');
   });
+
+  // A visit spends almost all of its time waiting on the network, so the thing
+  // that makes navigation feel fluid is not the animation - it is whether
+  // anything at all responds before the page arrives.
+  scenario('a tapped link answers before its page does', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/`);
+
+    const result = await b.evaluate(`
+      const link = document.querySelector('a[href="/balances"]');
+      if (!link) return 'no balances link on the page';
+
+      const start = performance.now();
+      link.click();
+
+      // Sampled on the very next task, long before any response.
+      await new Promise((r) => setTimeout(r, 0));
+      const marked = link.classList.contains('is-navigating');
+      const elapsed = Math.round(performance.now() - start);
+
+      await new Promise((r) => document.addEventListener('turbo:load', r, { once: true }));
+      return JSON.stringify({ marked, elapsed, cleared: !document.querySelector('.is-navigating') });
+    `);
+
+    const { marked, elapsed, cleared } = JSON.parse(result);
+    check(marked, 'the tapped link should respond immediately, not when the page lands');
+    check(elapsed < 100, `the response should be instant, took ${elapsed}ms`);
+    check(cleared, 'the mark should be gone once the new page is here');
+  });
+
+  scenario('the progress bar shows up while waiting, not after', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/`);
+
+    // 100ms is the configured delay; a little over it the bar should exist.
+    const shown = await b.evaluate(`
+      document.querySelector('a[href="/expenses"]').click();
+      await new Promise((r) => setTimeout(r, 160));
+      return !!document.querySelector('.turbo-progress-bar') || document.readyState === 'complete';
+    `);
+    check(shown, 'something should be moving within 160ms of the tap');
+  });
 }

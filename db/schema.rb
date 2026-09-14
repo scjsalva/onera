@@ -170,7 +170,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120030) do
     t.index ["requester_id", "addressee_id"], name: "index_friendships_on_requester_id_and_addressee_id", unique: true
     t.index ["requester_id"], name: "index_friendships_on_requester_id"
     t.check_constraint "requester_id <> addressee_id", name: "friendships_distinct_people"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'accepted'::character varying::text])", name: "friendships_status_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying]::text[])", name: "friendships_status_valid"
   end
 
   create_table "group_memberships", force: :cascade do |t|

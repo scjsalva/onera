@@ -16,7 +16,11 @@
           if (meta && dark) meta.content = '#101216';
         } catch (e) {}
       })();
-    %meta{ name: "turbo-cache-control", content: "no-preview" }
+    -# Deliberately no "no-preview": Turbo paints the last known state of a page
+    -# it has seen before, immediately, while the fresh one is on its way. That
+    -# is the difference between a bottom-nav tap feeling instant and feeling
+    -# like a website. [data-turbo-preview] styling makes it read as provisional
+    -# so nobody mistakes a cached balance for a current one.
     -# Lets Turbo cross-fade between pages instead of replacing them abruptly.
     %meta{ name: "view-transition", content: "same-origin" }
     = csrf_meta_tags
