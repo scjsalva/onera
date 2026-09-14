@@ -15,7 +15,11 @@ class Invitation < ApplicationRecord
 
   validates :token, presence: true, uniqueness: true
 
-  scope :live, -> { where(revoked_at: nil).where("expires_at IS NULL OR expires_at > ?", Time.current) }
+  scope :live, lambda {
+    where(revoked_at: nil)
+      .where("expires_at IS NULL OR expires_at > ?", Time.current)
+      .where("max_uses IS NULL OR accepted_count < max_uses")
+  }
 
   def self.for(group:, creator:)
     live.find_by(group:, created_by: creator) || create!(group:, created_by: creator)
@@ -35,7 +39,9 @@ class Invitation < ApplicationRecord
 
   def revoked? = revoked_at.present?
   def expired? = expires_at.present? && expires_at <= Time.current
-  def usable? = !revoked? && !expired?
+  def spent? = max_uses.present? && accepted_count >= max_uses
+  def usable? = !revoked? && !expired? && !spent?
+  def uses_left = max_uses && [ max_uses - accepted_count, 0 ].max
 
   def revoke! = update!(revoked_at: Time.current)
 

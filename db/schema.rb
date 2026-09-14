@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120029) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120030) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -207,10 +207,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120029) do
     t.integer "accepted_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "max_uses"
     t.index ["created_by_id", "revoked_at"], name: "index_invitations_on_created_by_id_and_revoked_at"
     t.index ["created_by_id"], name: "index_invitations_on_created_by_id"
     t.index ["group_id"], name: "index_invitations_on_group_id"
     t.index ["token"], name: "index_invitations_on_token", unique: true
+    t.check_constraint "max_uses IS NULL OR max_uses > 0", name: "invitations_max_uses_positive"
   end
 
   create_table "notifications", force: :cascade do |t|

@@ -60,11 +60,33 @@ the sign-in page. Its existence is the whole of the open-signup switch — there
 is no setting to remember, and the button cannot disagree with whether signing
 up actually works.
 
-Close it again once everyone is in:
+It is capped at **10 uses** and expires after **7 days**, because the app is on
+a public address and a door that only closes when somebody remembers to close
+it stays open. Change either, or pass 0 to lift the limit:
+
+    ./bin/rails onera:invite ONERA_INVITE_USES=25 ONERA_INVITE_DAYS=14
+
+Close it early once everyone is in:
 
     ./bin/rails onera:revoke_invites
 
 After that the only way in is a link a member sends from **You → People**.
+
+### On verifying accounts
+
+There is no email verification, and adding one would mean an SMTP provider —
+the same cost that put recovery codes in place of a password-reset email. It
+would also buy little: anyone can verify a throwaway address, so it filters
+robots rather than strangers.
+
+What actually limits who gets in is the link: capped, dated, revocable, and off
+by default. A stranger who did sign up would see nothing — visibility is
+friends and shared groups only, both of which need somebody to agree — so the
+cost of one is a junk row, not exposure.
+
+Email is still asked for on every sign-in until given, and is required before
+recovery codes can be issued, because that is the one thing that gets an
+account back.
 
 ## 4. The first account
 
