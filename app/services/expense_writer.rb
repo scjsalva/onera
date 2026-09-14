@@ -10,8 +10,9 @@ class ExpenseWriter
     def success? = errors.empty?
   end
 
-  def initialize(group:, actor:, params:)
+  def initialize(actor:, params:, group: nil, owner: nil)
     @group = group
+    @owner = owner
     @actor = actor
     @params = params.to_h.deep_symbolize_keys
     @errors = []
@@ -19,13 +20,19 @@ class ExpenseWriter
 
   private
 
-  attr_reader :group, :actor, :params, :errors
+  attr_reader :group, :owner, :actor, :params, :errors
+
+  def personal? = group.nil?
 
   def currency
-    @currency ||= Currency.active.find_by(code: params[:currency_code].presence || group.base_currency_code)
+    @currency ||= Currency.active.find_by(code: params[:currency_code].presence || base_currency.code)
   end
 
-  def base_currency = group.base_currency
+  # A group's currency governs its expenses. Outside a group there is no group
+  # currency, so the owner's own primary currency takes over.
+  def base_currency
+    @base_currency ||= group ? group.base_currency : owner.preferred_currency
+  end
 
   def amount_minor
     @amount_minor ||= MoneyAmount.from_major(params[:amount].presence || 0, currency).minor
@@ -45,6 +52,11 @@ class ExpenseWriter
       rate: locked_rate || params[:exchange_rate].presence,
       on: spent_on
     )
+  rescue ArgumentError
+    # No rate on file for this pair. The expense is still perfectly valid in
+    # its own currency, so it is stored unconverted and shows up at settle-up
+    # as a currency that needs a rate before it can be consolidated.
+    CurrencyConverter::Result.new(amount_minor:, rate: BigDecimal(1))
   end
 
   # Overridden by ExpenseUpdater when editing an already-locked expense.
@@ -64,6 +76,8 @@ class ExpenseWriter
   end
 
   def payer_rows
+    return @payer_rows ||= [ { user_id: owner.id, amount_minor: } ] if personal?
+
     @payer_rows ||= Array(params[:payers]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
       next if user_id.nil?
@@ -76,6 +90,8 @@ class ExpenseWriter
   end
 
   def participant_rows
+    return @participant_rows ||= [ { user_id: owner.id, split_value: nil } ] if personal?
+
     @participant_rows ||= Array(params[:participants]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
       next if user_id.nil?
@@ -84,10 +100,14 @@ class ExpenseWriter
     end
   end
 
+  def split_method
+    personal? ? "equal" : (params[:split_method].presence || "equal")
+  end
+
   def split_result
     @split_result ||= SplitCalculator.new(
       total_minor: amount_minor,
-      split_method: params[:split_method].presence || "equal",
+      split_method:,
       participants: participant_rows.map { |row| { user_id: row[:user_id], value: row[:split_value] } },
       currency:
     ).call
@@ -102,8 +122,10 @@ class ExpenseWriter
   def validate_inputs!
     errors << "Choose a currency" if currency.nil?
     errors << "Enter an amount greater than zero" if currency && !amount_minor.positive?
-    errors << "Choose who paid" if payer_rows.empty?
-    errors << "Choose who is sharing this expense" if participant_rows.empty?
+    unless personal?
+      errors << "Choose who paid" if payer_rows.empty?
+      errors << "Choose who is sharing this expense" if participant_rows.empty?
+    end
 
     return if errors.any?
 
@@ -128,7 +150,7 @@ class ExpenseWriter
       base_amount_minor: conversion.amount_minor,
       spent_on: spent_on,
       spent_time: params[:spent_time].presence,
-      split_method: params[:split_method].presence || "equal",
+      split_method: split_method,
       rate_source: rate_source,
       rate_locked_at: rate_source == "native" ? (expense.rate_locked_at || Time.current) : expense.rate_locked_at
     )

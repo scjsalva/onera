@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120017) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -113,7 +113,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
   end
 
   create_table "expenses", force: :cascade do |t|
-    t.bigint "group_id", null: false
+    t.bigint "group_id"
     t.bigint "category_id"
     t.bigint "created_by_id"
     t.string "description", null: false
@@ -135,6 +135,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
     t.datetime "rate_locked_at"
     t.string "rate_source", default: "indicative", null: false
     t.bigint "rate_locked_by_id"
+    t.bigint "owner_id"
     t.index ["category_id"], name: "index_expenses_on_category_id"
     t.index ["created_by_id"], name: "index_expenses_on_created_by_id"
     t.index ["currency_code"], name: "index_expenses_on_currency_code"
@@ -142,6 +143,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
     t.index ["group_id", "spent_on"], name: "index_expenses_on_group_id_and_spent_on"
     t.index ["group_id", "voided_at"], name: "index_expenses_on_group_id_and_voided_at"
     t.index ["group_id"], name: "index_expenses_on_group_id"
+    t.index ["owner_id", "spent_on"], name: "index_expenses_on_owner_id_and_spent_on"
+    t.index ["owner_id"], name: "index_expenses_on_owner_id"
     t.index ["rate_locked_by_id"], name: "index_expenses_on_rate_locked_by_id"
     t.index ["spent_on"], name: "index_expenses_on_spent_on"
     t.index ["voided_at"], name: "index_expenses_on_voided_at"
@@ -149,6 +152,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
     t.check_constraint "amount_minor > 0", name: "expenses_amount_positive"
     t.check_constraint "base_amount_minor > 0", name: "expenses_base_amount_positive"
     t.check_constraint "exchange_rate > 0::numeric", name: "expenses_rate_positive"
+    t.check_constraint "group_id IS NOT NULL OR owner_id IS NOT NULL", name: "expenses_have_a_home"
     t.check_constraint "length(btrim(description::text)) > 0", name: "expenses_description_present"
     t.check_constraint "rate_source::text = ANY (ARRAY['indicative'::character varying, 'locked'::character varying, 'native'::character varying]::text[])", name: "expenses_rate_source_valid"
     t.check_constraint "split_method::text = ANY (ARRAY['equal'::character varying, 'percentage'::character varying, 'fixed'::character varying, 'shares'::character varying]::text[])", name: "expenses_split_method_valid"
@@ -257,6 +261,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120016) do
   add_foreign_key "expenses", "currencies", column: "currency_code", primary_key: "code"
   add_foreign_key "expenses", "groups"
   add_foreign_key "expenses", "users", column: "created_by_id"
+  add_foreign_key "expenses", "users", column: "owner_id"
   add_foreign_key "expenses", "users", column: "rate_locked_by_id"
   add_foreign_key "expenses", "users", column: "voided_by_id"
   add_foreign_key "group_memberships", "groups"

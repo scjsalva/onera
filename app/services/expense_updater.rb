@@ -6,7 +6,7 @@ class ExpenseUpdater < ExpenseWriter
   def self.call(...) = new(...).call
 
   def initialize(expense:, actor:, params:)
-    super(group: expense.group, actor:, params:)
+    super(group: expense.group, owner: expense.owner, actor:, params:)
     @expense = expense
   end
 

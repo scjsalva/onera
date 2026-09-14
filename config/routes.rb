@@ -1,14 +1,50 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  root "dashboard#show"
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
+  # Temporary identity. There is no authentication yet: a person picks who
+  # they are and that choice lives in the session. Replacing this with real
+  # sign-in should only change how Current.user is established.
+  get    "welcome", to: "user_selection#new",     as: :user_selection
+  post   "welcome", to: "user_selection#create"
+  delete "welcome", to: "user_selection#destroy", as: :switch_user
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  resource  :profile, only: %i[show edit update]
+  resources :people,  only: %i[new create]
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  resources :expenses, only: :index, as: :global_expenses
+  get "balances", to: "balances#index"
+  get "activity", to: "activity#index"
+  get "insights", to: "insights#show"
+
+  resources :groups do
+    resources :expenses do
+      member do
+        patch :void
+        patch :restore
+      end
+    end
+
+    resources :settlements do
+      member { patch :void }
+    end
+
+    resources :memberships, only: %i[index create destroy]
+
+    member do
+      get :balances
+      get :activity
+    end
+
+    resource :settle_up, only: %i[show create], controller: "settle_ups"
+  end
+
+  # Server-authoritative previews for the Vue expense form. The client never
+  # computes a figure that gets persisted; it asks Rails what the split and
+  # the conversion would be, and Rails recalculates again on submit.
+  namespace :api do
+    post "split_previews", to: "split_previews#create"
+    get  "conversions",    to: "conversions#show"
+  end
+
+  get "up", to: "rails/health#show", as: :rails_health_check
 end

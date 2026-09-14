@@ -3,7 +3,9 @@
 class Expense < ApplicationRecord
   SPLIT_METHODS = %w[equal percentage fixed shares].freeze
 
-  belongs_to :group
+  # Null for a personal expense; owner is set instead.
+  belongs_to :group, optional: true
+  belongs_to :owner, class_name: "User", optional: true
   belongs_to :category, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :voided_by, class_name: "User", optional: true
@@ -35,6 +37,8 @@ class Expense < ApplicationRecord
   validate :people_belong_to_group
 
   scope :active, -> { where(voided_at: nil) }
+  scope :personal, -> { where(group_id: nil) }
+  scope :shared, -> { where.not(group_id: nil) }
   scope :voided, -> { where.not(voided_at: nil) }
   scope :recent_first, -> { order(spent_on: :desc, created_at: :desc, id: :desc) }
   scope :in_period, ->(from, to) { where(spent_on: from..to) }
@@ -47,6 +51,8 @@ class Expense < ApplicationRecord
 
   scope :rate_locked, -> { where.not(rate_locked_at: nil) }
   scope :awaiting_rate_lock, -> { active.where(rate_locked_at: nil).where("currency_code <> base_currency_code") }
+
+  def personal? = group_id.nil?
 
   def voided? = voided_at.present?
   def active? = voided_at.nil?
@@ -104,7 +110,7 @@ class Expense < ApplicationRecord
   end
 
   def people_belong_to_group
-    return if group.blank?
+    return personal_expense_involves_only_owner if group.blank?
 
     member_ids = group.group_memberships.pluck(:user_id).to_set
     involved = (expense_payers.reject(&:marked_for_destruction?).map(&:user_id) +
@@ -113,5 +119,15 @@ class Expense < ApplicationRecord
     return if outsiders.empty?
 
     errors.add(:base, "Everyone on an expense must be a member of the group")
+  end
+
+  def personal_expense_involves_only_owner
+    return errors.add(:base, "A personal expense needs an owner") if owner_id.blank?
+
+    involved = (expense_payers.reject(&:marked_for_destruction?).map(&:user_id) +
+                expense_participants.reject(&:marked_for_destruction?).map(&:user_id)).compact.uniq
+    return if involved.all? { |id| id == owner_id }
+
+    errors.add(:base, "A personal expense can only involve its owner")
   end
 end

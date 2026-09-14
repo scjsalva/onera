@@ -74,7 +74,7 @@ class Consolidation
         [ standing.user, converted ]
       end
 
-      [ balanced(raw) ].flatten.map { |user, net| Entry.new(user:, currency: target_currency, net_minor: net) }
+      balanced(raw).map { |user, net| Entry.new(user:, currency: target_currency, net_minor: net) }
     end
   end
 

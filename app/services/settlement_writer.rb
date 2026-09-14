@@ -38,6 +38,8 @@ class SettlementWriter
       amount_minor:, from: currency, to: base_currency,
       rate: params[:exchange_rate].presence, on: settled_on
     )
+  rescue ArgumentError
+    CurrencyConverter::Result.new(amount_minor:, rate: BigDecimal(1))
   end
 
   def validate_inputs!
