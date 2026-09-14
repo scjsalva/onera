@@ -28,7 +28,7 @@ const open = ref(false);
     >
       <span class="flex items-center gap-2">
         <svg
-          class="h-7 w-7 transition-transform duration-300 group-hover:rotate-90 md:h-5 md:w-5"
+          class="icon-nav transition-transform duration-300 group-hover:rotate-90"
           fill="none"
           stroke="currentColor"
           stroke-width="2.4"

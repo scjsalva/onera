@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120018) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120023) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -183,6 +183,56 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120018) do
     t.check_constraint "length(btrim(name::text)) > 0", name: "groups_name_present"
   end
 
+  create_table "invitations", force: :cascade do |t|
+    t.string "token", null: false
+    t.bigint "created_by_id", null: false
+    t.bigint "group_id"
+    t.datetime "revoked_at"
+    t.datetime "expires_at"
+    t.integer "accepted_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id", "revoked_at"], name: "index_invitations_on_created_by_id_and_revoked_at"
+    t.index ["created_by_id"], name: "index_invitations_on_created_by_id"
+    t.index ["group_id"], name: "index_invitations_on_group_id"
+    t.index ["token"], name: "index_invitations_on_token", unique: true
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "actor_id"
+    t.bigint "group_id"
+    t.string "subject_type"
+    t.bigint "subject_id"
+    t.string "kind", null: false
+    t.string "title", null: false
+    t.string "body"
+    t.string "url"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_notifications_on_actor_id"
+    t.index ["group_id"], name: "index_notifications_on_group_id"
+    t.index ["subject_type", "subject_id"], name: "index_notifications_on_subject"
+    t.index ["user_id", "created_at"], name: "index_notifications_on_user_id_and_created_at"
+    t.index ["user_id", "read_at", "created_at"], name: "index_notifications_on_user_and_state"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
+  create_table "recovery_codes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "code_digest", null: false
+    t.integer "position", null: false
+    t.datetime "used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code_digest"], name: "index_recovery_codes_on_code_digest", unique: true
+    t.index ["user_id", "position"], name: "index_recovery_codes_on_user_id_and_position", unique: true
+    t.index ["user_id", "used_at"], name: "index_recovery_codes_on_user_id_and_used_at"
+    t.index ["user_id"], name: "index_recovery_codes_on_user_id"
+  end
+
   create_table "revisions", force: :cascade do |t|
     t.string "revisable_type", null: false
     t.bigint "revisable_id", null: false
@@ -243,7 +293,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120018) do
     t.string "preferred_currency_code", limit: 3, default: "PHP", null: false
     t.datetime "archived_at"
     t.integer "archived_ordinal"
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "remember_created_at"
+    t.datetime "last_sign_in_at"
+    t.datetime "recovery_codes_generated_at"
+    t.string "username", null: false
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "(email IS NOT NULL)"
+    t.index "lower((username)::text)", name: "index_users_on_lower_username", unique: true
     t.index ["archived_at"], name: "index_users_on_archived_at"
     t.index ["archived_ordinal"], name: "index_users_on_archived_ordinal", unique: true, where: "(archived_ordinal IS NOT NULL)"
     t.index ["preferred_currency_code"], name: "index_users_on_preferred_currency_code"
@@ -272,6 +328,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120018) do
   add_foreign_key "group_memberships", "users"
   add_foreign_key "groups", "currencies", column: "base_currency_code", primary_key: "code"
   add_foreign_key "groups", "users", column: "created_by_id"
+  add_foreign_key "invitations", "groups"
+  add_foreign_key "invitations", "users", column: "created_by_id"
+  add_foreign_key "notifications", "groups"
+  add_foreign_key "notifications", "users"
+  add_foreign_key "notifications", "users", column: "actor_id"
+  add_foreign_key "recovery_codes", "users"
   add_foreign_key "revisions", "users", column: "actor_id"
   add_foreign_key "settlements", "currencies", column: "base_currency_code", primary_key: "code"
   add_foreign_key "settlements", "currencies", column: "currency_code", primary_key: "code"

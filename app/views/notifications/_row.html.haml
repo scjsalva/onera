@@ -1,0 +1,22 @@
+= button_to notification_path(notification), method: :patch,
+            class: "press block w-full text-left transition hover:bg-ink-200/40 #{'bg-brand-50' unless notification.read?}",
+            form_class: "contents" do
+  %span.flex.items-start.gap-3.px-4.py-3
+    - if notification.actor
+      = avatar_tag(notification.actor, size: :sm)
+    - else
+      %span.grid.h-8.w-8.shrink-0.place-items-center.rounded-full.bg-ink-200.text-ink-500
+        %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1" }
+
+    %span.min-w-0.flex-1
+      %span.block.text-sm.font-medium.text-ink-900= notification.title
+      - if notification.body.present?
+        %span.block.text-xs.text-ink-500{ class: "mt-0.5" }= notification.body
+      %span.mt-1.block.text-xs.text-ink-400
+        = "#{time_ago_in_words(notification.created_at)} ago"
+        - if notification.group
+          = "· #{notification.group.name}"
+
+    - unless notification.read?
+      %span.mt-1.h-2.w-2.shrink-0.rounded-full.bg-brand-600

@@ -98,7 +98,7 @@ function personFor(id) {
     <Transition name="fade">
       <ul v-if="preview?.errors?.length" class="mt-2 space-y-1">
         <li v-for="error in preview.errors" :key="error" class="flex items-start gap-1.5 text-xs text-negative-600">
-          <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <svg class="mt-0.5 icon-sm shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" d="M12 8v5m0 3.5v.01" />
             <circle cx="12" cy="12" r="9" />
           </svg>

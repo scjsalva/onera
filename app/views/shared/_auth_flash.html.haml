@@ -1,0 +1,6 @@
+- if flash[:alert].present?
+  .mt-6.rounded-xl.border.px-4.py-3.text-sm.text-white{ class: "border-negative-600/40 bg-negative-600/25" }
+    = flash[:alert]
+- if flash[:notice].present?
+  .mt-6.rounded-xl.border.px-4.py-3.text-sm.text-white{ class: "border-positive-600/40 bg-positive-600/25" }
+    = flash[:notice]

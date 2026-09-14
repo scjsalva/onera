@@ -8,6 +8,9 @@ gem "pg", "~> 1.5"
 gem "json", "~> 2.9"
 gem "puma", ">= 5.0"
 
+# Authentication
+gem "devise"
+
 # Views
 gem "haml-rails"
 gem "vite_rails"
@@ -27,3 +30,5 @@ group :development, :test do
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
 end
+
+gem "rack-test", "~> 2.2", groups: [ :development, :test ]

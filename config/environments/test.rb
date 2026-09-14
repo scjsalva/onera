@@ -15,6 +15,13 @@ Rails.application.configure do
   # loading is working properly before deploying your code.
   config.eager_load = ENV["CI"].present?
 
+  # The browser suite drives a real server here.
+  config.hosts.clear
+
+  # On for the browser suite (bin/e2e sets E2E), off for Rack::Test, which
+  # has no browser to supply a token.
+  config.action_controller.allow_forgery_protection = ENV["E2E"].present?
+
   # Configure public file server for tests with cache-control for performance.
   config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
 
@@ -26,7 +33,6 @@ Rails.application.configure do
   config.action_dispatch.show_exceptions = :rescuable
 
   # Disable request forgery protection in test environment.
-  config.action_controller.allow_forgery_protection = false
 
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the

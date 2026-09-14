@@ -1,0 +1,44 @@
+- page_title "Recover your account"
+
+.relative.flex.min-h-dvh.flex-col.justify-center.overflow-hidden.px-6.py-12
+  .pointer-events-none.absolute.-left-24.-top-24.h-72.w-72.rounded-full.opacity-50.blur-3xl{ class: "bg-brand-solid" }
+  .pointer-events-none.absolute.-bottom-32.-right-20.h-80.w-80.rounded-full.opacity-30.blur-3xl{ class: "bg-brand-500" }
+
+  .relative.mx-auto.w-full{ class: "max-w-sm" }
+    %h1.text-2xl.font-bold.tracking-tight.text-white Use a recovery code
+    %p.mt-2.text-sm{ class: "text-white/70" }
+      Enter your email and one of the codes you saved. Each code works once.
+    %p.mt-2.text-xs{ class: "text-white/45" }
+      Recovery needs the email on your account - a username won't do it, because everyone in your
+      groups can see that.
+
+    = render "shared/auth_flash"
+
+    = form_with url: recovery_path, method: :post, class: "mt-8 space-y-3" do |form|
+      %div
+        = form.label :email, "Email", class: "label text-white/60"
+        = form.email_field :email, value: @email, autofocus: true, autocomplete: "email",
+                           class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                           placeholder: "you@example.com"
+      %div
+        = form.label :code, "Recovery code", class: "label text-white/60"
+        = form.text_field :code, autocomplete: "one-time-code", spellcheck: false,
+                          class: "input border-white/15 bg-white/10 font-mono uppercase tracking-widest text-white placeholder:text-white/40 placeholder:tracking-normal",
+                          placeholder: "XXXX-XXXX-XXXX"
+      %div
+        = form.label :password, "New password", class: "label text-white/60"
+        = form.password_field :password, autocomplete: "new-password",
+                              class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                              placeholder: "At least 8 characters"
+      %div
+        = form.label :password_confirmation, "Confirm new password", class: "label text-white/60"
+        = form.password_field :password_confirmation, autocomplete: "new-password",
+                              class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40"
+
+      = form.submit "Set new password", class: "btn-primary w-full"
+
+    = link_to "Back to sign in", new_user_session_path,
+              class: "mt-6 block text-center text-sm font-medium text-white/70 transition hover:text-white"
+
+    %p.mt-6.text-center.text-xs{ class: "text-white/45" }
+      No email on your account, or lost your codes? Whoever runs this app can set you a new password.

@@ -1,0 +1,18 @@
+- page_title "Change password"
+- content_for :heading, "Change password"
+- content_for :back_path, profile_path
+
+= form_with url: password_path, method: :patch, class: "space-y-5" do |form|
+  .card.card-pad.space-y-4{ data: { reveal: true } }
+    %div
+      = form.label :current_password, "Current password", class: "label"
+      = form.password_field :current_password, autocomplete: "current-password", class: "input"
+    %div
+      = form.label :password, "New password", class: "label"
+      = form.password_field :password, autocomplete: "new-password", class: "input",
+                            placeholder: "At least 8 characters"
+    %div
+      = form.label :password_confirmation, "Confirm new password", class: "label"
+      = form.password_field :password_confirmation, autocomplete: "new-password", class: "input"
+
+  = form.submit "Change password", class: "btn-primary w-full"

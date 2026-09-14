@@ -2,7 +2,7 @@
   .mx-auto.flex.h-14.w-full.max-w-5xl.items-center.gap-3.px-4
     - if content_for?(:back_path)
       = link_to yield(:back_path), class: "-ml-2 grid h-9 w-9 place-items-center rounded-full text-ink-600 transition active:scale-90 hover:bg-ink-200/70" do
-        %svg.h-5.w-5{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %svg.icon-lg{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
           %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M15 19l-7-7 7-7" }
     - else
       = link_to root_path, class: "-ml-1 flex items-center gap-2" do
@@ -11,7 +11,15 @@
     %h1.min-w-0.flex-1.truncate.text-base.font-semibold.text-ink-900= yield(:heading).presence || yield(:title).presence
 
     - if current_user
-      %button.group.flex.items-center.gap-2.rounded-full.py-1.pl-1.pr-2.transition{ type: "button", class: "active:scale-95 hover:bg-ink-200/70", "@click" => "$root.userMenuOpen = true", "aria-label" => "Switch user" }
+      - unread = current_user.notifications.unread.count
+      = link_to notifications_path, class: "press relative grid h-9 w-9 place-items-center rounded-full text-ink-600 transition hover:bg-ink-200/70", "aria-label" => (unread.positive? ? "Notifications, #{unread} unread" : "Notifications") do
+        %svg.icon-lg{ fill: "none", stroke: "currentColor", "stroke-width" => "1.9", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1" }
+        - if unread.positive?
+          %span.animate-pop.absolute.grid.place-items-center.rounded-full.bg-brand-600.px-1.text-white{ class: "right-0.5 top-0.5 h-4 min-w-4 text-[10px] font-bold leading-4" }
+            = unread > 9 ? "9+" : unread
+
+      %button.group.flex.items-center.gap-2.rounded-full.py-1.pl-1.pr-2.transition{ type: "button", class: "active:scale-95 hover:bg-ink-200/70", "@click" => "$root.userMenuOpen = true", "aria-label" => "Your account" }
         = avatar_tag(current_user, size: :sm)
-        %svg.h-4.w-4.text-ink-500{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %svg.icon-md.text-ink-500{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
           %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }

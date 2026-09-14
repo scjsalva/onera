@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Runs the browser journeys against a throwaway server on the test database.
+#
+# They used to run against the development app, which meant a scenario that
+# changed a password left the next run signing in with the wrong one - and
+# quietly edited real data along the way.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH"
+export RAILS_ENV=test
+export E2E=1
+# Its own database. The journeys commit real rows, and sharing onera_test with
+# the unit suite left their leftovers visible to tests that count records.
+export DATABASE_URL="${ONERA_E2E_DATABASE_URL:-postgres://localhost/onera_e2e}"
+export ONERA_URL="http://localhost:3101"
+
+echo "== preparing the test database"
+bin/rails db:prepare > /tmp/onera-e2e-db.log 2>&1 || { tail -20 /tmp/onera-e2e-db.log; exit 1; }
+bin/rails runner '
+  require Rails.root.join("db/seeds/reference_data")
+  require Rails.root.join("db/seeds/people")
+  [Notification, RecoveryCode, Invitation, ActivityEvent, Revision,
+   ExpenseSplit, ExpensePayer, ExpenseParticipant, Expense, Settlement,
+   GroupMembership, Group].each(&:delete_all)
+  User.delete_all
+  Seeds::ReferenceData.load!
+  Seeds::People.load!
+' >> /tmp/onera-e2e-db.log 2>&1 || { tail -20 /tmp/onera-e2e-db.log; exit 1; }
+
+echo "== building assets"
+bin/vite build --mode test > /tmp/onera-e2e-vite.log 2>&1 || { tail -20 /tmp/onera-e2e-vite.log; exit 1; }
+
+echo "== booting test server on 3101"
+bin/rails server -p 3101 -e test > /tmp/onera-e2e-server.log 2>&1 &
+SERVER_PID=$!
+trap 'kill $SERVER_PID 2>/dev/null' EXIT INT TERM
+
+for _ in $(seq 1 40); do
+  if curl -s -o /dev/null "$ONERA_URL/sign-in"; then break; fi
+  sleep 0.5
+done
+
+if ! curl -s -o /dev/null "$ONERA_URL/sign-in"; then
+  echo "server never came up"; tail -30 /tmp/onera-e2e-server.log; exit 1
+fi
+
+echo "== journeys"
+node test/browser/run.mjs "${1:-}"
+status=$?
+
+kill $SERVER_PID 2>/dev/null
+exit $status

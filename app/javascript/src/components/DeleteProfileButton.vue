@@ -39,7 +39,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
       <section class="mt-4">
         <h3 class="flex items-center gap-2 text-sm font-semibold text-negative-700">
           <span class="grid h-5 w-5 place-items-center rounded-full bg-negative-100">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <svg class="icon-xs" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
               <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
             </svg>
           </span>
@@ -54,7 +54,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
       <section class="mt-4">
         <h3 class="flex items-center gap-2 text-sm font-semibold text-positive-700">
           <span class="grid h-5 w-5 place-items-center rounded-full bg-positive-100">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <svg class="icon-xs" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </span>

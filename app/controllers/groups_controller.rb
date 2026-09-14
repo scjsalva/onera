@@ -21,7 +21,8 @@ class GroupsController < ApplicationController
       Array(params[:member_ids]).reject(&:blank?).uniq.each do |user_id|
         next if user_id.to_i == current_user.id
 
-        GroupMembership.find_or_create_by!(group: @group, user_id: user_id)
+        membership = GroupMembership.find_or_create_by!(group: @group, user_id: user_id)
+        Notifier.added_to_group(membership.user, group: @group, actor: current_user)
       end
 
       ActivityRecorder.record(action: "group.created", summary: "#{current_user.name} created #{@group.name}",

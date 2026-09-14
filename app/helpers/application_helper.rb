@@ -60,12 +60,20 @@ module ApplicationHelper
     Currency.active.ordered.map { |currency| [ "#{currency.code} · #{currency.symbol}", currency.code ] }
   end
 
+  def counterparty_json(counterparty)
+    UserPresenter.new(counterparty.user).as_json.merge(
+      net_minor: counterparty.net_minor,
+      formatted: counterparty.net.format,
+      breakdown: counterparty.breakdown.map do |line|
+        { group: line.group.name, formatted: line.net.format(sign: true), minor: line.net_minor }
+      end
+    )
+  end
+
   def debt_json(debt)
     {
-      from: { id: debt.from_user.id, name: debt.from_user.name,
-              initials: debt.from_user.initials, tone: avatar_tone(debt.from_user) },
-      to: { id: debt.to_user.id, name: debt.to_user.name,
-            initials: debt.to_user.initials, tone: avatar_tone(debt.to_user) },
+      from: UserPresenter.new(debt.from_user).as_json,
+      to: UserPresenter.new(debt.to_user).as_json,
       minor: debt.amount_minor,
       formatted: debt.amount.format
     }

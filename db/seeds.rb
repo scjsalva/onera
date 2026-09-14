@@ -7,6 +7,11 @@ require_relative "seeds/reference_data"
 Seeds::ReferenceData.load!
 puts "Reference data: #{Currency.count} currencies, #{Category.count} categories, #{ExchangeRate.count} rates"
 
+# Accounts. Always loaded: an app with authentication and no users is a
+# locked door with nobody holding a key.
+require_relative "seeds/people"
+Seeds::People.load!
+
 # Demo data is opt-in. db:prepare runs seeds automatically the first time it
 # creates a database, so defaulting this on would drop sample groups into a
 # production deploy.

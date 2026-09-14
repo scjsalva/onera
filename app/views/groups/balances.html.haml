@@ -58,7 +58,7 @@
       %details.group
         %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
           %span.text-sm.font-semibold.text-ink-900= "Between other people (#{others.size})"
-          %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %svg.icon-md.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
             %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
         .card.divide-y.divide-ink-200.overflow-hidden
           - others.each do |debt|
@@ -68,7 +68,7 @@
     %details.group
       %summary.mb-2.flex.cursor-pointer.list-none.items-center.justify-between
         %span.text-sm.font-semibold.text-ink-900 Everyone's totals
-        %svg.h-4.w-4.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %svg.icon-md.text-ink-400.transition-transform{ class: "group-open:rotate-180", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
           %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }
       .space-y-4
         - actives.each do |currency|

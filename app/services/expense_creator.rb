@@ -18,6 +18,7 @@ class ExpenseCreator < ExpenseWriter
       end
 
       RevisionRecorder.record(expense, action: "created", actor:)
+      Notifier.expense_created(expense, actor:)
       ActivityRecorder.record(
         action: personal? ? "personal_expense.created" : "expense.created",
         summary: "#{actor&.name || 'Someone'} added #{expense.description} (#{expense.amount.format})",

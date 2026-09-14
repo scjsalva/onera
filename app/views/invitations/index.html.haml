@@ -1,0 +1,17 @@
+- page_title "Invite someone"
+- content_for :heading, "Invite someone"
+- content_for :back_path, people_path
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    %h1.font-semibold.text-ink-900 Your invite link
+    %p.mt-1.text-sm.text-ink-500
+      Anyone with this link can create their own account. Send it to people you actually want in here.
+    %invite-link{ url: @invitation.share_url(request.base_url), refresh_path: invitations_path }
+
+  %section.card.card-pad{ data: { reveal: true } }
+    %p.font-semibold.text-ink-900 Inviting into a group?
+    %p.mt-1.text-sm.text-ink-500
+      A group's People tab has its own link. Using that one signs them up and puts them straight into
+      that group.
+    = link_to "Your groups", groups_path, class: "btn-secondary mt-3 w-full"

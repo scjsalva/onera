@@ -39,7 +39,7 @@ function toggle(id) {
           {{ person.formatted.replace('-', '') }}
         </span>
         <svg
-          class="h-4 w-4 shrink-0 text-ink-400 transition-transform duration-300"
+          class="icon-md shrink-0 text-ink-400 transition-transform duration-300"
           :class="expanded === person.id ? 'rotate-180' : ''"
           fill="none"
           stroke="currentColor"

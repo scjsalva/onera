@@ -1,17 +1,29 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 
+// Toasts teleport into one shared stack so several of them queue vertically
+// rather than landing on top of each other.
 const props = defineProps({
   message: { type: String, required: true },
   tone: { type: String, default: 'positive' },
+  // Long enough to read a sentence, glance away, and look back.
+  duration: { type: [ Number, String ], default: 15000 },
 });
 
 const visible = ref(false);
+const mounted = ref(false);
+let timer = null;
 
 onMounted(() => {
+  mounted.value = !!document.getElementById('toast-stack');
   requestAnimationFrame(() => (visible.value = true));
-  setTimeout(() => (visible.value = false), 4200);
+  timer = setTimeout(() => (visible.value = false), Number(props.duration) || 15000);
 });
+
+function dismiss() {
+  clearTimeout(timer);
+  visible.value = false;
+}
 
 const tones = {
   positive: 'bg-ink-900 text-ink-50',
@@ -20,27 +32,26 @@ const tones = {
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport v-if="mounted" to="#toast-stack">
     <Transition name="toast">
-      <div
-        v-if="visible"
-        class="pointer-events-none fixed inset-x-0 top-3 z-[60] flex justify-center px-4 md:top-5"
-        role="status"
-      >
-        <div
+      <div v-if="visible" class="flex w-full justify-center" role="status">
+        <button
+          type="button"
           :class="[
-            'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium shadow-lift',
-            tones[props.tone] || tones.positive,
+            'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full px-4 py-2.5 text-left text-sm font-medium shadow-lift transition active:scale-[0.98]',
+            tones[tone] || tones.positive,
           ]"
+          aria-label="Dismiss"
+          @click="dismiss"
         >
-          <span class="grid h-5 w-5 place-items-center rounded-full bg-ink-50/20">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ink-50/20">
+            <svg class="icon-xs" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
               <path v-if="tone === 'positive'" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               <path v-else stroke-linecap="round" d="M12 8v5m0 3.5v.01" />
             </svg>
           </span>
           {{ message }}
-        </div>
+        </button>
       </div>
     </Transition>
   </Teleport>

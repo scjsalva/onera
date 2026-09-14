@@ -1,0 +1,41 @@
+# frozen_string_literal: true
+
+# A shareable link that lets someone create their own account.
+#
+# Accounts are no longer made on another person's behalf, so this is how
+# somebody new gets in: a member sends them a link. An invitation can carry a
+# group, in which case accepting it also joins that group.
+class Invitation < ApplicationRecord
+  belongs_to :created_by, class_name: "User"
+  belongs_to :group, optional: true
+
+  before_validation :assign_token, on: :create
+
+  validates :token, presence: true, uniqueness: true
+
+  scope :live, -> { where(revoked_at: nil).where("expires_at IS NULL OR expires_at > ?", Time.current) }
+
+  def self.for(group:, creator:)
+    live.find_by(group:, created_by: creator) || create!(group:, created_by: creator)
+  end
+
+  def revoked? = revoked_at.present?
+  def expired? = expires_at.present? && expires_at <= Time.current
+  def usable? = !revoked? && !expired?
+
+  def revoke! = update!(revoked_at: Time.current)
+
+  # Built from the request rather than a configured host, so the link is
+  # correct on localhost, on a preview deploy and in production without
+  # anything to remember to change.
+  def share_url(base_url) = "#{base_url.chomp('/')}/join/#{token}"
+
+  private
+
+  def assign_token
+    self.token ||= loop do
+      candidate = SecureRandom.urlsafe_base64(12).tr("-_", "aB")
+      break candidate unless Invitation.exists?(token: candidate)
+    end
+  end
+end

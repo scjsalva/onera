@@ -1,0 +1,61 @@
+- page_title "Recovery codes"
+- content_for :heading, "Recovery codes"
+- content_for :back_path, profile_path
+
+.space-y-5
+  - if current_user.email.blank?
+    %section.card.card-pad{ class: "border-sand-200", data: { reveal: true } }
+      %p.font-semibold.text-ink-900 Add an email first
+      %p.mt-1.text-sm.text-ink-600
+        Codes are redeemed against your email address. Without one they can't be used, so there's
+        nothing here to save yet.
+      = link_to "Add your email", edit_email_path, class: "btn-primary mt-3 w-full"
+
+  - if @fresh.present?
+    -# Shown exactly once. Only digests are stored, so this is the only
+    -# moment these codes are readable.
+    %section.card.card-pad{ class: "border-brand-600/30", data: { reveal: true } }
+      %p.font-semibold.text-ink-900 Save these now
+      %p.mt-1.text-sm.text-ink-500
+        This is the only time they'll be shown. Keep them somewhere you can reach without this app.
+      %recovery-code-list{ codes: vue_json(@fresh) }
+
+  %section.card.card-pad{ data: { reveal: true } }
+    .flex.items-baseline.justify-between
+      %p.stat-label Codes left
+      %p.text-xs.text-ink-400
+        - if current_user.recovery_codes_generated_at
+          = "issued #{time_ago_in_words(current_user.recovery_codes_generated_at)} ago"
+    %p.mt-1.text-2xl.font-semibold.tnum{ class: current_user.unused_recovery_codes.zero? ? "text-negative-600" : "text-ink-900" }
+      = "#{current_user.unused_recovery_codes} of #{@codes.size}"
+    %p.mt-1.text-sm.text-ink-500
+      Each code works once, to set a new password if you're locked out.
+
+  - if @codes.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Your codes
+      %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - @codes.each do |code|
+          %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+            %span.grid.h-8.w-8.shrink-0.place-items-center.rounded-lg.text-xs.font-semibold{ class: code.used? ? "bg-ink-200 text-ink-400" : "bg-brand-50 text-brand-700" }
+              = code.position
+            %span.min-w-0.flex-1
+              %span.block.font-mono.text-sm.tracking-widest{ class: code.used? ? "text-ink-400 line-through" : "text-ink-700" }
+                = code.used? ? "•••• •••• ••••" : "•••• •••• ••••"
+              %span.block.text-xs.text-ink-500
+                - if code.used?
+                  = "used #{time_ago_in_words(code.used_at)} ago"
+                - else
+                  Unused
+            - if code.used?
+              %span.pill.bg-ink-200.text-ink-500 Spent
+            - else
+              %span.pill.bg-positive-50.text-positive-700 Ready
+
+  %section.card.card-pad{ data: { reveal: true } }
+    %p.font-semibold.text-ink-900 Generate a new set
+    %p.mt-1.text-sm.text-ink-500
+      Replaces all #{@codes.size} codes with ten fresh ones. Anything you saved before stops working.
+    = button_to "Generate new codes", recovery_codes_path, method: :post,
+                class: "btn-secondary mt-3 w-full", disabled: current_user.email.blank?,
+                form: { data: { turbo_confirm: "Replace your recovery codes? The current ones stop working." } }

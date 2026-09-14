@@ -21,6 +21,7 @@ class ExpenseVoider
     ActiveRecord::Base.transaction do
       expense.update!(voided_at: Time.current, voided_by: actor, void_reason: reason)
       RevisionRecorder.record(expense, action: "voided", actor:, changed_fields: { void_reason: reason })
+      Notifier.expense_voided(expense, actor:)
       ActivityRecorder.record(
         action: "expense.voided",
         summary: "#{actor&.name || 'Someone'} voided #{expense.description}",

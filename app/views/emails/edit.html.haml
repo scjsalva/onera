@@ -1,0 +1,37 @@
+- page_title "Add your email"
+- content_for :heading, "Add your email"
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    %h1.text-lg.font-semibold.text-ink-900 Add an email so you can get back in
+    %p.mt-2.text-sm.text-ink-600
+      Onera works fine without one. But if you forget your password, an email is the only way back
+      into your account.
+
+    %ul.mt-3.space-y-2.text-sm.text-ink-600
+      %li.flex.gap-2
+        %svg.icon-md.shrink-0.text-positive-600{ class: "mt-0.5", fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M5 13l4 4L19 7" }
+        %span Resetting a forgotten password needs your email and a recovery code. A username won't do it — everyone in your groups can see that.
+      %li.flex.gap-2
+        %svg.icon-md.shrink-0.text-positive-600{ class: "mt-0.5", fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M5 13l4 4L19 7" }
+        %span You'll be able to sign in with either your email or your username.
+      %li.flex.gap-2
+        %svg.icon-md.shrink-0.text-ink-400{ class: "mt-0.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %circle{ cx: "12", cy: "12", r: "9" }
+          %path{ "stroke-linecap" => "round", d: "M12 8v5m0 3.5v.01" }
+        %span Nothing is sent to it. There's no mail service here — it's used to identify you, not to contact you.
+
+    = form_with url: email_path, method: :patch, class: "mt-5 space-y-4" do |form|
+      = fields_for :user, @user do |f|
+        %div
+          = f.label :email, "Email", class: "label"
+          = f.email_field :email, autofocus: true, autocomplete: "email", class: "input",
+                          placeholder: "you@example.com"
+      .flex.gap-3
+        = form.submit "Save email", class: "btn-primary flex-1"
+        = form.submit "Not now", name: "skip", value: "Not now", class: "btn-secondary flex-1"
+
+  %p.text-center.text-xs.text-ink-500
+    Skipping is fine — you'll be asked again next time you sign in.

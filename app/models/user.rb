@@ -8,8 +8,23 @@
 class User < ApplicationRecord
   EMAIL_FORMAT = URI::MailTo::EMAIL_REGEXP
 
+  # No :recoverable - recovery is by offline code, so the app needs no mail
+  # service to be usable. No :validatable either: it insists on an email, and
+  # here email is optional until someone chooses to add one.
+  devise :database_authenticatable, :rememberable
+
+  USERNAME_FORMAT = /\A[a-z0-9][a-z0-9._-]{2,29}\z/
+
+  # Sign in with either. Devise looks this up through :login.
+  attr_writer :login
+
+  def login = @login || username || email
+
   belongs_to :preferred_currency, class_name: "Currency", foreign_key: :preferred_currency_code,
                                   primary_key: :code, inverse_of: false
+
+  has_many :recovery_codes, dependent: :delete_all
+  has_many :notifications, dependent: :delete_all
 
   has_many :group_memberships, dependent: :destroy
   has_many :groups, through: :group_memberships
@@ -29,10 +44,18 @@ class User < ApplicationRecord
 
   normalizes :email, with: ->(email) { email.strip.downcase.presence }
   normalizes :name, with: ->(name) { name.strip }
+  normalizes :username, with: ->(username) { username.strip.downcase.presence }
 
   validates :name, presence: true, length: { maximum: 120 }
+  validates :username, presence: true,
+                       format: { with: USERNAME_FORMAT,
+                                 message: "must be 3-30 characters: letters, numbers, dots, dashes or underscores" },
+                       uniqueness: { case_sensitive: false }
+  # Optional, but must be usable and unique when given - it is a login too.
   validates :email, format: { with: EMAIL_FORMAT }, allow_blank: true,
                     uniqueness: { case_sensitive: false }, length: { maximum: 255 }
+  validates :password, length: { minimum: 8 }, allow_nil: true
+  validates :password, confirmation: true
   validate :date_of_birth_is_in_the_past
 
   scope :ordered, -> { order(:name, :id) }
@@ -44,11 +67,39 @@ class User < ApplicationRecord
 
   def archived? = archived_at.present?
 
+  # Devise checks this before signing anyone in. A closed account keeps its
+  # row for the sake of the expenses that reference it, but can never be
+  # used again.
+  def active_for_authentication? = super && !archived?
+
+  def inactive_message = archived? ? :account_closed : super
+
+  def unused_recovery_codes = recovery_codes.unused.count
+  def recovery_codes_issued? = recovery_codes.exists?
+
   # Derived, never stored - a stored age is wrong the day after it is written.
   def age(on: Date.current)
     return if date_of_birth.blank?
 
     on.year - date_of_birth.year - (on.strftime("%m%d") < date_of_birth.strftime("%m%d") ? 1 : 0)
+  end
+
+  AVATAR_STYLE = "notionists-neutral"
+  AVATAR_HOST = "https://api.dicebear.com/9.x"
+
+  # Deterministic from the username, so the same person is the same face on
+  # every device with nothing stored. If the service is unreachable the UI
+  # falls back to the initials underneath, so this is decoration, not a
+  # dependency.
+  def avatar_url(size: 96)
+    return nil if archived?
+
+    "#{AVATAR_HOST}/#{AVATAR_STYLE}/svg?" + {
+      seed: username.presence || "user-#{id}",
+      size:,
+      backgroundColor: "transparent",
+      radius: 50
+    }.to_query
   end
 
   def initials
@@ -60,6 +111,16 @@ class User < ApplicationRecord
   end
 
   def member_of?(group) = group_memberships.exists?(group_id: group.id)
+
+  def needs_email? = email.blank?
+
+  # Devise's lookup, widened so one field accepts either identifier.
+  def self.find_for_database_authentication(conditions)
+    login = conditions[:login].to_s.strip.downcase
+    return nil if login.blank?
+
+    active.where("lower(username) = :login OR lower(email) = :login", login:).first
+  end
 
   private
 

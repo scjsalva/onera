@@ -1,3 +1,7 @@
-- flash.each do |type, message|
+-# Only the two message kinds are rendered. The flash also carries structured
+-# values between actions (the freshly generated recovery codes, for one), and
+-# iterating everything in it turned those into a second toast full of secrets.
+- %w[notice alert].each do |kind|
+  - message = flash[kind]
   - next if message.blank?
-  %flash-toast{ message: message, tone: (type.to_s == "alert" ? "negative" : "positive") }
+  %flash-toast{ key: "#{kind}-#{message.hash}", message: message, tone: (kind == "alert" ? "negative" : "positive") }

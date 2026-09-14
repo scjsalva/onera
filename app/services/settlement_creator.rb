@@ -17,6 +17,7 @@ class SettlementCreator < SettlementWriter
       end
 
       RevisionRecorder.record(settlement, action: "created", actor:)
+      Notifier.settlement_created(settlement, actor:)
       ActivityRecorder.record(
         action: "settlement.created",
         summary: "#{settlement.payer.name} paid #{settlement.recipient.name} #{settlement.amount.format}",

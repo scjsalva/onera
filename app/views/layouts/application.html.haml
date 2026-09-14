@@ -4,6 +4,10 @@
     %meta{ charset: "utf-8" }
     %meta{ name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" }
     %meta{ name: "theme-color", content: "#f1f3f5" }
+    %link{ rel: "icon", href: "/icon.svg", type: "image/svg+xml" }
+    %link{ rel: "icon", href: "/icon.png", type: "image/png", sizes: "512x512" }
+    %link{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" }
+    %link{ rel: "mask-icon", href: "/icon-mask.svg", color: "#2b62f0" }
     %meta{ name: "apple-mobile-web-app-capable", content: "yes" }
     %title= [ yield(:title).presence, "Onera" ].compact.join(" · ")
     :javascript
@@ -23,6 +27,7 @@
     = vite_stylesheet_tag "~/stylesheets/tailwind.css"
     = vite_javascript_tag "application"
   %body.h-full.overflow-x-hidden{ data: { user_id: current_user&.id } }
+    #toast-stack.pointer-events-none.fixed.inset-x-0.top-3.flex.flex-col.items-center.gap-2.px-4{ class: "z-[60] md:top-5" }
     #vue.min-h-full{ "v-cloak" => true }
       = render "shared/top_bar"
 
@@ -32,4 +37,4 @@
 
       - if signed_in?
         = render "shared/bottom_nav"
-        = render "shared/user_switcher"
+        = render "shared/account_sheet"

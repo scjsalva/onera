@@ -5,10 +5,10 @@
 .space-y-4
   .flex.items-center.justify-between
     %p.text-sm.text-ink-500= pluralize(@people.size, "person")
-    = link_to new_person_path, class: "btn-primary btn-sm" do
-      %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
+    = link_to invitations_path, class: "btn-primary btn-sm" do
+      %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
         %path{ "stroke-linecap" => "round", d: "M12 5v14M5 12h14" }
-      Add person
+      Invite
 
   %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
     - @people.each do |person|
@@ -25,8 +25,14 @@
         - if person.id == current_user.id
           -# Same pencil as the "Your profile" row in the switcher sheet.
           = link_to edit_profile_path, class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700", "aria-label" => "Edit your profile" do
-            %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+            %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
               %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M11 4H7a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z" }
 
+  %section.card.card-pad{ data: { reveal: true } }
+    %h2.text-sm.font-semibold.text-ink-900 Invite someone
+    %p.mt-1.text-sm.text-ink-500
+      People join by signing themselves up. Share this link with whoever should be here.
+    %invite-link{ url: @invitation.share_url(request.base_url), refresh_path: invitations_path }
+
   %p.text-xs.text-ink-500
-    One person, one record. Adding someone to a group reuses them rather than making a copy, so their balances follow them everywhere.
+    One person, one account. Adding someone to a group reuses them rather than making a copy, so their balances follow them everywhere.

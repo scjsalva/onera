@@ -76,6 +76,8 @@ class RateLocker
       end
     end
 
+    Notifier.rates_locked(group, actor:, currencies: resolved.keys, target: target.code) if locked.positive?
+
     Result.new(locked_count: locked, currencies: resolved.keys, errors: [])
   end
 

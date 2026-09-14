@@ -23,16 +23,17 @@
             = button_to group_membership_path(@group, membership), method: :delete,
                         class: "press grid h-9 w-9 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
                         form: { data: { turbo_confirm: "Remove #{membership.user.name} from #{@group.name}?" } } do
-              %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+              %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
                 %path{ "stroke-linecap" => "round", d: "M6 6l12 12M18 6L6 18" }
 
+  = render "shared/invite_panel", group: @group, invitation: @invitation
+
   %section.card.card-pad{ data: { reveal: true } }
-    %h2.mb-3.text-sm.font-semibold.text-ink-900 Add someone
+    %h2.mb-3.text-sm.font-semibold.text-ink-900 Add someone already on Onera
     - if @candidates.any?
       = form_with url: group_memberships_path(@group), method: :post do
         %member-selector{ people: vue_json(UserPresenter.collection(@candidates)), field: "user_ids[]" }
         %button.btn-primary.mt-4.w-full{ type: "submit" } Add to group
     - else
       %p.text-sm.text-ink-500 Everyone in Onera is already in this group.
-    = link_to "Create a new person instead", new_person_path(group_id: @group.id),
-              class: "mt-3 block text-center text-sm font-medium text-brand-600"
+

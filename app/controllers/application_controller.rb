@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  before_action :configure_permitted_parameters, if: :devise_controller?
+  before_action :authenticate_user!
   before_action :set_current_user
-  before_action :require_current_user
+  before_action :ask_for_email
 
   # Every group and expense lookup is scoped to what the current user can see,
   # so a record that is missing and one that belongs to someone else fail the
@@ -10,9 +12,15 @@ class ApplicationController < ActionController::Base
   # exists. Either way it is a dead end for this person, not an error.
   rescue_from ActiveRecord::RecordNotFound, with: :record_out_of_reach
 
-  helper_method :current_user, :signed_in?, :current_groups, :contextual_group
+  helper_method :current_groups, :contextual_group
 
   private
+
+  # Sign-in accepts a username or an email through one field, so Devise has
+  # to be told that :login is a permitted parameter.
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_in, keys: [ :login, :remember_me ])
+  end
 
   def record_out_of_reach
     respond_to do |format|
@@ -24,22 +32,30 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # The single seam between "who is looking" and the rest of the app. Real
-  # authentication would replace the body of this method and nothing else.
+  # The single seam between "who is looking" and the rest of the app. It used
+  # to read a session-selected id; now Devise supplies it. Nothing downstream
+  # changed, which was the point of routing everything through Current.user.
   def set_current_user
-    Current.user = User.active.find_by(id: session[:current_user_id])
-    session.delete(:current_user_id) if Current.user.nil?
+    Current.user = warden.user
   end
 
-  def current_user = Current.user
+  # Interrupts once per sign-in, and only once. Email stays optional for using
+  # the app but is the only way to recover an account, so the ask returns on
+  # the next sign-in - it just doesn't follow you around this one. Marking it
+  # shown before redirecting is what keeps it from re-catching every page
+  # someone navigates to instead of answering.
+  def ask_for_email
+    return unless Current.user
+    return if Current.user.email.present?
+    return if session[:email_prompt_shown]
+    # HEAD is routed like GET but request.get? is false for it, and either way
+    # only a page load should be interrupted.
+    return unless request.get? || request.head?
+    return if request.xhr? || !request.format.html?
+    return if controller_name.in?(%w[emails sessions signups])
 
-  def signed_in? = Current.user.present?
-
-  def require_current_user
-    return if signed_in?
-
-    session[:return_to] = request.fullpath if request.get?
-    redirect_to user_selection_path
+    session[:email_prompt_shown] = true
+    redirect_to edit_email_path
   end
 
   def current_groups

@@ -1,0 +1,18 @@
+- page_title "Notifications"
+- content_for :heading, "Notifications"
+
+.space-y-4
+  - if @notifications.any?
+    - unread = @notifications.count { |n| !n.read? }
+    - if unread.positive?
+      .flex.items-center.justify-between
+        %p.text-sm.text-ink-500= "#{unread} unread"
+        = button_to "Mark all read", read_all_notifications_path, method: :patch, class: "btn-secondary btn-sm"
+
+    %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+      - @notifications.each do |notification|
+        %li{ data: { reveal: true } }
+          = render "notifications/row", notification: notification
+  - else
+    = render "shared/empty_state", title: "Nothing yet",
+             body: "You'll hear when someone adds an expense you're part of, pays you back, or adds you to a group."

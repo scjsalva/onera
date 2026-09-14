@@ -20,7 +20,7 @@
     %p.label Who's in?
     %member-selector{ people: vue_json(UserPresenter.collection(User.active.ordered.where.not(id: current_user.id))),
                       field: "member_ids[]",
-                      "new-person-path" => new_person_path }
+                      "new-person-path" => nil }
     %p.mt-3.text-xs.text-ink-500 You're included automatically.
 
   = form.submit "Create group", class: "btn-primary w-full"

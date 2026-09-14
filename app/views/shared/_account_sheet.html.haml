@@ -1,0 +1,9 @@
+%account-sheet{ "v-if" => "$root.userMenuOpen",
+                user: vue_json(UserPresenter.new(current_user).as_json),
+                email: current_user.email,
+                "profile-path" => profile_path,
+                "password-path" => edit_password_path,
+                "recovery-path" => recovery_codes_path,
+                "sign-out-path" => destroy_user_session_path,
+                "recovery-codes-left" => current_user.unused_recovery_codes,
+                "@close" => "$root.userMenuOpen = false" }

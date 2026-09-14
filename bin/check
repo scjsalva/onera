@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Everything that must be true before a change is considered done.
+# Exits non-zero on the first failure, so it can't be misread as passing.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH"
+
+fail=0
+step() { printf '\n\033[1m== %s\033[0m\n' "$1"; }
+ok()   { printf '   \033[32mok\033[0m %s\n' "$1"; }
+bad()  { printf '   \033[31mFAIL\033[0m %s\n' "$1"; fail=1; }
+
+step "Ruby autoload"
+if bin/rails zeitwerk:check > /tmp/onera-check-zeitwerk.log 2>&1; then ok "zeitwerk"; else bad "zeitwerk (see /tmp/onera-check-zeitwerk.log)"; fi
+
+step "Frontend build"
+if npx vite build --logLevel error > /tmp/onera-check-vite.log 2>&1; then ok "vite build"; else bad "vite build (see /tmp/onera-check-vite.log)"; fi
+# Integration tests render real layouts, which need the test manifest too.
+if RAILS_ENV=test bin/vite build --mode test > /tmp/onera-check-vite-test.log 2>&1; then
+  ok "vite build (test)"
+else
+  bad "vite build for test (see /tmp/onera-check-vite-test.log)"
+fi
+
+step "Rubocop"
+if bin/rubocop --format simple > /tmp/onera-check-rubocop.log 2>&1; then
+  ok "rubocop"
+else
+  bad "rubocop"; tail -25 /tmp/onera-check-rubocop.log
+fi
+
+step "Brakeman"
+# -w2 reports medium and high confidence only; the weak tier is dominated by
+# advisories like "this Rails version reaches end of life eventually".
+if bin/brakeman -q -w2 --no-summary --no-pager > /tmp/onera-check-brakeman.log 2>&1; then
+  ok "no security warnings"
+else
+  bad "brakeman"; grep -A4 "Confidence" /tmp/onera-check-brakeman.log | head -30
+fi
+
+step "Route smoke crawl"
+if bin/rails runner test/smoke_routes.rb > /tmp/onera-check-smoke.log 2>&1; then
+  ok "$(tail -1 /tmp/onera-check-smoke.log)"
+else
+  bad "route crawl"; grep -E "FAIL|Error" /tmp/onera-check-smoke.log | head -10
+fi
+
+step "Ruby tests"
+if [ -d test ] && ls test/**/*_test.rb > /dev/null 2>&1; then
+  if bin/rails test > /tmp/onera-check-minitest.log 2>&1; then
+    ok "$(grep -oE '[0-9]+ runs.*' /tmp/onera-check-minitest.log | tail -1)"
+  else
+    bad "minitest"; tail -30 /tmp/onera-check-minitest.log
+  fi
+else
+  printf '   -- no ruby tests yet\n'
+fi
+
+step "JS tests"
+if [ -f vitest.config.mjs ] || [ -f vitest.config.js ]; then
+  if npx vitest run --silent > /tmp/onera-check-vitest.log 2>&1; then
+    ok "$(grep -oE 'Tests +[0-9]+ passed.*' /tmp/onera-check-vitest.log | tail -1)"
+  else
+    bad "vitest"; tail -30 /tmp/onera-check-vitest.log
+  fi
+else
+  printf '   -- no js tests yet\n'
+fi
+
+printf '\n'
+if [ "$fail" -eq 0 ]; then printf '\033[32mAll checks passed\033[0m\n'; else printf '\033[31mChecks failed\033[0m\n'; fi
+exit $fail

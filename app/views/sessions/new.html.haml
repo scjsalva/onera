@@ -1,0 +1,38 @@
+- page_title "Sign in"
+
+.relative.flex.min-h-dvh.flex-col.justify-center.overflow-hidden.px-6.py-12
+  .pointer-events-none.absolute.-left-24.-top-24.h-72.w-72.rounded-full.opacity-50.blur-3xl{ class: "bg-brand-solid" }
+  .pointer-events-none.absolute.-bottom-32.-right-20.h-80.w-80.rounded-full.opacity-30.blur-3xl{ class: "bg-brand-500" }
+
+  .relative.mx-auto.w-full{ class: "max-w-sm" }
+    %span.grid.h-12.w-12.place-items-center.rounded-2xl.backdrop-blur.animate-pop{ class: "bg-white/10" }
+      %svg.icon-lg.text-white{ viewBox: "0 0 24 24", fill: "none" }
+        %circle{ cx: "9", cy: "12", r: "6", stroke: "currentColor", "stroke-width" => "2.4" }
+        %path{ d: "M15 6a6 6 0 010 12", stroke: "currentColor", "stroke-width" => "2.4", "stroke-linecap" => "round", opacity: "0.55" }
+
+    %h1.mt-6.text-3xl.font-bold.tracking-tight.text-white Onera
+    %p.mt-2{ class: "text-white/70" } Shared costs, settled without the spreadsheet.
+
+    = render "shared/auth_flash"
+
+    = form_with url: user_session_path, scope: :user, class: "mt-8 space-y-3" do |form|
+      %div
+        = form.label :login, "Username or email", class: "label text-white/60"
+        = form.text_field :login, autofocus: true, autocapitalize: "none", autocorrect: "off",
+                          autocomplete: "username",
+                          class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                          placeholder: "yourname"
+      %div
+        = form.label :password, "Password", class: "label text-white/60"
+        = form.password_field :password, autocomplete: "current-password",
+                              class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                              placeholder: "••••••••"
+
+      %label.flex.cursor-pointer.items-center.gap-2.pt-1.text-sm{ class: "text-white/70" }
+        = form.check_box :remember_me, class: "h-4 w-4 rounded border-white/30 bg-white/10 text-brand-500 focus:ring-brand-500"
+        Stay signed in
+
+      = form.submit "Sign in", class: "btn-primary w-full"
+
+    = link_to "Forgotten your password?", recovery_path,
+              class: "mt-6 block text-center text-sm font-medium text-white/70 transition hover:text-white"

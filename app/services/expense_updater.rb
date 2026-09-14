@@ -29,6 +29,7 @@ class ExpenseUpdater < ExpenseWriter
 
       after = RevisionRecorder.snapshot_for(@expense.reload)
       RevisionRecorder.record(@expense, action: "edited", actor:, changed_fields: diff(before, after))
+      Notifier.expense_updated(@expense, actor:)
       ActivityRecorder.record(
         action: "expense.edited",
         summary: "#{actor&.name || 'Someone'} edited #{@expense.description}",

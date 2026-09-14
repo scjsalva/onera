@@ -207,7 +207,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
               v-model="form.description"
               placeholder="What was it for?"
               autocomplete="off"
-              class="input border-0 border-b border-ink-200 px-0 text-lg font-medium shadow-none focus:border-brand-500 focus:ring-0"
+              class="input border-0 border-b border-ink-200 text-lg font-medium shadow-none focus:border-brand-500 focus:ring-0"
             />
           </div>
 
@@ -221,7 +221,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                  estimate: the rate that counts is chosen at settle-up. -->
             <Transition name="fade-slide">
               <p v-if="conversion?.applicable" class="mt-2 flex items-start gap-1.5 pl-1 text-xs leading-relaxed text-ink-500">
-                <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="mt-0.5 icon-sm shrink-0 text-ink-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-3-3m3 3l-3 3M16 17H4m0 0l3 3m-3-3l3-3" />
                 </svg>
                 <span v-if="conversion.unavailable">
@@ -285,7 +285,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
             <summary class="cursor-pointer list-none text-sm font-medium text-ink-500 transition hover:text-ink-700">
               <span class="inline-flex items-center gap-1">
                 Add a note
-                <svg class="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="icon-md transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </span>
@@ -377,7 +377,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
           @click="submit"
         >
           <span class="inline-flex items-center justify-center gap-2">
-            <svg v-if="saving" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg v-if="saving" class="icon-md animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
               <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
             </svg>

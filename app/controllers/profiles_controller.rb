@@ -39,6 +39,8 @@ class ProfilesController < ApplicationController
   end
   helper_method :next_archived_label
 
+  # Password is deliberately absent: it changes through PasswordsController,
+  # which requires the current one.
   def profile_params
     params.require(:user).permit(:name, :email, :date_of_birth, :preferred_currency_code)
   end

@@ -5,11 +5,14 @@ import { computed, onMounted, ref, watch } from 'vue';
 // and eases between values afterwards, so a figure changing is something you
 // notice rather than something you miss.
 const props = defineProps({
-  minor: { type: [Number, String], required: true },
+  // Every numeric prop accepts a string: values set as HTML attributes always
+  // arrive as one, and declaring them Number-only just logs a warning on
+  // every render.
+  minor: { type: [ Number, String ], required: true },
   symbol: { type: String, default: '' },
-  exponent: { type: Number, default: 2 },
-  sign: { type: Boolean, default: false },
-  duration: { type: Number, default: 700 },
+  exponent: { type: [ Number, String ], default: 2 },
+  sign: { type: [ Boolean, String ], default: false },
+  duration: { type: [ Number, String ], default: 700 },
 });
 
 // Props set as HTML attributes always arrive as strings - Vue does not coerce
@@ -33,7 +36,7 @@ function animateTo(to, from = shown.value) {
   const delta = to - from;
 
   const step = (now) => {
-    const progress = Math.min((now - start) / props.duration, 1);
+    const progress = Math.min((now - start) / (Number(props.duration) || 700), 1);
     // easeOutExpo: fast out of the gate, gentle landing.
     const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
     shown.value = Math.round(from + delta * eased);
@@ -52,7 +55,8 @@ function format(minor) {
   const digits = Math.abs(minor).toString().padStart(places + 1, '0');
   const whole = digits.slice(0, digits.length - places).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   const fraction = places ? `.${digits.slice(-places)}` : '';
-  const prefix = negative ? '-' : props.sign && minor > 0 ? '+' : '';
+  const showPlus = props.sign && props.sign !== 'false';
+  const prefix = negative ? '-' : showPlus && minor > 0 ? '+' : '';
   return `${prefix}${props.symbol}${whole}${fraction}`;
 }
 </script>

@@ -210,9 +210,27 @@
     @apply py-3 leading-relaxed;
   }
 
+  /* The native chevron is painted hard against the right edge, and no amount
+     of padding moves it - only the text. Drawing our own means it can sit
+     inside the field like everything else. */
   select.input {
-    /* Room for the chevron, so a long option never runs under it. */
-    @apply py-3 pr-10;
+    @apply py-3 pr-11;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23757e8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    background-size: 1rem 1rem;
+  }
+
+  .dark select.input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23949daa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  }
+
+  /* Date and time inputs put a native picker button at the edge too. */
+  input[type='date'].input,
+  input[type='time'].input {
+    @apply pr-3;
   }
 
   .btn {
@@ -285,6 +303,18 @@
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
+
+  /* One icon scale for the whole app. Sizes were previously chosen per icon,
+     which is why the filter glyph sat larger than everything around it. Use
+     these on an svg rather than sizing it with height and width utilities. */
+  .icon-xs { @apply h-3 w-3 shrink-0; }
+  .icon-sm { @apply h-3.5 w-3.5 shrink-0; }
+  .icon-md { @apply h-4 w-4 shrink-0; }
+  .icon-lg { @apply h-5 w-5 shrink-0; }
+  .icon-xl { @apply h-6 w-6 shrink-0; }
+
+  /* The tab bar steps down when it becomes a sidebar. */
+  .icon-nav { @apply h-6 w-6 shrink-0 md:h-5 md:w-5; }
 
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;

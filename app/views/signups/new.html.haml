@@ -1,0 +1,47 @@
+- page_title "Join Onera"
+
+.relative.flex.min-h-dvh.flex-col.justify-center.overflow-hidden.px-6.py-12
+  .pointer-events-none.absolute.-left-24.-top-24.h-72.w-72.rounded-full.opacity-50.blur-3xl{ class: "bg-brand-solid" }
+  .pointer-events-none.absolute.-bottom-32.-right-20.h-80.w-80.rounded-full.opacity-30.blur-3xl{ class: "bg-brand-500" }
+
+  .relative.mx-auto.w-full{ class: "max-w-sm" }
+    %h1.text-3xl.font-bold.tracking-tight.text-white Join Onera
+    %p.mt-2.text-sm{ class: "text-white/70" }
+      - if @invitation.group
+        = "#{@invitation.created_by.name} invited you to #{@invitation.group.name}."
+      - else
+        = "#{@invitation.created_by.name} invited you."
+
+    = render "shared/auth_flash"
+
+    = form_with model: @user, url: signup_path(token: @invitation.token), class: "mt-8 space-y-3" do |form|
+      %div
+        = form.label :name, "Your name", class: "label text-white/60"
+        = form.text_field :name, autofocus: true, autocomplete: "name",
+                          class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                          placeholder: "Jane Dela Cruz"
+      %div
+        = form.label :username, "Username", class: "label text-white/60"
+        = form.text_field :username, autocapitalize: "none", autocorrect: "off", autocomplete: "username",
+                          class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                          placeholder: "jdelacruz"
+        %p.mt-1.text-xs{ class: "text-white/45" } This is how you sign in. Letters, numbers, dots, dashes.
+      %div
+        = form.label :email, "Email (optional)", class: "label text-white/60"
+        = form.email_field :email, autocomplete: "email",
+                           class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                           placeholder: "you@example.com"
+      %div
+        = form.label :password, "Password", class: "label text-white/60"
+        = form.password_field :password, autocomplete: "new-password",
+                              class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40",
+                              placeholder: "At least 8 characters"
+      %div
+        = form.label :password_confirmation, "Confirm password", class: "label text-white/60"
+        = form.password_field :password_confirmation, autocomplete: "new-password",
+                              class: "input border-white/15 bg-white/10 text-white placeholder:text-white/40"
+
+      = form.submit "Create account", class: "btn-primary w-full"
+
+    = link_to "Already have an account? Sign in", new_user_session_path,
+              class: "mt-6 block text-center text-sm font-medium text-white/70 transition hover:text-white"

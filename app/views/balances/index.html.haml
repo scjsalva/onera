@@ -13,7 +13,7 @@
   - if @counterparties.any?
     %section
       %h2.mb-2.text-sm.font-semibold.text-ink-900 By person
-      %counterparty-list{ people: vue_json(@counterparties.map { |c| { id: c.user.id, name: c.user.name, initials: c.user.initials, tone: avatar_tone(c.user), net_minor: c.net_minor, formatted: c.net.format, breakdown: c.breakdown.map { |b| { group: b.group.name, formatted: b.net.format(sign: true), minor: b.net_minor } } } }) }
+      %counterparty-list{ people: vue_json(@counterparties.map { |c| counterparty_json(c) }) }
   - else
     = render "shared/empty_state", title: "All square",
              body: "Nobody owes you and you owe nobody."

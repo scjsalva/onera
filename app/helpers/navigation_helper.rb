@@ -12,7 +12,7 @@ module NavigationHelper
     )
 
     link_to path, class: classes, "aria-current": (active ? "page" : nil) do
-      concat tag.svg(capture(&icon), class: class_names("h-6 w-6 transition-transform md:h-5 md:w-5",
+      concat tag.svg(capture(&icon), class: class_names("icon-nav transition-transform",
                                                         "scale-110 md:scale-100" => active),
                                      fill: "none", stroke: "currentColor",
                                      "stroke-width": active ? "2.4" : "1.9", viewBox: "0 0 24 24")

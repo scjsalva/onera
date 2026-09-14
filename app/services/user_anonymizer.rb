@@ -32,11 +32,19 @@ class UserAnonymizer
 
       user.update!(
         name: "Removed person #{ordinal}",
-        email: nil,
+        # Email is the sign-in identity and must stay present and unique, so
+        # it becomes a placeholder on a domain that can never receive mail.
+        email: "removed-#{ordinal}@closed.onera.invalid",
         date_of_birth: nil,
         archived_at: Time.current,
-        archived_ordinal: ordinal
+        archived_ordinal: ordinal,
+        # Both, or the confirmation validation compares the new password
+        # against whatever confirmation the object happens to be carrying and
+        # the whole close silently rolls back.
+        password: (scrambled = SecureRandom.hex(32)),
+        password_confirmation: scrambled
       )
+      user.recovery_codes.delete_all
 
       # The event deliberately does not record the old name - anonymising and
       # then writing the name into the history would defeat the point.

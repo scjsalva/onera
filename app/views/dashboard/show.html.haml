@@ -30,7 +30,7 @@
 
       - if @dashboard.estimated?
         %p.mt-4.flex.items-start.text-xs{ class: "gap-1.5 text-white/70" }
-          %svg.shrink-0{ class: "mt-0.5 h-3.5 w-3.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %svg.shrink-0{ class: "mt-0.5 icon-sm", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
             %circle{ cx: "12", cy: "12", r: "9" }
             %path{ "stroke-linecap" => "round", d: "M12 8v5m0 3.5v.01" }
           %span
@@ -42,7 +42,7 @@
       .mb-2.flex.items-baseline.justify-between
         %h2.text-sm.font-semibold.text-ink-900 People
         = link_to "See all", balances_path, class: "text-xs font-medium text-brand-600"
-      %counterparty-list{ people: vue_json(@counterparties.map { |c| { id: c.user.id, name: c.user.name, initials: c.user.initials, tone: avatar_tone(c.user), net_minor: c.net_minor, formatted: c.net.format, breakdown: c.breakdown.map { |b| { group: b.group.name, formatted: b.net.format(sign: true), minor: b.net_minor } } } }) }
+      %counterparty-list{ people: vue_json(@counterparties.map { |c| counterparty_json(c) }) }
 
   -# Groups.
   %section

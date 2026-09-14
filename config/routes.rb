@@ -1,15 +1,30 @@
 Rails.application.routes.draw do
   root "dashboard#show"
 
-  # Temporary identity. There is no authentication yet: a person picks who
-  # they are and that choice lives in the session. Replacing this with real
-  # sign-in should only change how Current.user is established.
-  get    "welcome", to: "user_selection#new",     as: :user_selection
-  post   "welcome", to: "user_selection#create"
-  delete "welcome", to: "user_selection#destroy", as: :switch_user
+  # Sign in and out only - accounts are created from inside the app, and
+  # password recovery is by offline code rather than email.
+  devise_for :users,
+             skip: %i[registrations passwords],
+             path: "",
+             path_names: { sign_in: "sign-in", sign_out: "sign-out" },
+             controllers: { sessions: "sessions" }
+
+  # Forgotten password, redeemed with one of the codes from your profile.
+  get  "recover", to: "recoveries#new",    as: :recovery
+  post "recover", to: "recoveries#create"
+
+  resource :password, only: %i[edit update], controller: "passwords"
+  resource :recovery_codes, only: %i[show create], controller: "recovery_codes"
+
+  # Accounts are created only by accepting an invite link.
+  get  "join/:token", to: "signups#new",    as: :signup
+  post "join/:token", to: "signups#create"
+
+  resources :invitations, only: %i[index create]
 
   resource  :profile, only: %i[show edit update destroy]
-  resources :people,  only: %i[index new create]
+  resource  :email,   only: %i[edit update], controller: "emails"
+  resources :people,  only: :index
 
   # Expenses live at the top level whether or not they belong to a group -
   # expense[group_id] decides, and a blank one means a personal expense.
@@ -18,6 +33,10 @@ Rails.application.routes.draw do
       patch :void
       patch :restore
     end
+  end
+
+  resources :notifications, only: %i[index update] do
+    collection { patch :read_all }
   end
 
   get "balances", to: "balances#index"

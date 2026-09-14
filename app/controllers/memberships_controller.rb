@@ -7,6 +7,7 @@ class MembershipsController < ApplicationController
     @memberships = @group.group_memberships.ordered.includes(:user)
     @calculator = BalanceCalculator.new(@group)
     @candidates = User.active.ordered.where.not(id: @group.group_memberships.select(:user_id))
+    @invitation = Invitation.for(group: @group, creator: current_user)
 
     respond_to do |format|
       format.html
@@ -28,6 +29,7 @@ class MembershipsController < ApplicationController
       ActivityRecorder.record(action: "membership.created",
                               summary: "#{current_user.name} added #{user.name} to #{@group.name}",
                               group: @group, actor: current_user, subject: user)
+      Notifier.added_to_group(user, group: @group, actor: current_user)
     end
 
     redirect_to group_memberships_path(@group),
@@ -48,6 +50,7 @@ class MembershipsController < ApplicationController
     ActivityRecorder.record(action: "membership.removed",
                             summary: "#{current_user.name} removed #{user.name} from #{@group.name}",
                             group: @group, actor: current_user, subject: user)
+    Notifier.removed_from_group(user, group: @group, actor: current_user)
     redirect_to group_memberships_path(@group), notice: "#{user.name} was removed."
   end
 

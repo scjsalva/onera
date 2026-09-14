@@ -86,7 +86,7 @@ function setPeriod(value) {
     <div class="flex gap-2">
       <div class="relative flex-1">
         <svg
-          class="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-ink-400"
+          class="pointer-events-none absolute inset-y-0 left-3 my-auto icon-md text-ink-400"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
@@ -111,7 +111,7 @@ function setPeriod(value) {
         aria-label="More filters"
         @click="sheetOpen = true"
       >
-        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4" />
         </svg>
         <span
