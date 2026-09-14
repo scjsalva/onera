@@ -70,7 +70,7 @@ const links = [
       <form :action="signOutPath" method="post" class="sheet-actions">
         <input type="hidden" name="_method" value="delete" />
         <input type="hidden" name="authenticity_token" :value="token" />
-        <button type="submit" class="sheet-action sheet-action-quiet">Sign out</button>
+        <button type="submit" class="sheet-action sheet-action-warn">Sign out</button>
       </form>
     </template>
   </BottomSheet>

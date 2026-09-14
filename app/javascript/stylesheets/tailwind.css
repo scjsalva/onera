@@ -319,6 +319,12 @@
     @apply text-ink-600 hover:bg-ink-200/50;
   }
 
+  /* Red text rather than a red slab: it is the only action in its footer, and
+     signing out is not the same order of danger as deleting an account. */
+  .sheet-action-warn {
+    @apply text-negative-600 hover:bg-negative-50;
+  }
+
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }

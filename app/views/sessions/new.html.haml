@@ -29,8 +29,8 @@
                               placeholder: "••••••••"
 
       %label.flex.cursor-pointer.items-center.gap-2.pt-1.text-sm{ class: "text-white/70" }
-        = form.check_box :remember_me, class: "h-4 w-4 rounded border-white/30 bg-white/10 text-brand-500 focus:ring-brand-500"
-        Stay signed in
+        = form.check_box :remember_me, { checked: true, class: "h-4 w-4 rounded border-white/30 bg-white/10 text-brand-500 focus:ring-brand-500" }
+        Stay signed in for six months
 
       = form.submit "Sign in", class: "btn-primary w-full"
 
