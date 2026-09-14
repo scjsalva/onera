@@ -9,124 +9,96 @@ process and a database.
 
 ## The shape of it
 
-**An Oracle Cloud always-free VM** runs the container behind Caddy, which
-holds the TLS certificate. **Neon** holds the database.
+**Render** runs the container. **Neon** holds the database. Both free, neither
+needs a card.
 
-Oracle's free tier has no clock on it and the machine never sleeps, which is
-why it is here rather than a free PaaS — those idle out after a quarter of an
-hour and the next visitor waits most of a minute for the app to wake.
+The database is deliberately not a Render Postgres: theirs is deleted after 30
+days on the free plan. Neon's free tier has no such clock, backs itself up, and
+survives the app being rebuilt or moved — which is the point. Losing the web
+service should cost an afternoon, not everyone's records.
 
-The database is deliberately not on the same box. Neon backs it up and can be
-reached from anywhere, so losing the machine costs an afternoon of setup
-rather than everyone's records.
+## 1. The database (~2 minutes)
 
-The image is built by GitHub Actions and pulled from the registry. The
-always-free micro has 1 GB of memory and building the image on it — bundle
-install and the Vite build together — exhausts that.
+1. Sign in at https://neon.com with GitHub.
+2. Create a project in the region nearest you — Singapore for Manila.
+3. Copy the connection string:
+   `postgresql://user:pass@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
 
-    GitHub Actions ──build──> ghcr.io/scjsalva/onera:latest
-                                        │ pull
-                                        v
-                         Oracle VM: Caddy ──> Rails ──> Neon
+Keep the `?sslmode=require`. Neon refuses unencrypted connections, which is
+what you want for a database holding other people's money.
 
-## What you need first
+Neon suspends an idle database and wakes it on the next query, so the first
+request after a quiet spell pays about half a second. Nothing is lost.
 
-1. **A Neon project** — https://neon.com, sign in with GitHub. Create a
-   project in the region nearest you and copy the connection string. Keep the
-   `?sslmode=require` on the end; Neon refuses unencrypted connections, which
-   is what you want for a database holding other people's money.
+## 2. The web service (~5 minutes)
 
-2. **An Oracle Cloud account** — https://cloud.oracle.com. It asks for a card
-   to verify identity and does not charge it, but check that for yourself
-   before you type it in. Create an **Always Free** compute instance:
-   - Ubuntu 24.04
-   - Shape: `VM.Standard.A1.Flex` (ARM, 4 cores / 24 GB) if the region has
-     capacity, otherwise `VM.Standard.E2.1.Micro` (1 core / 1 GB). Either
-     works — the image is built for both — and the micro is always available.
-   - Save the SSH private key it offers. It is the only copy.
-   - Note the public IP.
+1. Sign in at https://render.com with GitHub.
+2. **New → Blueprint**, connect GitHub, pick `scjsalva/onera`. It reads
+   `render.yaml`. The one-click deploy URL will not work — the repository is
+   private.
+3. It asks for the two values marked `sync: false`:
+   - `DATABASE_URL` — the Neon string above
+   - `APP_HOST` — the host Render assigns, e.g. `onera.onrender.com`. You will
+     not know it until the service exists; the app allows any `onrender.com`
+     host for exactly that reason, so it works on the first deploy and you can
+     fill this in straight after.
+4. Deploy. The first build takes several minutes — it compiles the Vite bundle
+   inside the image.
 
-3. **A hostname pointing at that IP.** A certificate needs a name, not an
-   address. Two free ways:
-   - `sslip.io` — no signup at all: an IP of `152.70.1.2` is already
-     `152-70-1-2.sslip.io`.
-   - DuckDNS — a nicer name like `onera.duckdns.org`, one GitHub sign-in.
+On boot the container runs migrations and loads reference data: currencies,
+categories, exchange rates. **No accounts and no passwords.**
 
-4. **A registry token** — a GitHub personal access token with `read:packages`,
-   so the box can pull a private image.
+## 3. The first account
 
-## Opening the ports
+    Render dashboard → your service → Shell
 
-Oracle blocks inbound traffic in two separate places and you have to open
-both. Missing the second is the most common way this fails.
+    ./bin/rails onera:owner ONERA_NAME='Your Name' ONERA_USERNAME=yourname
 
-1. **The console**: Networking → Virtual Cloud Networks → your VCN → the
-   public subnet → its security list → add ingress rules for TCP 80 and 443
-   from `0.0.0.0/0`.
-2. **The machine itself**: Oracle's Ubuntu image ships an iptables ruleset
-   that rejects everything but SSH. `deploy/setup.sh` handles this.
-
-## Running it
-
-    scp -i <your-key> deploy/setup.sh ubuntu@<ip>:/tmp/
-    ssh -i <your-key> ubuntu@<ip>
-
-    sudo ONERA_HOST=onera.duckdns.org \
-         ACME_EMAIL=you@example.com \
-         DATABASE_URL='postgres://...neon.tech/neondb?sslmode=require' \
-         GHCR_USER=scjsalva \
-         GHCR_TOKEN=ghp_... \
-         bash /tmp/setup.sh
-
-It installs Docker, opens the firewall, adds a 2 GB swapfile — 1 GB with no
-swap means the first memory spike kills the container instead of slowing it
-down — writes `/opt/onera/.env`, pulls the image and starts it. Caddy gets a
-certificate on first boot and renews it on its own.
-
-Run it again any time. Every step checks before it acts, so it doubles as the
-repair script.
-
-`SECRET_KEY_BASE` is generated once and then kept. Changing it signs everyone
-out and invalidates every session cookie, so a re-run never regenerates it.
-
-## The first account
-
-Nothing is seeded but reference data — currencies, categories, exchange rates.
-There are no accounts and no passwords in the image.
-
-    cd /opt/onera
-    docker compose exec web ./bin/rails onera:owner \
-      ONERA_NAME='Your Name' ONERA_USERNAME=yourname
-
-It prints a generated password once. You cannot pass one in on purpose: a real
+It prints a generated password once. You cannot pass one in, on purpose: a real
 password should never sit in a shell history or a deploy log. Sign in, change
 it, then invite everyone else from **You → People**.
 
+## 4. Keeping it awake
+
+Render spins a free service down after about fifteen minutes idle, and the next
+visitor waits 40–90 seconds for it to come back.
+
+`.github/workflows/keepalive.yml` pings `/up` every ten minutes between 07:00
+and 23:00 Manila. Set the URL it pings under **Settings → Secrets and variables
+→ Actions → Variables**, as `ONERA_URL` — e.g. `https://onera.onrender.com`.
+
+Sixteen hours a day is 496 instance-hours in a 31-day month against a free
+allowance of 750. Round-the-clock would be 744, and exceeding the allowance
+suspends the service until the month rolls over, so the overnight gap is what
+buys the margin. The cost is one slow visit each morning.
+
+Two things that make a keep-alive fail quietly:
+
+- GitHub disables scheduled workflows after 60 days with no repository
+  activity. If nothing has been pushed in two months, the pings stop and the
+  app goes back to sleeping without telling anyone.
+- Scheduled runs are best-effort and can be delayed by ten minutes or more
+  under load, so the odd visitor will still meet a cold start.
+
 ## Updating
 
-Pushing to `main` builds a new image. On the box:
-
-    cd /opt/onera && docker compose pull && docker compose up -d
-
-Migrations run on boot.
+Pushing to `main` deploys. Migrations run on boot.
 
 ## Day to day
 
-    docker compose logs -f web          # what it is doing
-    docker compose ps                   # what is running
-    docker compose restart web          # turn it off and on again
-    docker compose exec web ./bin/rails console
+From the service's **Shell** tab:
 
-Recovering an account, from the same directory:
+    ./bin/rails console
+    ./bin/rails onera:password ONERA_USERNAME=someone   # locked out
+    ./bin/rails onera:codes ONERA_USERNAME=someone      # codes remaining
 
-    docker compose exec web ./bin/rails onera:password ONERA_USERNAME=someone
-    docker compose exec web ./bin/rails onera:codes ONERA_USERNAME=someone
+Logs are on the **Logs** tab.
 
 ## Checking a deploy before you make it
 
-The image can be run by hand against any Postgres, which is how the Thruster
-bug was caught — it started fine in every test and could not boot as a
-container.
+The image can be built and run against any Postgres. This is how the Thruster
+bug was caught: the app started fine in every test and the container could not
+boot at all.
 
     docker build -t onera .
     docker run -p 3200:80 \
@@ -136,10 +108,10 @@ container.
 
 ## If it does not come up
 
-- `curl -I http://<ip>` times out → a firewall. Both places, see above.
-- Caddy logs `could not get certificate` → the hostname does not resolve to
-  the machine yet, or port 80 is closed. Let's Encrypt needs 80 to answer.
-- `web` restarting → `docker compose logs web`. A bad `DATABASE_URL` is the
-  usual cause; check the `?sslmode=require` survived the copy and paste.
-- 403 on every page → `APP_HOST` does not match the name in the address bar.
-  Rails' host allowlist is refusing it.
+- Build fails on assets → check the build log for the Vite step; it needs
+  `package-lock.json` in the repository.
+- `web` restarting → almost always `DATABASE_URL`. Check the
+  `?sslmode=require` survived the copy and paste.
+- 403 on every page → `APP_HOST` does not match the address bar. Rails' host
+  allowlist is refusing it.
+- Slow first visit → that is the spin-up. See "Keeping it awake".

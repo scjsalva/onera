@@ -79,8 +79,11 @@ Rails.application.configure do
   # Hosting platforms front the app with their own domain, so trust it from
   # the environment rather than hardcoding one.
   # Rails blocks any host not listed here with a 403 that reads like a routing
-  # bug, so the one name the app is served under comes from the environment.
+  # bug, so the name the app is served under comes from the environment.
   config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
+  # And Render's own hostname, because you cannot know it until the service
+  # exists - which is after the first deploy has already tried to serve a page.
+  config.hosts << /\A[a-z0-9-]+\.onrender\.com\z/
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # config.hosts = [

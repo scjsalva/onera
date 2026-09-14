@@ -1,0 +1,41 @@
+# Render reads this when you create a Blueprint from the repository.
+#
+# The repository is private, so the one-click deploy URL will not reach it.
+# Create it the ordinary way: New > Blueprint, connect GitHub, pick
+# scjsalva/onera.
+#
+# The database is deliberately not a Render Postgres: theirs is deleted after
+# 30 days on the free plan, and the whole point is that the records outlive
+# the trial. Neon's free tier has no such clock.
+services:
+  - type: web
+    name: onera
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: RAILS_SERVE_STATIC_FILES
+        value: "true"
+      # One worker, three threads. The free instance is small, and a second
+      # worker buys nothing when every request waits on a remote database.
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: RAILS_MAX_THREADS
+        value: "3"
+      # Generated once by Render and kept. Changing it signs everybody out.
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      # Both set by hand after the service exists:
+      #   APP_HOST      the host Render assigns, e.g. onera.onrender.com
+      #   DATABASE_URL  the Neon string, including ?sslmode=require
+      - key: APP_HOST
+        sync: false
+      - key: DATABASE_URL
+        sync: false

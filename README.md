@@ -191,16 +191,16 @@ Controllers hold no money logic. See `docs/architecture.md` and
 ## Deploying
 
 Any host that runs a container and reaches a Postgres database. What is set up
-here is an Oracle Cloud always-free VM running the image behind Caddy, with the
-database on Neon — free, and neither of them idles the app out.
+here is Render for the container and Neon for the database, both free and
+neither needing a card. `render.yaml` builds the Dockerfile, runs migrations
+and reference seeds on boot, and health-checks `/up`.
 
-`deploy/` holds the compose file, the Caddyfile and a setup script that turns a
-fresh Ubuntu box into the server. GitHub Actions builds the image and pushes it
-to the registry; the box only pulls. Full walkthrough in
-`docs/deployment.md`.
+The database is deliberately not Render's own free Postgres: that is deleted
+after 30 days, and the point is that the records outlive the trial.
 
-The database is deliberately not a host's own free tier — those expire, and the
-point is that the records outlive the trial.
+A free Render service sleeps after fifteen minutes idle, so a scheduled
+workflow pings it through waking hours — 496 instance-hours a month against an
+allowance of 750. Full walkthrough in `docs/deployment.md`.
 
 Required environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_HOST`. See
 `.env.example`. No accounts are seeded outside development; the first one is

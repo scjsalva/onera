@@ -36,9 +36,9 @@ money or membership.
 **Testing** — 260 Ruby tests, Vitest over the Vue layer, a route crawl, and a
 browser suite driving real Chrome. `bin/check` and `bin/e2e`.
 
-**Deployment** — Dockerfile that builds the frontend, a compose file and
-provisioning script under `deploy/`, CI that builds the image and pushes it to
-the registry, health check, migrations and reference seeds on boot.
+**Deployment** — Dockerfile that builds the frontend, `render.yaml`, a
+keep-alive schedule, CI workflow, health check, migrations and reference seeds
+on boot.
 
 ## Deliberately not built
 
