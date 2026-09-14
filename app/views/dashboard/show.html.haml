@@ -1,0 +1,86 @@
+- page_title "Home"
+- content_for :heading, "Hi, #{current_user.name.split.first}"
+
+.space-y-5
+  -# Headline position. One number, large, with the two halves that make it up.
+  %section.relative.overflow-hidden.rounded-card.bg-brand-800.px-5.py-6.text-white.shadow-lift{ data: { reveal: true } }
+    .pointer-events-none.absolute.-right-16.-top-16.h-48.w-48.rounded-full.bg-brand-500.opacity-40.blur-2xl
+    .pointer-events-none.absolute.-bottom-20.-left-10.h-40.w-40.rounded-full.bg-brand-950.opacity-40.blur-2xl
+
+    .relative
+      %p.text-xs.font-medium.uppercase.tracking-wide.text-brand-200
+        - if @dashboard.net_balance.positive?
+          You're owed overall
+        - elsif @dashboard.net_balance.negative?
+          You owe overall
+        - else
+          You're all square
+      %p.mt-1.text-4xl.font-bold.tracking-tight
+        %animated-money{ minor: @dashboard.net_balance.minor.abs, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
+
+      .mt-5.grid.grid-cols-2.gap-3
+        .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
+          %p.font-medium.uppercase.tracking-wide.text-brand-200{ class: "text-[11px]" } Owed to you
+          %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
+            %animated-money{ minor: @dashboard.owed_to_you.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
+        .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
+          %p.font-medium.uppercase.tracking-wide.text-brand-200{ class: "text-[11px]" } You owe
+          %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
+            %animated-money{ minor: @dashboard.you_owe.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
+
+      - if @dashboard.estimated?
+        %p.mt-4.flex.items-start.text-xs.text-brand-200{ class: "gap-1.5" }
+          %svg.shrink-0{ class: "mt-0.5 h-3.5 w-3.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+            %circle{ cx: "12", cy: "12", r: "9" }
+            %path{ "stroke-linecap" => "round", d: "M12 8v5m0 3.5v.01" }
+          %span
+            Mixed currencies, converted at today's estimate. Lock the rates when you settle up.
+
+  -# People, not groups: the question is usually "who do I owe?".
+  - if @counterparties.any?
+    %section
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 People
+        = link_to "See all", balances_path, class: "text-xs font-medium text-brand-600"
+      %counterparty-list{ people: vue_json(@counterparties.map { |c| { id: c.user.id, name: c.user.name, initials: c.user.initials, tone: avatar_tone(c.user), net_minor: c.net_minor, formatted: c.net.format, breakdown: c.breakdown.map { |b| { group: b.group.name, formatted: b.net.format(sign: true), minor: b.net_minor } } } }) }
+
+  -# Groups.
+  %section
+    .mb-2.flex.items-baseline.justify-between
+      %h2.text-sm.font-semibold.text-ink-900 Your groups
+      = link_to "New group", new_group_path, class: "text-xs font-medium text-brand-600"
+
+    - if @summaries.any?
+      .grid.gap-3{ class: "sm:grid-cols-2", data: { reveal_group: true } }
+        - @summaries.each do |summary|
+          = render "groups/summary_card", summary: summary
+    - else
+      = render "shared/empty_state", title: "No groups yet",
+               body: "Start one for a trip, a flat, or anything else you split.",
+               action: link_to("Create a group", new_group_path, class: "btn-primary")
+
+  -# Recent activity, kept short: the full lists live behind their own tabs.
+  - if @recent_expenses.any?
+    %section
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 Recent
+        = link_to "All expenses", expenses_path, class: "text-xs font-medium text-brand-600"
+      .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+        - @recent_expenses.each do |expense|
+          = render "shared/expense_row", expense: expense
+
+  - if @recent_settlements.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Recent payments
+      .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+        - @recent_settlements.each do |settlement|
+          = render "shared/settlement_row", settlement: settlement, show_group: true
+
+  - if @spend_by_category.any?
+    %section
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 Where it goes
+        = link_to "Insights", insights_path, class: "text-xs font-medium text-brand-600"
+      .card.card-pad
+        %spend-bars{ rows: vue_json(@spend_by_category.map { |name, total| { label: name, minor: total.minor, formatted: total.format } }),
+                     symbol: @dashboard.display_currency.symbol }

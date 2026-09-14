@@ -1,0 +1,28 @@
+- page_title "Insights"
+- content_for :heading, "Insights"
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    .grid.grid-cols-2.gap-4
+      = render "shared/stat", label: "You paid", money: @dashboard.total_paid
+      = render "shared/stat", label: "Your share", money: @dashboard.total_share
+    .mt-4.border-t.border-ink-100.pt-4.grid.grid-cols-2.gap-4
+      = render "shared/stat", label: "Just you", money: @dashboard.personal_spend, tone: :muted, size: :base
+      = render "shared/stat", label: "All groups", money: @dashboard.total_spend, tone: :muted, size: :base
+
+  - if @by_month.any?
+    %section.card.card-pad{ data: { reveal: true } }
+      %h2.mb-3.text-sm.font-semibold.text-ink-900 Last six months
+      %month-chart{ rows: vue_json(@by_month.map { |month, total| { label: month.strftime("%b"), minor: total.minor, formatted: total.format } }) }
+
+  - if @by_category.any?
+    %section.card.card-pad{ data: { reveal: true } }
+      %h2.mb-3.text-sm.font-semibold.text-ink-900 By category
+      %spend-bars{ rows: vue_json(@by_category.map { |name, total| { label: name, minor: total.minor, formatted: total.format } }),
+                   symbol: @dashboard.display_currency.symbol }
+
+  - if @by_group.any?
+    %section.card.card-pad{ data: { reveal: true } }
+      %h2.mb-3.text-sm.font-semibold.text-ink-900 By group
+      %spend-bars{ rows: vue_json(@by_group.map { |group, total| { label: group.name, minor: total.minor, formatted: total.format } }),
+                   symbol: @dashboard.display_currency.symbol }

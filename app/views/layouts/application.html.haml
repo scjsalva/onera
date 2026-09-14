@@ -1,0 +1,23 @@
+!!!
+%html{ lang: "en", class: "h-full" }
+  %head
+    %meta{ charset: "utf-8" }
+    %meta{ name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" }
+    %meta{ name: "theme-color", content: "#8748ad" }
+    %meta{ name: "apple-mobile-web-app-capable", content: "yes" }
+    %title= [ yield(:title).presence, "Onera" ].compact.join(" · ")
+    = csrf_meta_tags
+    = csp_meta_tag
+    = vite_client_tag
+    = vite_stylesheet_tag "~/stylesheets/tailwind.css"
+    = vite_javascript_tag "application"
+  %body.h-full.overflow-x-hidden{ data: { user_id: current_user&.id } }
+    #vue.min-h-full{ "v-cloak" => true }
+      = render "shared/top_bar"
+
+      %main.mx-auto.w-full.max-w-5xl.px-4.pb-28.pt-3{ class: "md:pl-64 md:pb-10 md:pt-6" }
+        = render "shared/flash"
+        = yield
+
+      = render "shared/bottom_nav"
+      = render "shared/user_switcher"

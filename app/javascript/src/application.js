@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import http from '@/lib/http';
+import { startRevealObserver } from '@/lib/reveal';
 import { formatMoney, formatMinor } from '@/lib/money';
 
 // Mirrors the Rails-monolith pattern: one Vue app mounted over the server
@@ -31,6 +32,7 @@ app.config.globalProperties.$formatMinor = formatMinor;
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.querySelector('#vue');
   if (root) app.mount(root);
+  startRevealObserver();
 });
 
 window.Onera = { app, http };

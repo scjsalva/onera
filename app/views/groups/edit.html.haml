@@ -1,0 +1,26 @@
+- page_title "Edit #{@group.name}"
+- content_for :heading, "Group settings"
+- content_for :back_path, group_path(@group)
+
+= form_with model: @group, class: "space-y-5" do |form|
+  .card.card-pad.space-y-4{ data: { reveal: true } }
+    %div
+      = form.label :name, "Group name", class: "label"
+      = form.text_field :name, class: "input"
+    %div
+      = form.label :description, "Description", class: "label"
+      = form.text_area :description, rows: 2, class: "input"
+    %div
+      = form.label :base_currency_code, "Group currency", class: "label"
+      = form.select :base_currency_code, currency_options, {}, class: "input"
+      %p.mt-1.text-xs.text-ink-500
+        Changing this changes what totals are shown in. Expenses keep the currency they were entered in.
+
+  = form.submit "Save changes", class: "btn-primary w-full"
+
+.mt-8.card.card-pad{ data: { reveal: true } }
+  %p.font-semibold.text-ink-900 Archive this group
+  %p.mt-1.text-sm.text-ink-500
+    Hides it from your list. Nothing is deleted — expenses, payments and history are kept.
+  = button_to "Archive group", group_path(@group), method: :delete, class: "btn-danger mt-3 w-full",
+              form: { data: { turbo_confirm: "Archive #{@group.name}?" } }

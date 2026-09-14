@@ -1,0 +1,9 @@
+.flex.flex-col.items-center.justify-center.rounded-card.border.border-dashed.border-ink-300.px-6.py-12.text-center{ class: "bg-white/60", data: { reveal: true } }
+  %span.mb-3.grid.h-12.w-12.place-items-center.rounded-2xl.bg-ink-100.text-ink-400
+    %svg.h-6.w-6{ fill: "none", stroke: "currentColor", "stroke-width" => "1.8", viewBox: "0 0 24 24" }
+      %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: (defined?(icon) && icon.present? ? icon : "M9 12h6m-6 4h6M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z") }
+  %p.font-semibold.text-ink-800= title
+  - if defined?(body) && body.present?
+    %p.mt-1.max-w-xs.text-sm.text-ink-500= body
+  - if defined?(action) && action.present?
+    .mt-4= action

@@ -1,0 +1,8 @@
+.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+  = avatar_tag(debt.from_user, size: :sm)
+  %span.min-w-0.flex-1.text-sm
+    %span.font-medium.text-ink-900= debt.from_user.name
+    %span.text-ink-500  owes
+    %span.font-medium.text-ink-900= debt.to_user.name
+  = avatar_tag(debt.to_user, size: :sm)
+  %span.shrink-0.font-semibold.text-ink-900.tnum= debt.amount.format

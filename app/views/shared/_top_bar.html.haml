@@ -1,0 +1,17 @@
+%header.sticky.top-0.z-30.border-b.border-ink-200.bg-ink-100{ class: "backdrop-blur supports-[backdrop-filter]:bg-ink-100/85 md:pl-64" }
+  .mx-auto.flex.h-14.w-full.max-w-5xl.items-center.gap-3.px-4
+    - if content_for?(:back_path)
+      = link_to yield(:back_path), class: "-ml-2 grid h-9 w-9 place-items-center rounded-full text-ink-600 transition active:scale-90 hover:bg-ink-200/70" do
+        %svg.h-5.w-5{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M15 19l-7-7 7-7" }
+    - else
+      = link_to root_path, class: "-ml-1 flex items-center gap-2" do
+        = render "shared/logo_mark"
+
+    %h1.min-w-0.flex-1.truncate.text-base.font-semibold.text-ink-900= yield(:heading).presence || yield(:title).presence
+
+    - if current_user
+      %button.group.flex.items-center.gap-2.rounded-full.py-1.pl-1.pr-2.transition{ type: "button", class: "active:scale-95 hover:bg-ink-200/70", "@click" => "$root.userMenuOpen = true", "aria-label" => "Switch user" }
+        = avatar_tag(current_user, size: :sm)
+        %svg.h-4.w-4.text-ink-500{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M19 9l-7 7-7-7" }

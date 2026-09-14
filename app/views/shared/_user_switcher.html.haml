@@ -1,0 +1,7 @@
+-# Perspective switching only. Nothing about the ledger changes.
+%user-switcher{ "v-if" => "$root.userMenuOpen",
+                "current-user" => vue_json(UserPresenter.new(current_user).as_json),
+                "users" => vue_json(UserPresenter.collection(User.ordered)),
+                "switch-path" => welcome_path,
+                "profile-path" => profile_path,
+                "@close" => "$root.userMenuOpen = false" }

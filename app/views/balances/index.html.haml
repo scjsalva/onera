@@ -1,0 +1,31 @@
+- page_title "Balances"
+- content_for :heading, "Balances"
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    .grid.grid-cols-2.gap-4
+      = render "shared/stat", label: "Owed to you", money: @dashboard.owed_to_you, tone: :positive
+      = render "shared/stat", label: "You owe", money: @dashboard.you_owe, tone: :negative
+    .mt-4.border-t.border-ink-100.pt-4
+      = render "shared/stat", label: "Net", money: @dashboard.net_balance, tone: :auto, sign: true,
+               hint: (@dashboard.estimated? ? "Includes estimated conversions" : nil)
+
+  - if @counterparties.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 By person
+      %counterparty-list{ people: vue_json(@counterparties.map { |c| { id: c.user.id, name: c.user.name, initials: c.user.initials, tone: avatar_tone(c.user), net_minor: c.net_minor, formatted: c.net.format, breakdown: c.breakdown.map { |b| { group: b.group.name, formatted: b.net.format(sign: true), minor: b.net_minor } } } }) }
+  - else
+    = render "shared/empty_state", title: "All square",
+             body: "Nobody owes you and you owe nobody."
+
+  - if @summaries.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 By group
+      .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+        - @summaries.each do |summary|
+          = link_to group_path(summary.group), class: "press flex items-center gap-3 px-4 py-3 transition hover:bg-ink-50", data: { reveal: true } do
+            %span.min-w-0.flex-1
+              %span.block.truncate.font-medium.text-ink-900= summary.group.name
+              %span.text-xs.text-ink-500= summary.group.base_currency_code
+            %span.shrink-0.font-semibold.tnum{ class: summary.net.positive? ? "text-positive-600" : (summary.net.negative? ? "text-negative-600" : "text-ink-400") }
+              = summary.net.format(sign: true)

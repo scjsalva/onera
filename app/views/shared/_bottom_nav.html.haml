@@ -1,0 +1,21 @@
+-# Mobile: a fixed tab bar with a raised action in the middle.
+-# Desktop: the same destinations promoted to a left sidebar.
+%nav.fixed.inset-x-0.bottom-0.z-30.border-t.border-ink-200.bg-white{ class: "pb-[env(safe-area-inset-bottom)] md:inset-y-0 md:right-auto md:w-64 md:border-r md:border-t-0 md:pb-0" }
+  .hidden.h-14.items-center.px-6{ class: "md:flex" }
+    = link_to root_path do
+      = render "shared/logo_mark"
+
+  .relative.mx-auto.flex.h-16.max-w-5xl.items-stretch.justify-around.px-2{ class: "md:h-auto md:flex-col md:items-stretch md:justify-start md:gap-1 md:px-3 md:py-2" }
+    = nav_link_to "Home", root_path, current_page?(root_path) do
+      %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" }
+    = nav_link_to "Groups", groups_path, controller_name.in?(%w[groups memberships]) do
+      %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m10-4a3 3 0 11-6 0 3 3 0 016 0zm5-1a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM7 11a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" }
+
+    -# The primary action. Raised on mobile, inline on desktop.
+    .relative.flex.w-16.shrink-0.items-center.justify-center{ class: "md:order-first md:mb-2 md:w-full md:justify-stretch md:px-1" }
+      %expense-composer-launcher{ "groups" => vue_json(current_groups.map { |g| { id: g.id, name: g.name } }) }
+
+    = nav_link_to "Balances", balances_path, controller_name == "balances" do
+      %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M12 3v18M5 8l7-4 7 4M3 12l4-7 4 7a4 4 0 01-8 0zm10 0l4-7 4 7a4 4 0 01-8 0z" }
+    = nav_link_to "You", profile_path, controller_name.in?(%w[profiles people activity insights]) do
+      %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM5 21v-1a7 7 0 0114 0v1" }

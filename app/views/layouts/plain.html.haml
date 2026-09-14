@@ -1,0 +1,15 @@
+!!!
+%html{ lang: "en", class: "h-full" }
+  %head
+    %meta{ charset: "utf-8" }
+    %meta{ name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" }
+    %meta{ name: "theme-color", content: "#8748ad" }
+    %title= [ yield(:title).presence, "Onera" ].compact.join(" · ")
+    = csrf_meta_tags
+    = csp_meta_tag
+    = vite_client_tag
+    = vite_stylesheet_tag "~/stylesheets/tailwind.css"
+    = vite_javascript_tag "application"
+  %body.h-full.bg-brand-950
+    #vue.min-h-full{ "v-cloak" => true }
+      = yield

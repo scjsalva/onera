@@ -1,0 +1,23 @@
+- page_title "Add a person"
+- content_for :heading, "Add a person"
+- content_for :back_path, (@group ? group_memberships_path(@group) : root_path)
+
+= form_with model: @user, url: people_path(group_id: @group&.id), class: "space-y-5" do |form|
+  .card.card-pad.space-y-4{ data: { reveal: true } }
+    %div
+      = form.label :name, class: "label"
+      = form.text_field :name, class: "input", autofocus: true, placeholder: "Their name"
+    %div
+      = form.label :email, "Email (optional)", class: "label"
+      = form.email_field :email, class: "input"
+    %div
+      = form.label :date_of_birth, "Birthday (optional)", class: "label"
+      = form.date_field :date_of_birth, class: "input"
+    %div
+      = form.label :preferred_currency_code, "Their currency", class: "label"
+      = form.select :preferred_currency_code, currency_options, {}, class: "input"
+
+  %p.text-xs.text-ink-500
+    One person, one record. Adding them to another group later reuses this same person.
+
+  = form.submit(@group ? "Add to #{@group.name}" : "Create person", class: "btn-primary w-full")

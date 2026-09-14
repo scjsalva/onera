@@ -1,0 +1,28 @@
+- page_title "Settle up"
+- content_for :heading, "Settle up"
+- content_for :back_path, balances_for_group_path(@group)
+
+%settle-up-flow{ group: vue_json({ id: @group.id, name: @group.name, base_currency: @group.base_currency_code }),
+                 currencies: vue_json(CurrencyPresenter.collection),
+                 "target-currency" => @target_currency.code,
+                 "per-currency" => vue_json(@active_currencies.map { |currency|
+                   {
+                     currency: CurrencyPresenter.new(currency).as_json,
+                     debts: @calculator.simplified_debts(currency).map { |d| debt_json(d) },
+                     locked: @consolidation.locked?(currency)
+                   }
+                 }),
+                 consolidated: vue_json({
+                   estimated: @consolidation.estimated?,
+                   target: CurrencyPresenter.new(@target_currency).as_json,
+                   lines: @consolidation.lines.map { |line|
+                     { currency: CurrencyPresenter.new(line.currency).as_json,
+                       rate: line.rate.to_s("F"), locked: line.locked?,
+                       source: MoneyAmount.new(line.source_total_minor, line.currency).format,
+                       converted: MoneyAmount.new(line.converted_minor, @target_currency).format }
+                   },
+                   transfers: @consolidation.suggested_transfers.map { |d| debt_json(d) }
+                 }),
+                 "settle-path" => group_settle_up_path(@group),
+                 "record-path" => new_group_settlement_path(@group),
+                 "reload-path" => group_settle_up_path(@group) }

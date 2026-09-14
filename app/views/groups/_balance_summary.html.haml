@@ -1,0 +1,16 @@
+- actives = calculator.currencies.select { |currency| calculator.active_in?(currency.code) }
+
+%section
+  .mb-2.flex.items-baseline.justify-between
+    %h2.text-sm.font-semibold.text-ink-900 Who owes who
+    = link_to "Details", balances_for_group_path(group), class: "text-xs font-medium text-brand-600"
+
+  - debts = actives.flat_map { |currency| calculator.pairwise_debts(currency) }
+  - if debts.any?
+    .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+      - debts.first(5).each do |debt|
+        = render "groups/debt_row", debt: debt
+  - else
+    .card.card-pad.text-center{ data: { reveal: true } }
+      %p.font-medium.text-ink-800 Everyone's square.
+      %p.text-sm.text-ink-500 No outstanding balances in this group.

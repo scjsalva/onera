@@ -1,0 +1,12 @@
+- page_title "Edit payment"
+- content_for :heading, "Edit payment"
+- content_for :back_path, group_settlements_path(@group)
+
+= render "settlements/form", settlement: @settlement
+
+.mt-8.card.card-pad{ data: { reveal: true } }
+  %p.font-semibold.text-ink-900 Void this payment
+  %p.mt-1.text-sm.text-ink-500
+    Reverses its effect on balances. The record stays in the history.
+  = button_to "Void payment", void_group_settlement_path(@group, @settlement), method: :patch,
+              class: "btn-danger mt-3 w-full", form: { data: { turbo_confirm: "Void this payment?" } }

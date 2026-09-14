@@ -1,0 +1,26 @@
+- page_title "New group"
+- content_for :heading, "New group"
+- content_for :back_path, groups_path
+
+= form_with model: @group, class: "space-y-5" do |form|
+  .card.card-pad.space-y-4{ data: { reveal: true } }
+    %div
+      = form.label :name, "Group name", class: "label"
+      = form.text_field :name, class: "input", placeholder: "Japan Trip", autofocus: true
+    %div
+      = form.label :description, "What's it for?", class: "label"
+      = form.text_area :description, rows: 2, class: "input", placeholder: "Optional"
+    %div
+      = form.label :base_currency_code, "Group currency", class: "label"
+      = form.select :base_currency_code, currency_options, {}, class: "input"
+      %p.mt-1.text-xs.text-ink-500
+        Everything in this group is totalled in this currency. Expenses can still be entered in any other.
+
+  .card.card-pad{ data: { reveal: true } }
+    %p.label Who's in?
+    %member-selector{ people: vue_json(UserPresenter.collection(User.ordered.where.not(id: current_user.id))),
+                      field: "member_ids[]",
+                      "new-person-path" => new_person_path }
+    %p.mt-3.text-xs.text-ink-500 You're included automatically.
+
+  = form.submit "Create group", class: "btn-primary w-full"

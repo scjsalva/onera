@@ -1,0 +1,15 @@
+- page_title "Record a payment"
+- content_for :heading, "Record a payment"
+- content_for :back_path, group_settlements_path(@group)
+
+- actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
+- debts = actives.flat_map { |currency| @calculator.pairwise_debts(currency) }.select { |d| d.from_user.id == current_user.id || d.to_user.id == current_user.id }
+
+- if debts.any?
+  %section.mb-5{ data: { reveal: true } }
+    %h2.mb-2.text-sm.font-semibold.text-ink-900 Outstanding
+    .card.divide-y.divide-ink-100.overflow-hidden
+      - debts.each do |debt|
+        = render "groups/debt_row", debt: debt
+
+= render "settlements/form", settlement: @group.settlements.new

@@ -1,0 +1,83 @@
+- page_title @expense.description
+- content_for :heading, "Expense"
+- content_for :back_path, (@expense.group ? expenses_for_group_path(@expense.group) : expenses_path)
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    - if @expense.voided?
+      .mb-3.flex.items-center.rounded-lg.bg-ink-100.px-3.py-2.text-sm.text-ink-600{ class: "gap-1.5" }
+        %svg.h-4.w-4.shrink-0{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %circle{ cx: "12", cy: "12", r: "9" }
+          %path{ "stroke-linecap" => "round", d: "M9 9l6 6m0-6l-6 6" }
+        %span
+          Voided#{@expense.void_reason.present? ? " — #{@expense.void_reason}" : ""}. Kept in the history, excluded from balances.
+
+    %p.text-2xl.font-bold.text-ink-900.tnum= @expense.amount.format
+    %h1.mt-1.text-lg.font-semibold.text-ink-900= @expense.description
+
+    .mt-2.flex.flex-wrap.items-center.gap-2
+      = category_pill(@expense.category)
+      - if @expense.group
+        = link_to @expense.group.name, group_path(@expense.group), class: "pill bg-ink-100 text-ink-600"
+      - else
+        %span.pill.bg-ink-100.text-ink-500 Personal
+      %span.pill.bg-ink-100.text-ink-600= relative_day(@expense.spent_on)
+
+    - if @expense.converted?
+      .mt-4.rounded-xl.bg-ink-50.p-3
+        .flex.items-center.justify-between.text-sm
+          %span.text-ink-600
+            = "#{@expense.currency_code} → #{@expense.base_currency_code}"
+          %span.font-semibold.text-ink-900.tnum= @expense.base_amount.format
+        %p.mt-1.text-xs.text-ink-500
+          - if @expense.rate_locked?
+            Locked at #{@expense.exchange_rate.to_s("F")} on #{@expense.rate_locked_at.to_date.strftime("%-d %b %Y")}. This is the rate the money follows.
+          - else
+            Estimated at #{@expense.exchange_rate.to_s("F")}. The rate that counts is set when the group settles up.
+
+    - if @expense.notes.present?
+      %p.mt-4.whitespace-pre-line.text-sm.text-ink-600= @expense.notes
+
+  %section{ data: { reveal: true } }
+    %h2.mb-2.text-sm.font-semibold.text-ink-900 Paid by
+    .card.divide-y.divide-ink-100.overflow-hidden
+      - @expense.expense_payers.each do |payer|
+        .flex.items-center.gap-3.px-4.py-3
+          = avatar_tag(payer.user, size: :sm)
+          %span.flex-1.truncate.font-medium.text-ink-900= payer.user.name
+          %span.font-semibold.text-ink-900.tnum= payer.amount.format
+
+  - unless @expense.personal?
+    %section{ data: { reveal: true } }
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 Split #{@expense.split_method}
+        %span.text-xs.text-ink-500= pluralize(@expense.expense_splits.size, "person")
+      .card.divide-y.divide-ink-100.overflow-hidden
+        - @expense.expense_splits.each do |split|
+          .flex.items-center.gap-3.px-4.py-3
+            = avatar_tag(split.user, size: :sm)
+            %span.flex-1.truncate.font-medium{ class: split.user_id == current_user.id ? "text-brand-700" : "text-ink-900" }
+              = split.user.name
+              - if split.user_id == current_user.id
+                %span.text-xs.font-normal.text-ink-400  (you)
+            %span.font-semibold.text-ink-900.tnum= split.amount.format
+
+  %section{ data: { reveal: true } }
+    %h2.mb-2.text-sm.font-semibold.text-ink-900 History
+    %ol.card.divide-y.divide-ink-100.overflow-hidden
+      - @revisions.each do |revision|
+        %li.px-4.py-3
+          .flex.items-baseline.justify-between.gap-3
+            %span.text-sm.font-medium.text-ink-800= revision.action.humanize
+            %span.text-xs.text-ink-400= revision.occurred_at.strftime("%-d %b, %H:%M")
+          - if revision.actor
+            %p.text-xs.text-ink-500= "by #{revision.actor.name}"
+          - if revision.changed_fields.any?
+            %p.mt-1.text-xs.text-ink-500= "Changed: #{revision.changed_fields.keys.map(&:humanize).to_sentence.downcase}"
+
+  .flex.gap-3
+    - unless @expense.voided?
+      = link_to "Edit", edit_expense_path(@expense), class: "btn-secondary flex-1"
+      %void-expense-button{ "action" => void_expense_path(@expense), "description" => @expense.description }
+    - else
+      = button_to "Restore", restore_expense_path(@expense), method: :patch, class: "btn-secondary w-full"

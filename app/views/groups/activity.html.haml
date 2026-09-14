@@ -1,0 +1,12 @@
+- page_title "#{@group.name} activity"
+- content_for :heading, @group.name
+- content_for :back_path, group_path(@group)
+
+= render "groups/tabs", group: @group
+
+- if @events.any?
+  %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+    - @events.each do |event|
+      = render "shared/activity_row", event: event
+- else
+  = render "shared/empty_state", title: "Nothing has happened yet"

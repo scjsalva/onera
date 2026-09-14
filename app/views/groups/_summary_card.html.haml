@@ -1,0 +1,26 @@
+- net = summary.net
+
+= link_to group_path(summary.group), class: "press card card-pad block transition hover:shadow-lift", data: { reveal: true } do
+  .flex.items-start.justify-between.gap-3
+    .min-w-0
+      %p.truncate.font-semibold.text-ink-900= summary.group.name
+      %p.text-xs.text-ink-500{ class: "mt-0.5" }
+        = summary.group.base_currency_code
+        = "· #{pluralize(summary.group.users.size, 'person')}"
+    = render "groups/member_avatars", group: summary.group
+
+  .mt-4.flex.items-end.justify-between
+    %div
+      %p.stat-label
+        - if net.positive?
+          You're owed
+        - elsif net.negative?
+          You owe
+        - else
+          Settled up
+      %p.text-xl.font-semibold.tnum{ class: "mt-0.5", class: net.positive? ? "text-positive-600" : (net.negative? ? "text-negative-600" : "text-ink-400") }
+        %animated-money{ minor: net.minor.abs, symbol: net.currency.symbol, exponent: net.currency.exponent }
+    %p.text-right.text-xs.text-ink-400
+      = summary.total_spend.format
+      %br/
+      total

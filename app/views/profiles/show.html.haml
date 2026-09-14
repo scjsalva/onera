@@ -1,0 +1,45 @@
+- page_title "You"
+- content_for :heading, "You"
+
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    .flex.items-center.gap-4
+      = avatar_tag(current_user, size: :lg)
+      .min-w-0
+        %h1.truncate.text-xl.font-semibold.text-ink-900= current_user.name
+        - if current_user.email.present?
+          %p.truncate.text-sm.text-ink-500= current_user.email
+
+    %dl.mt-5.space-y-3.border-t.border-ink-100.pt-4
+      - if current_user.date_of_birth
+        .flex.justify-between.text-sm
+          %dt.text-ink-500 Birthday
+          %dd.font-medium.text-ink-900
+            = current_user.date_of_birth.strftime("%-d %B %Y")
+            %span.text-ink-400= " · #{current_user.age}"
+      .flex.justify-between.text-sm
+        %dt.text-ink-500 Your currency
+        %dd.font-medium.text-ink-900= "#{current_user.preferred_currency.name} (#{current_user.preferred_currency_code})"
+      .flex.justify-between.text-sm
+        %dt.text-ink-500 Groups
+        %dd.font-medium.text-ink-900= current_user.groups.active.count
+
+    = link_to "Edit profile", edit_profile_path, class: "btn-secondary mt-5 w-full"
+
+  %section.card.card-pad{ data: { reveal: true } }
+    %h2.mb-3.text-sm.font-semibold.text-ink-900 Across all groups
+    .grid.grid-cols-2.gap-4
+      = render "shared/stat", label: "You paid", money: @dashboard.total_paid, size: :base
+      = render "shared/stat", label: "Your share", money: @dashboard.total_share, size: :base
+
+  %nav.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+    - [["Insights", insights_path, "Where your money goes"], ["Activity", activity_path, "Everything that happened"], ["All expenses", expenses_path, "Search and filter"]].each do |label, path, hint|
+      = link_to path, class: "press flex items-center gap-3 px-4 py-3.5 transition hover:bg-ink-50", data: { reveal: true } do
+        %span.min-w-0.flex-1
+          %span.block.font-medium.text-ink-900= label
+          %span.block.text-xs.text-ink-500= hint
+        %svg.h-4.w-4.shrink-0.text-ink-400{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+          %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M9 5l7 7-7 7" }
+
+  = button_to switch_user_path, method: :delete, class: "btn-secondary w-full" do
+    Switch to someone else

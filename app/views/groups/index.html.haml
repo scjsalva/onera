@@ -1,0 +1,19 @@
+- page_title "Groups"
+- content_for :heading, "Groups"
+
+.space-y-4
+  .flex.items-center.justify-between
+    %p.text-sm.text-ink-500= pluralize(@summaries.size, "group")
+    = link_to new_group_path, class: "btn-primary btn-sm" do
+      %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
+        %path{ "stroke-linecap" => "round", d: "M12 5v14M5 12h14" }
+        New
+
+  - if @summaries.any?
+    .grid.gap-3{ class: "sm:grid-cols-2", data: { reveal_group: true } }
+      - @summaries.each do |summary|
+        = render "groups/summary_card", summary: summary
+  - else
+    = render "shared/empty_state", title: "No groups yet",
+             body: "A group is anything you split — a trip, a flat, a night out.",
+             action: link_to("Create your first group", new_group_path, class: "btn-primary")

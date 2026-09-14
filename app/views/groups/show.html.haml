@@ -1,0 +1,34 @@
+- page_title @group.name
+- content_for :heading, @group.name
+- content_for :back_path, groups_path
+
+= render "groups/tabs", group: @group
+
+.space-y-5
+  = render "groups/currency_totals", group: @group, calculator: @calculator
+
+  - if @pending_rates.any?
+    = render "groups/rate_lock_prompt", group: @group, pending: @pending_rates
+
+  = render "groups/balance_summary", group: @group, calculator: @calculator
+
+  - if @recent_expenses.any?
+    %section
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 Recent expenses
+        = link_to "See all", expenses_for_group_path(@group), class: "text-xs font-medium text-brand-600"
+      .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+        - @recent_expenses.each do |expense|
+          = render "shared/expense_row", expense: expense
+  - else
+    = render "shared/empty_state", title: "Nothing spent yet",
+             body: "Add the first expense and balances will appear here."
+
+  - if @recent_settlements.any?
+    %section
+      .mb-2.flex.items-baseline.justify-between
+        %h2.text-sm.font-semibold.text-ink-900 Recent payments
+        = link_to "See all", group_settlements_path(@group), class: "text-xs font-medium text-brand-600"
+      .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+        - @recent_settlements.each do |settlement|
+          = render "shared/settlement_row", settlement: settlement

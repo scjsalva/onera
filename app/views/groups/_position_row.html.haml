@@ -1,0 +1,16 @@
+.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+  = avatar_tag(position.user, size: :sm)
+  %span.min-w-0.flex-1
+    %span.block.truncate.font-medium.text-ink-900= position.user.name
+    %span.text-xs.text-ink-500
+      paid #{position.paid.format} · share #{position.share.format}
+  %span.shrink-0.text-right
+    %span.block.font-semibold.tnum{ class: position.owed? ? "text-positive-600" : (position.owing? ? "text-negative-600" : "text-ink-400") }
+      = position.net.format(sign: true)
+    %span.block.text-xs.text-ink-400
+      - if position.owed?
+        gets back
+      - elsif position.owing?
+        owes
+      - else
+        settled

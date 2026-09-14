@@ -1,0 +1,28 @@
+- page_title "#{@group.name} balances"
+- content_for :heading, @group.name
+- content_for :back_path, group_path(@group)
+
+= render "groups/tabs", group: @group
+
+.space-y-5
+  - if @pending_rates.any?
+    = render "groups/rate_lock_prompt", group: @group, pending: @pending_rates
+
+  - actives = @calculator.currencies.select { |currency| @calculator.active_in?(currency.code) }
+  - actives.each do |currency|
+    %section{ data: { reveal: true } }
+      .mb-2.flex.items-center.justify-between
+        %h2.text-sm.font-semibold.text-ink-900
+          Balances in #{currency.code}
+        %span.pill.bg-ink-200.text-ink-600{ class: "bg-ink-200/70" }= currency.name
+
+      .card.divide-y.divide-ink-100.overflow-hidden
+        - @calculator.positions_in(currency).select(&:any_activity?).each do |position|
+          = render "groups/position_row", position: position
+
+      %balance-toggle{ pairwise: vue_json(@calculator.pairwise_debts(currency).map { |d| debt_json(d) }),
+                       simplified: vue_json(@calculator.simplified_debts(currency).map { |d| debt_json(d) }),
+                       currency: currency.code }
+
+  = link_to group_settle_up_path(@group), class: "btn-primary w-full" do
+    Settle up

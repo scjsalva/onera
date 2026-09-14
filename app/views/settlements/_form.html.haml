@@ -1,0 +1,36 @@
+- members = @group.users.ordered
+- suggested = defined?(suggestion) ? suggestion : nil
+
+= form_with model: [@group, settlement], class: "space-y-5" do |form|
+  .card.card-pad.space-y-4{ data: { reveal: true } }
+    .grid.grid-cols-2.gap-3
+      %div
+        = form.label :payer_id, "Who paid", class: "label"
+        = form.collection_select :payer_id, members, :id, :name, { selected: settlement.payer_id || current_user.id }, class: "input"
+      %div
+        = form.label :recipient_id, "Paid to", class: "label"
+        = form.collection_select :recipient_id, members, :id, :name, { include_blank: "Choose…" }, class: "input"
+
+    %div
+      = form.label :amount, "Amount", class: "label"
+      .flex.gap-2
+        = form.text_field :amount, value: settlement.persisted? ? settlement.amount.to_major.to_s("F") : nil,
+                          class: "input tnum flex-1", inputmode: "decimal", placeholder: "0.00"
+        = form.select :currency_code, currency_options, { selected: settlement.currency_code || @group.base_currency_code },
+                      class: "input w-32"
+      %p.mt-1.text-xs.text-ink-500
+        Pay in whichever currency the debt is in. Balances are kept per currency.
+
+    .grid.grid-cols-2.gap-3
+      %div
+        = form.label :settled_on, "Date", class: "label"
+        = form.date_field :settled_on, value: settlement.settled_on || Date.current, class: "input"
+      %div
+        = form.label :payment_method, "How", class: "label"
+        = form.text_field :payment_method, class: "input", placeholder: "GCash, cash…"
+
+    %div
+      = form.label :note, "Note", class: "label"
+      = form.text_area :note, rows: 2, class: "input", placeholder: "Optional"
+
+  = form.submit settlement.persisted? ? "Save payment" : "Record payment", class: "btn-primary w-full"

@@ -1,0 +1,28 @@
+- actives = calculator.currencies.select { |currency| calculator.active_in?(currency.code) }
+
+- if actives.any?
+  %section.grid.gap-3{ class: actives.many? ? "sm:grid-cols-2" : "", data: { reveal_group: true } }
+    - actives.each do |currency|
+      .card.card-pad{ data: { reveal: true } }
+        .flex.items-center.justify-between
+          %span.pill.bg-brand-50.text-brand-700= currency.code
+          - if currency.code == group.base_currency_code
+            %span.text-xs.text-ink-400 group currency
+        .mt-3.grid.grid-cols-3.gap-2
+          %div
+            %p.stat-label Spent
+            %p.font-semibold.text-ink-900.tnum{ class: "mt-0.5" }= calculator.total_spend(currency).format
+          %div
+            %p.stat-label Settled
+            %p.font-semibold.text-ink-900.tnum{ class: "mt-0.5" }= calculator.total_settled(currency).format
+          %div
+            %p.stat-label Outstanding
+            %p.font-semibold.tnum.text-brand-700{ class: "mt-0.5" }= calculator.outstanding(currency).format
+
+  - if actives.many?
+    %p.flex.items-start.text-xs.text-ink-500{ class: "gap-1.5" }
+      %svg.shrink-0.text-ink-400{ class: "mt-0.5 h-3.5 w-3.5", fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+        %circle{ cx: "12", cy: "12", r: "9" }
+        %path{ "stroke-linecap" => "round", d: "M12 8v5m0 3.5v.01" }
+      %span
+        This group has spending in #{actives.size} currencies. They're kept apart until you settle up — then you can pay each one separately or convert them all into one.

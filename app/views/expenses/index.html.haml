@@ -1,0 +1,11 @@
+- page_title "Expenses"
+- content_for :heading, "Expenses"
+
+= render "shared/filter_bar", filter: @filter, scope: :global
+
+- if @expenses.any?
+  .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+    - @expenses.each do |expense|
+      = render "shared/expense_row", expense: expense
+- else
+  = render "shared/empty_state", title: "Nothing to show", body: "No expenses match these filters."

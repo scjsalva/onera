@@ -1,0 +1,12 @@
+- tone ||= :plain
+- size ||= :lg
+- tones = { plain: "text-ink-900", positive: "text-positive-600", negative: "text-negative-600", muted: "text-ink-500" }
+- tone = money.negative? ? :negative : (money.positive? ? :positive : :muted) if tone == :auto
+- sizes = { sm: "text-lg", base: "text-xl", lg: "text-2xl", xl: "text-3xl" }
+
+%div{ data: { reveal: true } }
+  %p.stat-label= label
+  %p.font-semibold.tnum{ class: "#{tones[tone]} #{sizes[size]} mt-0.5" }
+    %animated-money{ minor: money.minor, symbol: money.currency.symbol, exponent: money.currency.exponent, sign: (defined?(sign) && sign ? "true" : nil) }
+  - if defined?(hint) && hint.present?
+    %p.text-xs.text-ink-400{ class: "mt-0.5" }= hint

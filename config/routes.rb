@@ -11,28 +11,29 @@ Rails.application.routes.draw do
   resource  :profile, only: %i[show edit update]
   resources :people,  only: %i[new create]
 
-  resources :expenses, only: :index, as: :global_expenses
+  # Expenses live at the top level whether or not they belong to a group -
+  # expense[group_id] decides, and a blank one means a personal expense.
+  resources :expenses do
+    member do
+      patch :void
+      patch :restore
+    end
+  end
+
   get "balances", to: "balances#index"
   get "activity", to: "activity#index"
   get "insights", to: "insights#show"
 
   resources :groups do
-    resources :expenses do
-      member do
-        patch :void
-        patch :restore
-      end
-    end
-
-    resources :settlements do
+    resources :memberships, only: %i[index create destroy]
+    resources :settlements, only: %i[index new create edit update] do
       member { patch :void }
     end
 
-    resources :memberships, only: %i[index create destroy]
-
     member do
-      get :balances
-      get :activity
+      get :expenses, as: :expenses_for
+      get :balances, as: :balances_for
+      get :activity, as: :activity_for
     end
 
     resource :settle_up, only: %i[show create], controller: "settle_ups"

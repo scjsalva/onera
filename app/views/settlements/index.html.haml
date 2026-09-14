@@ -1,0 +1,20 @@
+- page_title "#{@group.name} payments"
+- content_for :heading, @group.name
+- content_for :back_path, group_path(@group)
+
+= render "groups/tabs", group: @group
+
+.space-y-4
+  = link_to "Record a payment", new_group_settlement_path(@group), class: "btn-primary w-full"
+
+  - if @settlements.any?
+    .card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+      - @settlements.each do |settlement|
+        .relative
+          = render "shared/settlement_row", settlement: settlement
+          - unless settlement.voided?
+            .absolute.inset-y-0.right-3.flex.items-center.gap-1.opacity-0.transition{ class: "hover:opacity-100 focus-within:opacity-100" }
+              = link_to "Edit", edit_group_settlement_path(@group, settlement), class: "btn-secondary btn-sm"
+  - else
+    = render "shared/empty_state", title: "No payments yet",
+             body: "When someone pays another person back, record it here and the balances update."

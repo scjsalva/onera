@@ -1,0 +1,3 @@
+- flash.each do |type, message|
+  - next if message.blank?
+  %flash-toast{ message: message, tone: (type.to_s == "alert" ? "negative" : "positive") }

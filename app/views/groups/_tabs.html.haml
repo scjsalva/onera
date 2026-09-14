@@ -1,0 +1,5 @@
+%nav.mb-4.flex.gap-1.overflow-x-auto.rounded-xl.bg-ink-200.p-1{ class: "bg-ink-200/70" }
+  - tabs = [["Overview", group_path(group)], ["Expenses", expenses_for_group_path(group)], ["Balances", balances_for_group_path(group)], ["Payments", group_settlements_path(group)], ["People", group_memberships_path(group)], ["Activity", activity_for_group_path(group)]]
+  - tabs.each do |label, path|
+    - active = current_page?(path)
+    = link_to label, path, class: "shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition #{active ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500 hover:text-ink-800'}"

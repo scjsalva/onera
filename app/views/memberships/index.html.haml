@@ -1,0 +1,38 @@
+- page_title "#{@group.name} people"
+- content_for :heading, @group.name
+- content_for :back_path, group_path(@group)
+
+= render "groups/tabs", group: @group
+
+.space-y-5
+  %section
+    %h2.mb-2.text-sm.font-semibold.text-ink-900= pluralize(@memberships.size, "person")
+    %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+      - @memberships.each do |membership|
+        - standing = @calculator.standing_for(membership.user_id)
+        %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+          = avatar_tag(membership.user)
+          %span.min-w-0.flex-1
+            %span.block.truncate.font-medium.text-ink-900= membership.user.name
+            %span.block.truncate.text-xs.text-ink-500
+              - if standing&.settled?
+                Settled up
+              - else
+                = standing&.active_positions&.map { |p| p.net.format(sign: true) }&.join(" · ")
+          - if membership.user_id != current_user.id
+            = button_to group_membership_path(@group, membership), method: :delete,
+                        class: "press grid h-9 w-9 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
+                        form: { data: { turbo_confirm: "Remove #{membership.user.name} from #{@group.name}?" } } do
+              %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+                %path{ "stroke-linecap" => "round", d: "M6 6l12 12M18 6L6 18" }
+
+  %section.card.card-pad{ data: { reveal: true } }
+    %h2.mb-3.text-sm.font-semibold.text-ink-900 Add someone
+    - if @candidates.any?
+      = form_with url: group_memberships_path(@group), method: :post do
+        %member-selector{ people: vue_json(UserPresenter.collection(@candidates)), field: "user_ids[]" }
+        %button.btn-primary.mt-4.w-full{ type: "submit" } Add to group
+    - else
+      %p.text-sm.text-ink-500 Everyone in Onera is already in this group.
+    = link_to "Create a new person instead", new_person_path(group_id: @group.id),
+              class: "mt-3 block text-center text-sm font-medium text-brand-600"

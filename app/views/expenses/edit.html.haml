@@ -1,0 +1,27 @@
+- page_title "Edit #{@expense.description}"
+- content_for :heading, "Edit expense"
+- content_for :back_path, expense_path(@expense)
+
+- members = @expense.group ? @expense.group.users.ordered : [current_user]
+
+%expense-composer{ open: "true",
+                   action: expense_path(@expense),
+                   method: "patch",
+                   "current-user-id" => current_user.id,
+                   groups: vue_json(current_groups.map { |g| { id: g.id, name: g.name } }),
+                   currencies: vue_json(CurrencyPresenter.collection),
+                   categories: vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }),
+                   members: vue_json(UserPresenter.collection(members)),
+                   expense: vue_json({
+                     group_id: @expense.group_id,
+                     description: @expense.description,
+                     amount: @expense.amount.to_major.to_s("F"),
+                     currency_code: @expense.currency_code,
+                     spent_on: @expense.spent_on.to_s,
+                     category_id: @expense.category_id,
+                     notes: @expense.notes,
+                     split_method: @expense.split_method,
+                     payers: @expense.expense_payers.map { |p| { user_id: p.user_id, amount: p.amount.to_major.to_s("F") } },
+                     participants: @expense.expense_participants.map { |p| { user_id: p.user_id, split_value: p.split_value&.to_s("F") } }
+                   }),
+                   "@close" => "window.location = '#{expense_path(@expense)}'" }

@@ -1,0 +1,9 @@
+- page_title "Activity"
+- content_for :heading, "Activity"
+
+- if @events.any?
+  %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
+    - @events.each do |event|
+      = render "shared/activity_row", event: event, show_group: true
+- else
+  = render "shared/empty_state", title: "Nothing yet", body: "Everything that happens in your groups shows up here."

@@ -1,0 +1,7 @@
+- group ||= nil
+%expense-filter-bar{ filter: vue_json(filter.to_params),
+                     scope: scope.to_s,
+                     categories: vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }),
+                     currencies: vue_json(CurrencyPresenter.collection),
+                     people: vue_json(UserPresenter.collection(group ? group.users.ordered : User.ordered)),
+                     groups: vue_json(current_groups.map { |g| { id: g.id, name: g.name } }) }
