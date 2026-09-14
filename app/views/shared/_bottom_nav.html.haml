@@ -13,7 +13,12 @@
 
     -# The primary action. Raised on mobile, inline on desktop.
     .relative.flex.w-16.shrink-0.items-center.justify-center{ class: "md:order-first md:mb-2 md:w-full md:justify-stretch md:px-1" }
-      %expense-composer-launcher{ "groups" => vue_json(current_groups.map { |g| { id: g.id, name: g.name } }) }
+      %expense-composer-launcher{ "groups" => vue_json(current_groups.map { |g| { id: g.id, name: g.name } }),
+                                  "group-id" => contextual_group&.id,
+                                  "group-name" => contextual_group&.name,
+                                  "current-user-id" => current_user.id,
+                                  "currencies" => vue_json(CurrencyPresenter.collection),
+                                  "categories" => vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }) }
 
     = nav_link_to "Balances", balances_path, controller_name == "balances" do
       %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M12 3v18M5 8l7-4 7 4M3 12l4-7 4 7a4 4 0 01-8 0zm10 0l4-7 4 7a4 4 0 01-8 0z" }

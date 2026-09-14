@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_user
   before_action :require_current_user
 
-  helper_method :current_user, :signed_in?, :current_groups
+  helper_method :current_user, :signed_in?, :current_groups, :contextual_group
 
   private
 
@@ -32,6 +32,13 @@ class ApplicationController < ActionController::Base
 
   def current_group
     @current_group ||= current_user.groups.find(params[:group_id] || params[:id])
+  end
+
+  # The group the page being rendered is about, if any. Used to preselect it
+  # in the expense composer so adding several expenses to the same group
+  # doesn't mean picking it every time.
+  def contextual_group
+    @group || @expense&.group
   end
 
   def expense_filter

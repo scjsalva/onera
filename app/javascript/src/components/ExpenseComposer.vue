@@ -70,7 +70,9 @@ const splitMethods = [
   { value: 'fixed', label: 'Exact' },
 ];
 
-// Switching group changes who can be involved and which currency is implied.
+// Who can be involved, and which currency is implied, both follow the group.
+// Runs immediately as well as on change: opening the composer from inside a
+// group preselects it, and with no change event the members would never load.
 watch(
   () => form.value.group_id,
   async (groupId) => {
@@ -81,14 +83,19 @@ watch(
       return;
     }
 
+    // Editing already has its members and its own currency; don't refetch or
+    // overwrite what the expense was saved with.
+    if (existing && memberList.value.length) return;
+
     const { data } = await http.get(`/groups/${groupId}/memberships.json`);
     memberList.value = data.members;
-    if (!existing) {
-      form.value.currency_code = data.base_currency;
-      form.value.payers = props.currentUserId ? [{ user_id: Number(props.currentUserId), amount: '' }] : [];
-      form.value.participants = data.members.map((m) => ({ user_id: m.id, split_value: null }));
-    }
-  }
+    if (existing) return;
+
+    form.value.currency_code = data.base_currency;
+    form.value.payers = props.currentUserId ? [{ user_id: Number(props.currentUserId), amount: '' }] : [];
+    form.value.participants = data.members.map((m) => ({ user_id: m.id, split_value: null }));
+  },
+  { immediate: true }
 );
 
 function togglePayer(userId) {

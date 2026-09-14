@@ -4,8 +4,15 @@ import ExpenseComposer from './ExpenseComposer.vue';
 
 // The raised action in the middle of the tab bar. Opens the composer sheet
 // rather than navigating, so adding an expense never loses your place.
-defineProps({
+const props = defineProps({
   groups: { type: [Array, String], default: () => [] },
+  currencies: { type: [Array, String], default: () => [] },
+  categories: { type: [Array, String], default: () => [] },
+  currentUserId: { type: [Number, String], default: null },
+  // Set when the page being viewed belongs to a group, so the composer opens
+  // already pointed at it.
+  groupId: { type: [Number, String], default: null },
+  groupName: { type: String, default: '' },
 });
 
 const open = ref(false);
@@ -16,7 +23,7 @@ const open = ref(false);
     <button
       type="button"
       class="group absolute -top-6 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full bg-brand-600 text-white shadow-lift transition duration-200 active:scale-90 hover:bg-brand-700 md:static md:h-auto md:w-full md:translate-x-0 md:rounded-xl md:px-3 md:py-2.5 md:shadow-sm"
-      aria-label="Add an expense"
+      :aria-label="groupName ? `Add an expense to ${groupName}` : 'Add an expense'"
       @click="open = true"
     >
       <span class="flex items-center gap-2">
@@ -33,6 +40,15 @@ const open = ref(false);
       </span>
     </button>
 
-    <ExpenseComposer v-if="open" :groups="groups" open @close="open = false" />
+    <ExpenseComposer
+      v-if="open"
+      open
+      :groups="groups"
+      :currencies="currencies"
+      :categories="categories"
+      :current-user-id="currentUserId"
+      :group-id="groupId"
+      @close="open = false"
+    />
   </div>
 </template>

@@ -1,3 +1,4 @@
-
+# Ports are pinned so the app is always at localhost:3000 - foreman otherwise
+# hands out its own PORT (5000, 5100, ...) and Rails picks it up.
+web: bin/rails s -p 3000
 vite: bin/vite dev
-web: bin/rails s
