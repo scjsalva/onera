@@ -24,6 +24,9 @@ Rails.application.routes.draw do
 
   resource  :profile, only: %i[show edit update destroy]
   resource  :email,   only: %i[edit update], controller: "emails"
+  resource  :avatar,  only: :update, controller: "avatars" do
+    patch :shuffle, on: :member
+  end
   resources :people,  only: :index
 
   # Expenses live at the top level whether or not they belong to a group -

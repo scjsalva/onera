@@ -141,6 +141,25 @@
     background-attachment: fixed;
   }
 
+  /* Tailwind's reset leaves buttons with the default arrow cursor, so nothing
+     in the app looked clickable on a desktop pointer. */
+  button:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  label[for],
+  select:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input[type="submit"]:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+
   /* Tabular figures everywhere money is shown keeps columns aligned. */
   .tnum {
     font-variant-numeric: tabular-nums;
@@ -315,6 +334,12 @@
 
   /* The tab bar steps down when it becomes a sidebar. */
   .icon-nav { @apply h-6 w-6 shrink-0 md:h-5 md:w-5; }
+
+  /* Initials are the fallback layer. Once the illustration loads they would
+     otherwise show through its transparent background. */
+  .avatar-loaded .avatar-initials {
+    visibility: hidden;
+  }
 
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;

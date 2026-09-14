@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120023) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -298,6 +298,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120023) do
     t.datetime "last_sign_in_at"
     t.datetime "recovery_codes_generated_at"
     t.string "username", null: false
+    t.string "avatar_style", default: "notionists-neutral", null: false
+    t.string "avatar_seed"
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "(email IS NOT NULL)"
     t.index "lower((username)::text)", name: "index_users_on_lower_username", unique: true
     t.index ["archived_at"], name: "index_users_on_archived_at"

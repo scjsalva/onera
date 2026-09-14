@@ -42,6 +42,6 @@ class ProfilesController < ApplicationController
   # Password is deliberately absent: it changes through PasswordsController,
   # which requires the current one.
   def profile_params
-    params.require(:user).permit(:name, :email, :date_of_birth, :preferred_currency_code)
+    params.require(:user).permit(:name, :email, :date_of_birth, :preferred_currency_code, :avatar_style)
   end
 end

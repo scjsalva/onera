@@ -63,8 +63,10 @@ export async function signOut(b) {
   await sleep(600);
 }
 
-const { default: register } = await import('./scenarios.mjs');
-register({ scenario, check, signIn, signOut, BASE, sleep });
+for (const file of ['./scenarios.mjs', './scenarios_extra.mjs']) {
+  const { default: register } = await import(file);
+  register({ scenario, check, signIn, signOut, BASE, sleep });
+}
 
 const b = new Browser({ headless: process.env.HEADED !== '1' });
 await b.start();

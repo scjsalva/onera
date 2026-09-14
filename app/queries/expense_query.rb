@@ -22,7 +22,14 @@ class ExpenseQuery
   attr_reader :scope, :filter
 
   def base_scope
-    scope.left_joins(:category, :group)
+    relation = scope.left_joins(:category, :group)
+    # Amount bounds compare against the converted figure, which is held in the
+    # base currency's minor units - and those differ per currency, so the
+    # currency row has to come along to know where the decimal point is.
+    return relation unless filter.min_amount.present? || filter.max_amount.present?
+
+    relation.joins("INNER JOIN currencies base_currencies " \
+                   "ON base_currencies.code = expenses.base_currency_code")
   end
 
   def apply_status(relation)
@@ -74,15 +81,23 @@ class ExpenseQuery
     range ? relation.where(expenses: { spent_on: range }) : relation
   end
 
-  # Amount bounds are compared against the group-currency figure so a mixed
-  # currency list stays comparable.
+  # Compared against the group-currency figure so a mixed-currency list stays
+  # comparable. Scaling by the currency's own exponent rather than assuming
+  # two decimals: a ¥1,000 expense is 1000 minor units, not 100000, and a flat
+  # multiplier silently excluded every zero-decimal currency.
   def apply_amounts(relation)
     if filter.min_amount.present?
-      relation = relation.where("expenses.base_amount_minor >= ?", (filter.min_amount * 100).to_i)
+      relation = relation.where(
+        "expenses.base_amount_minor >= ? * power(10, base_currencies.exponent)", filter.min_amount
+      )
     end
+
     if filter.max_amount.present?
-      relation = relation.where("expenses.base_amount_minor <= ?", (filter.max_amount * 100).to_i)
+      relation = relation.where(
+        "expenses.base_amount_minor <= ? * power(10, base_currencies.exponent)", filter.max_amount
+      )
     end
+
     relation
   end
 end

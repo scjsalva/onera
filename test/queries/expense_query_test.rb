@@ -120,6 +120,29 @@ class ExpenseQueryTest < ActiveSupport::TestCase
     assert_equal 3, results(period: "custom", from: "not-a-date").size
   end
 
+  test "amount bounds respect the currency's decimal places" do
+    yen_group = create_group(name: "Tokyo", currency: "JPY", members: [ @john ], creator: @john)
+    add_expense(group: yen_group, actor: @john, description: "Ramen", amount: "1200",
+                currency_code: "JPY",
+                payers: [ { user_id: @john.id, amount: "1200" } ],
+                participants: [ { user_id: @john.id } ])
+
+    ramen = yen_group.expenses.first
+
+    # ¥1,200 is 1200 minor units, not 120000. Comparing with a flat times-100
+    # would have treated it as ¥120,000 and put it above every sane maximum.
+    assert_includes results(group_id: yen_group.id, min_amount: "1000").map(&:id), ramen.id
+    assert_includes results(group_id: yen_group.id, max_amount: "1500").map(&:id), ramen.id
+    assert_empty results(group_id: yen_group.id, min_amount: "2000")
+    assert_empty results(group_id: yen_group.id, max_amount: "1000")
+  end
+
+  test "amount bounds still work for two-decimal currencies" do
+    assert_includes results(min_amount: "500").map(&:id), @train.id
+    refute_includes results(max_amount: "200").map(&:id), @dinner.id
+    assert_includes results(max_amount: "200").map(&:id), @personal.id
+  end
+
   test "everything happens in SQL rather than in Ruby" do
     sql = ExpenseQuery.new(Expense.all, filter: ExpenseFilter.new(q: "dinner")).call.to_sql
 

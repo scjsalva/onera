@@ -123,6 +123,40 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.avatar_url, "stable"
   end
 
+  test "the avatar style must be one of the offered set" do
+    user = create_user(name: "Styled", username: "styled")
+
+    user.avatar_style = "bottts-neutral"
+    assert user.valid?
+
+    user.avatar_style = "something-invented"
+    refute user.valid?
+  end
+
+  test "shuffling changes the face without changing the name" do
+    user = create_user(name: "Shuffler", username: "shuffler")
+    before = user.avatar_url
+
+    user.reroll_avatar!
+
+    refute_equal before, user.reload.avatar_url
+    assert_equal "Shuffler", user.name
+    assert_equal "shuffler", user.username
+  end
+
+  test "the avatar follows the chosen style" do
+    user = create_user(name: "Robot", username: "robotuser", avatar_style: "bottts-neutral")
+
+    assert_includes user.avatar_url, "bottts-neutral"
+  end
+
+  test "a style can be previewed without saving it" do
+    user = create_user(name: "Preview", username: "previewuser")
+
+    assert_includes user.avatar_url(style: "fun-emoji"), "fun-emoji"
+    assert_equal "notionists-neutral", user.reload.avatar_style
+  end
+
   private
 
   def assert_valid(**attrs)

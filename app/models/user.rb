@@ -84,23 +84,44 @@ class User < ApplicationRecord
     on.year - date_of_birth.year - (on.strftime("%m%d") < date_of_birth.strftime("%m%d") ? 1 : 0)
   end
 
-  AVATAR_STYLE = "notionists-neutral"
   AVATAR_HOST = "https://api.dicebear.com/9.x"
 
-  # Deterministic from the username, so the same person is the same face on
-  # every device with nothing stored. If the service is unreachable the UI
-  # falls back to the initials underneath, so this is decoration, not a
-  # dependency.
-  def avatar_url(size: 96)
+  # A small, deliberately different-looking set. Each is a keyless endpoint on
+  # the avatar service, so choosing one costs nothing and needs no account.
+  AVATAR_STYLES = {
+    "notionists-neutral" => "Sketch",
+    "adventurer-neutral" => "Character",
+    "thumbs" => "Thumb",
+    "bottts-neutral" => "Robot",
+    "fun-emoji" => "Emoji",
+    "shapes" => "Shapes",
+    "identicon" => "Pattern"
+  }.freeze
+
+  DEFAULT_AVATAR_STYLE = "notionists-neutral"
+
+  validates :avatar_style, inclusion: { in: AVATAR_STYLES.keys }
+
+  # Deterministic from the seed, so the same person is the same face on every
+  # device with nothing stored anywhere. If the service is unreachable the
+  # initials underneath show instead - this is decoration, not a dependency.
+  def avatar_url(size: 96, style: nil)
     return nil if archived?
 
-    "#{AVATAR_HOST}/#{AVATAR_STYLE}/svg?" + {
-      seed: username.presence || "user-#{id}",
+    chosen = style.presence || avatar_style.presence || DEFAULT_AVATAR_STYLE
+
+    "#{AVATAR_HOST}/#{chosen}/svg?" + {
+      seed: avatar_seed_value,
       size:,
       backgroundColor: "transparent",
       radius: 50
     }.to_query
   end
+
+  def avatar_seed_value = avatar_seed.presence || username.presence || "user-#{id}"
+
+  # A new face without changing anything anyone else sees about you.
+  def reroll_avatar! = update!(avatar_seed: SecureRandom.hex(6))
 
   def initials
     # Anonymized people all share a name, so their initials come from their

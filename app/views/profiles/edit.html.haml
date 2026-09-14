@@ -22,6 +22,15 @@
   = form.submit "Save", class: "btn-primary w-full"
 
 .mt-6.card.card-pad{ data: { reveal: true } }
+  %p.label Your avatar
+  %p.mb-3.text-sm.text-ink-500
+    Drawn from your account, not uploaded. Pick a style, or shuffle for a different face in the same one.
+  %avatar-picker{ styles: vue_json(User::AVATAR_STYLES.map { |value, label| { value: value, label: label, preview: current_user.avatar_url(size: 80, style: value) } }),
+                  current: current_user.avatar_style,
+                  "update-path" => avatar_path,
+                  "shuffle-path" => shuffle_avatar_path }
+
+.mt-6.card.card-pad{ data: { reveal: true } }
   %p.label Appearance
   %theme-toggle
 

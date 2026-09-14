@@ -18,9 +18,27 @@ export function formatMoney(amount, currency) {
   return `${negative ? '-' : ''}${symbol}${body}`;
 }
 
+// Shifts the decimal point by manipulating the digits rather than multiplying,
+// and rounds half up on the first dropped digit - the same rule Ruby's
+// BigDecimal uses on the server.
+//
+// Multiplying went wrong exactly where money does: 1.005 * 100 is
+// 100.49999999999999 in binary floating point, so the preview said ₱1.00
+// while the server stored ₱1.01.
 export function toMinor(amount, exponent = 2) {
-  // Round-half-up on the decimal string avoids float drift for user input.
-  const n = Number(amount);
-  if (Number.isNaN(n)) return 0;
-  return Math.round(n * 10 ** exponent);
+  const text = String(amount ?? '').trim();
+  if (!/^-?\d*\.?\d*$/.test(text) || !/\d/.test(text)) return 0;
+
+  const negative = text.startsWith('-');
+  const [whole = '', fraction = ''] = text.replace('-', '').split('.');
+
+  // One digit past what we keep, so we can see whether to round up.
+  const padded = `${fraction}${'0'.repeat(exponent + 1)}`.slice(0, exponent + 1);
+  const kept = padded.slice(0, exponent);
+  const dropped = Number(padded[exponent] || '0');
+
+  let value = Number(`${whole || '0'}${kept}`);
+  if (dropped >= 5) value += 1;
+
+  return negative ? -value : value;
 }

@@ -78,7 +78,12 @@ Rails.application.configure do
   # Enable DNS rebinding protection and other `Host` header attacks.
   # Hosting platforms front the app with their own domain, so trust it from
   # the environment rather than hardcoding one.
+  # Render, Fly and friends each serve the app on their own hostname. Rails
+  # blocks anything not listed here with a 403 that reads like a routing bug,
+  # so the host comes from the environment rather than being hardcoded.
   config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
+  config.hosts << /\A[a-z0-9-]+\.onrender\.com\z/
+  config.hosts << /\A[a-z0-9-]+\.fly\.dev\z/
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # config.hosts = [

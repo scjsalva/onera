@@ -46,6 +46,9 @@ else
 fi
 
 step "Ruby tests"
+# Purge first: a stray committed row from an interrupted run makes tests that
+# count records fail in ways that look like real bugs.
+bin/rails db:test:prepare > /tmp/onera-check-dbprep.log 2>&1
 if [ -d test ] && ls test/**/*_test.rb > /dev/null 2>&1; then
   if bin/rails test > /tmp/onera-check-minitest.log 2>&1; then
     ok "$(grep -oE '[0-9]+ runs.*' /tmp/onera-check-minitest.log | tail -1)"

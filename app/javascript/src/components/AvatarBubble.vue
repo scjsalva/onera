@@ -1,12 +1,17 @@
 <script setup>
-// Initials underneath, illustrated avatar on top. The image removes itself if
-// it fails, so a blocked or offline avatar service degrades to initials
-// rather than to an empty circle.
+import { ref } from 'vue';
+
+// Initials underneath, illustrated avatar on top. The illustration has a
+// transparent background, so the initials hide once it arrives - and stay if
+// it never does, which is what makes this safe to depend on.
 defineProps({
   user: { type: Object, required: true },
   size: { type: String, default: 'md' },
   ring: { type: Boolean, default: false },
 });
+
+const loaded = ref(false);
+const failed = ref(false);
 
 const sizes = {
   xs: 'h-6 w-6 text-[10px]',
@@ -26,15 +31,16 @@ const sizes = {
     ]"
     :title="user.name"
   >
-    <span>{{ user.initials }}</span>
+    <span :class="loaded ? 'invisible' : ''">{{ user.initials }}</span>
     <img
-      v-if="user.avatar"
+      v-if="user.avatar && !failed"
       :src="user.avatar"
       alt=""
       aria-hidden="true"
       loading="lazy"
       class="absolute inset-0 h-full w-full object-cover"
-      @error="$event.target.remove()"
+      @load="loaded = true"
+      @error="failed = true"
     />
   </span>
 </template>
