@@ -12,10 +12,11 @@ import WebSocket from 'ws';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 export class Browser {
-  constructor({ port = 9400, width = 430, height = 932, profile = '/tmp/onera-e2e', headless = true, headers = null, insecure = false } = {}) {
+  constructor({ port = 9400, width = 430, height = 932, profile = '/tmp/onera-e2e', headless = true, headers = null, insecure = false, userAgent = null } = {}) {
     this.port = port;
     this.headers = headers;
     this.insecure = insecure;
+    this.userAgent = userAgent;
     this.width = width;
     this.height = height;
     this.profile = profile;
@@ -63,6 +64,12 @@ export class Browser {
     await this.send('Network.enable');
     await this.send('Log.enable');
     if (this.headers) await this.send('Network.setExtraHTTPHeaders', { headers: this.headers });
+    // Pretending to be another device, for the handful of things that branch on
+    // the user agent because the platform gives no other way to know.
+    if (this.userAgent) {
+      await this.send('Emulation.setUserAgentOverride', { userAgent: this.userAgent });
+      await this.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    }
     // The command-line flag is ignored under headless=new, so the certificate
     // has to be waved through over the protocol instead.
     if (this.insecure) {

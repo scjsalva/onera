@@ -67,6 +67,17 @@ document.addEventListener('turbo:load', mountIfNeeded);
 document.addEventListener('turbo:render', mountIfNeeded);
 document.addEventListener('DOMContentLoaded', mountIfNeeded);
 
+// Registered for one reason: Chrome will not offer to install a site without
+// one. It caches only Vite's content-hashed assets - see public/service-worker.js.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {
+      // Blocked by settings, or unsupported. The app works the same without it;
+      // the only loss is the install prompt.
+    });
+  });
+}
+
 Turbo.start();
 
 window.Onera = { http, Turbo };

@@ -3,18 +3,7 @@
   %head
     %meta{ charset: "utf-8" }
     %meta{ name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" }
-    %meta{ name: "theme-color", content: "#f1f3f5" }
-    %link{ rel: "icon", href: "/icon.svg", type: "image/svg+xml" }
-    %link{ rel: "icon", href: "/icon.png", type: "image/png", sizes: "512x512" }
-    %link{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" }
-    %link{ rel: "mask-icon", href: "/icon-mask.svg", color: "#2b62f0" }
-    -# Installed to a home screen it runs without browser chrome, which is the
-    -# difference between a website you visit and an app you open.
-    %link{ rel: "manifest", href: "/manifest.json" }
-    %meta{ name: "apple-mobile-web-app-capable", content: "yes" }
-    %meta{ name: "mobile-web-app-capable", content: "yes" }
-    %meta{ name: "apple-mobile-web-app-title", content: "Onera" }
-    %meta{ name: "apple-mobile-web-app-status-bar-style", content: "default" }
+    = render "shared/app_head"
     %title= [ yield(:title).presence, "Onera" ].compact.join(" · ")
     :javascript
       (function () {
