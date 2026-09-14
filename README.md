@@ -198,9 +198,11 @@ and reference seeds on boot, and health-checks `/up`.
 The database is deliberately not Render's own free Postgres: that is deleted
 after 30 days, and the point is that the records outlive the trial.
 
-A free Render service sleeps after fifteen minutes idle, so a scheduled
-workflow pings it through waking hours — 496 instance-hours a month against an
-allowance of 750. Full walkthrough in `docs/deployment.md`.
+A free Render service sleeps after fifteen minutes idle, so an external cron
+pings `/up` every twelve minutes through waking hours — 527 instance-hours a
+month against an allowance of 750. Not GitHub Actions: scheduled workflows are
+best-effort and, when tried, simply did not fire. Full walkthrough in
+`docs/deployment.md`.
 
 Required environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_HOST`. See
 `.env.example`. No accounts are seeded outside development; the first one is

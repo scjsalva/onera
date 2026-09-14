@@ -98,31 +98,37 @@ password should never sit in a shell history or a deploy log.
 ## 5. Keeping it awake
 
 Render spins a free service down after about fifteen minutes idle, and the next
-visitor waits 40–90 seconds for the container to come back.
+visitor waits 40-90 seconds for the container to come back.
 
-`.github/workflows/keepalive.yml` pings `/up` every ten minutes between 07:00
-and midnight, Manila. Point it at the app under **Settings → Secrets and
-variables → Actions → Variables**, as `ONERA_URL` — e.g.
-`https://onera.onrender.com`.
+**Not with GitHub Actions.** That was tried and does not work: scheduled
+workflows are best-effort, get dropped under load, and in eight hours inside
+the active window not one of them fired. They are not a timer. On a private
+repository they would also be metered - per job, rounded up to a whole minute,
+so a ten-minute ping costs about 3,100 minutes against an allowance of 2,000 -
+which makes it a trap waiting for the day somebody flips the repo to private.
+
+Use a cron service, where the request is free and actually happens:
+
+1. https://cron-job.org — free, no card.
+2. New cron job, URL `https://onera-yqv9.onrender.com/up`.
+3. Every **12 minutes**. Render's idle timer is fifteen, so three minutes of
+   slack absorbs a late run.
+4. Restrict the hours to **07:00-23:59**, your timezone.
+5. Turn on failure notifications. It then doubles as uptime monitoring: if the
+   app is down, the thing already watching it tells you.
 
 Seventeen hours a day is **527 instance-hours** in a 31-day month against a
-free allowance of **750**. Round the clock would be 744 — six hours of margin,
-shared with the second instance a deploy briefly runs — and exceeding the
+free allowance of **750**. Round the clock would be 744 - six hours of margin,
+shared with the second instance a deploy briefly runs - and exceeding the
 allowance suspends the service until the month turns. The overnight gap is what
 buys the margin, and the cost is one slow visit each morning.
 
-This only works because the repository is public: Actions minutes are free and
-unlimited for public repositories, and a private one gets 2,000 a month, which
-a ten-minute ping would exhaust three times over. If it ever goes private
-again, move the ping to an external cron such as cron-job.org and take CI off
-`push`.
+UptimeRobot works too, on a fixed five-minute interval; use its maintenance
+windows for the overnight gap.
 
-Two ways it fails quietly, worth knowing:
-
-- Scheduled runs are best-effort and can be delayed ten minutes or more under
-  load, so the odd visitor still meets a cold start.
-- GitHub disables schedules after 60 days with no repository activity. If
-  nothing is pushed for two months the pings stop and nothing says so.
+Whatever you pick, the pinger is load-bearing and fails quietly. The failure
+notifications in step 5 are what make that visible - without them you find out
+because the app got slow again.
 
 ## A region note
 
