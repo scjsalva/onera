@@ -12,6 +12,7 @@
                    currencies: vue_json(CurrencyPresenter.collection),
                    categories: vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }),
                    members: vue_json(UserPresenter.collection(members)),
+                   friends: vue_json(UserPresenter.collection(current_user.friends.ordered)),
                    expense: vue_json({
                      group_id: @expense.group_id,
                      description: @expense.description,

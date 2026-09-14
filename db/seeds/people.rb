@@ -17,6 +17,26 @@ module Seeds
       { name: "Andrew Egonia",     username: "aegonia" }
     ].freeze
 
+    # Everyone starts connected to the first account and to nobody else, so
+    # the visibility rules are visible from the first minute: that person can
+    # tag anyone directly, and the rest can only reach each other by sharing a
+    # group.
+    def self.connect_to_first!
+      hub = User.find_by(username: PEOPLE.first[:username])
+      return if hub.nil?
+
+      PEOPLE.drop(1).each do |attrs|
+        other = User.find_by(username: attrs[:username])
+        next if other.nil? || Friendship.between(hub, other)
+
+        Friendship.create!(requester: hub, addressee: other, status: "accepted",
+                           responded_at: Time.current)
+      end
+
+      puts "Friendships: #{hub.username} is connected to #{hub.friends.count} people, who are not " \
+           "connected to each other"
+    end
+
     def self.load!
       PEOPLE.each do |attrs|
         user = User.find_or_initialize_by(username: attrs[:username])
@@ -28,6 +48,8 @@ module Seeds
 
         RecoveryCodeIssuer.call(user:) unless user.recovery_codes_issued?
       end
+
+      connect_to_first!
 
       puts "People: #{User.active.count} accounts (#{PEOPLE.map { |p| p[:username] }.join(', ')}), " \
            "password #{DEFAULT_PASSWORD.inspect}"

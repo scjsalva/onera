@@ -6,6 +6,7 @@ class Notification < ApplicationRecord
     settlement.received settlement.recorded
     group.added group.removed
     rates.locked
+    friend.requested friend.accepted
     recovery.codes_low
   ].freeze
 
@@ -38,6 +39,7 @@ class Notification < ApplicationRecord
     when /\Asettlement/ then :swap
     when /\Agroup/ then :people
     when /\Arates/ then :swap
+    when /\Afriend/ then :people
     else :bell
     end
   end

@@ -13,6 +13,14 @@ class ExpensesController < ApplicationController
                             .includes(:category, :currency, :base_currency, :group,
                                       expense_payers: :user, expense_splits: :user)
                             .limit(200)
+
+    @timeline = Timeline.new(
+      expenses: @expenses,
+      settlements: Settlement.active.involving(current_user.id)
+                             .recent_first.limit(50)
+                             .includes(:payer, :recipient, :currency, :group),
+      include_settlements: Timeline.settlements_relevant?(@filter)
+    )
   end
 
   def show

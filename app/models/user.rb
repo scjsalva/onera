@@ -23,6 +23,11 @@ class User < ApplicationRecord
   belongs_to :preferred_currency, class_name: "Currency", foreign_key: :preferred_currency_code,
                                   primary_key: :code, inverse_of: false
 
+  has_many :sent_friend_requests, class_name: "Friendship", foreign_key: :requester_id,
+                                  inverse_of: :requester, dependent: :destroy
+  has_many :received_friend_requests, class_name: "Friendship", foreign_key: :addressee_id,
+                                      inverse_of: :addressee, dependent: :destroy
+
   has_many :recovery_codes, dependent: :delete_all
   has_many :notifications, dependent: :delete_all
 
@@ -100,7 +105,18 @@ class User < ApplicationRecord
 
   DEFAULT_AVATAR_STYLE = "notionists-neutral"
 
+  # Eight fixed identity colours. Fixed rather than themed, because a person
+  # should be the same colour in light and dark, and they always carry white
+  # text.
+  AVATAR_TONES = (1..8).to_a.freeze
+
   validates :avatar_style, inclusion: { in: AVATAR_STYLES.keys }
+  validates :avatar_tone, inclusion: { in: AVATAR_TONES }, allow_nil: true
+
+  # Chosen if they picked one, otherwise derived so nobody starts grey.
+  def tone_number = avatar_tone || (id % AVATAR_TONES.length) + 1
+
+  def tone_class = "bg-avatar-#{tone_number}"
 
   # Deterministic from the seed, so the same person is the same face on every
   # device with nothing stored anywhere. If the service is unreachable the
@@ -132,6 +148,24 @@ class User < ApplicationRecord
   end
 
   def member_of?(group) = group_memberships.exists?(group_id: group.id)
+
+  # Everyone you have actually connected with. This is the whole of what one
+  # person can see of another outside a shared group.
+  def friends
+    User.active.where(id: Friendship.accepted.involving(self)
+                                    .pluck(:requester_id, :addressee_id).flatten.uniq - [ id ])
+  end
+
+  def friends_with?(other) = other && Friendship.between(self, other)&.accepted? || false
+
+  def friend_request_pending_with?(other) = other && Friendship.between(self, other)&.pending? || false
+
+  def incoming_friend_requests = received_friend_requests.pending.includes(:requester)
+  def outgoing_friend_requests = sent_friend_requests.pending.includes(:addressee)
+
+  # People you may put on an expense that has no group: yourself and your
+  # friends. A shared group widens this inside that group only.
+  def taggable_people = User.active.where(id: [ id ] + friends.ids)
 
   def needs_email? = email.blank?
 

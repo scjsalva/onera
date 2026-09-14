@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120027) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -158,6 +158,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
     t.check_constraint "split_method::text = ANY (ARRAY['equal'::character varying::text, 'percentage'::character varying::text, 'fixed'::character varying::text, 'shares'::character varying::text])", name: "expenses_split_method_valid"
   end
 
+  create_table "friendships", force: :cascade do |t|
+    t.bigint "requester_id", null: false
+    t.bigint "addressee_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "responded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["addressee_id", "status"], name: "index_friendships_on_addressee_id_and_status"
+    t.index ["addressee_id"], name: "index_friendships_on_addressee_id"
+    t.index ["requester_id", "addressee_id"], name: "index_friendships_on_requester_id_and_addressee_id", unique: true
+    t.index ["requester_id"], name: "index_friendships_on_requester_id"
+    t.check_constraint "requester_id <> addressee_id", name: "friendships_distinct_people"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying]::text[])", name: "friendships_status_valid"
+  end
+
   create_table "group_memberships", force: :cascade do |t|
     t.bigint "group_id", null: false
     t.bigint "user_id", null: false
@@ -250,7 +265,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
   end
 
   create_table "settlements", force: :cascade do |t|
-    t.bigint "group_id", null: false
+    t.bigint "group_id"
     t.bigint "payer_id", null: false
     t.bigint "recipient_id", null: false
     t.bigint "created_by_id"
@@ -271,6 +286,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
     t.index ["created_by_id"], name: "index_settlements_on_created_by_id"
     t.index ["group_id", "settled_on"], name: "index_settlements_on_group_id_and_settled_on"
     t.index ["group_id"], name: "index_settlements_on_group_id"
+    t.index ["payer_id", "recipient_id", "settled_on"], name: "index_settlements_on_pair_and_date"
     t.index ["payer_id", "recipient_id"], name: "index_settlements_on_payer_id_and_recipient_id"
     t.index ["payer_id"], name: "index_settlements_on_payer_id"
     t.index ["recipient_id"], name: "index_settlements_on_recipient_id"
@@ -300,11 +316,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
     t.string "username", null: false
     t.string "avatar_style", default: "notionists-neutral", null: false
     t.string "avatar_seed"
+    t.integer "avatar_tone"
     t.index "lower((email)::text)", name: "index_users_on_lower_email", unique: true, where: "(email IS NOT NULL)"
     t.index "lower((username)::text)", name: "index_users_on_lower_username", unique: true
     t.index ["archived_at"], name: "index_users_on_archived_at"
     t.index ["archived_ordinal"], name: "index_users_on_archived_ordinal", unique: true, where: "(archived_ordinal IS NOT NULL)"
     t.index ["preferred_currency_code"], name: "index_users_on_preferred_currency_code"
+    t.check_constraint "avatar_tone IS NULL OR avatar_tone >= 1 AND avatar_tone <= 8", name: "users_avatar_tone_range"
     t.check_constraint "length(btrim(name::text)) > 0", name: "users_name_present"
   end
 
@@ -326,6 +344,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_14_120024) do
   add_foreign_key "expenses", "users", column: "owner_id"
   add_foreign_key "expenses", "users", column: "rate_locked_by_id"
   add_foreign_key "expenses", "users", column: "voided_by_id"
+  add_foreign_key "friendships", "users", column: "addressee_id"
+  add_foreign_key "friendships", "users", column: "requester_id"
   add_foreign_key "group_memberships", "groups"
   add_foreign_key "group_memberships", "users"
   add_foreign_key "groups", "currencies", column: "base_currency_code", primary_key: "code"

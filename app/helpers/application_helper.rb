@@ -6,14 +6,7 @@ module ApplicationHelper
   end
 
   # A stable colour per person so avatars stay recognisable across screens.
-  # Fixed hues, not part of the inverting ramp: a person should be the same
-  # colour in both themes, and these always sit under white text.
-  AVATAR_TONES = %w[
-    bg-avatar-1 bg-avatar-2 bg-avatar-3 bg-avatar-4
-    bg-avatar-5 bg-avatar-6 bg-avatar-7 bg-avatar-8
-  ].freeze
-
-  def avatar_tone(user) = AVATAR_TONES[user.id % AVATAR_TONES.length]
+  def avatar_tone(user) = user.tone_class
 
   def avatar_tag(user, size: :md, ring: false)
     dimensions = { xs: "h-6 w-6 text-[10px]", sm: "h-8 w-8 text-xs",
@@ -35,6 +28,19 @@ module ApplicationHelper
               xl: "text-xl", "2xl": "text-2xl", "3xl": "text-3xl" }.fetch(size)
 
     tag.span(money.format(sign:), class: class_names("tnum font-semibold", colour, scale))
+  end
+
+  # Phrased from the reader's side. Built here rather than in the template
+  # because a multi-line `- x = if ...` in HAML renders its branches as text.
+  def settlement_label(settlement, viewer)
+    return "You paid #{settlement.recipient.name}" if settlement.payer_id == viewer.id
+    return "#{settlement.payer.name} paid you" if settlement.recipient_id == viewer.id
+
+    settlement.summary
+  end
+
+  def settlement_involves?(settlement, viewer)
+    [ settlement.payer_id, settlement.recipient_id ].include?(viewer.id)
   end
 
   def relative_day(date)
@@ -65,7 +71,8 @@ module ApplicationHelper
       net_minor: counterparty.net_minor,
       formatted: counterparty.net.format,
       breakdown: counterparty.breakdown.map do |line|
-        { group: line.group.name, formatted: line.net.format(sign: true), minor: line.net_minor }
+        { group: line.group&.name || "Just the two of you",
+          formatted: line.net.format(sign: true), minor: line.net_minor }
       end
     )
   end

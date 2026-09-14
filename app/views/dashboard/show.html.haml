@@ -8,7 +8,7 @@
     .pointer-events-none.absolute.-bottom-20.-left-10.h-40.w-40.rounded-full.opacity-30.blur-2xl{ class: "bg-black/40" }
 
     .relative
-      %p.text-xs.font-medium.uppercase.tracking-wide{ class: "text-white/70" }
+      %p.text-xs.font-medium.uppercase.tracking-wide{ class: "text-white/85" }
         - if @dashboard.net_balance.positive?
           You're owed overall
         - elsif @dashboard.net_balance.negative?
@@ -19,11 +19,11 @@
         %animated-money{ minor: @dashboard.net_balance.minor.abs, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
 
       .mt-5.grid.grid-cols-2.gap-3
-        .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
+        .rounded-xl.px-3.backdrop-blur{ class: "bg-black/20 py-2.5" }
           %p.font-medium.uppercase.tracking-wide{ class: "text-[11px] text-white/70" } Owed to you
           %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
             %animated-money{ minor: @dashboard.owed_to_you.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }
-        .rounded-xl.px-3.backdrop-blur{ class: "bg-white/10 py-2.5" }
+        .rounded-xl.px-3.backdrop-blur{ class: "bg-black/20 py-2.5" }
           %p.font-medium.uppercase.tracking-wide{ class: "text-[11px] text-white/70" } You owe
           %p.text-lg.font-semibold.tnum{ class: "mt-0.5" }
             %animated-money{ minor: @dashboard.you_owe.minor, symbol: @dashboard.display_currency.symbol, exponent: @dashboard.display_currency.exponent }

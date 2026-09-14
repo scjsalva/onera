@@ -66,6 +66,9 @@ Named for what they do, not for a pattern:
 | `BalanceCalculator` | Per-currency positions, pairwise debts, simplification |
 | `Consolidation` | Restate those positions in a single chosen currency |
 | `DashboardCalculator` | One person's position across every group |
+| `DirectLedger` | Balances between people who share no group |
+| `Timeline` | Expenses and settlements merged into one chronological list |
+| `RecoveryCodeIssuer` / `RecoveryCodeRedeemer` | Offline password recovery |
 | `RevisionRecorder` / `ActivityRecorder` | Append-only history |
 
 Plain CRUD does not get a service. `GroupsController#update` calls
@@ -85,12 +88,23 @@ group size and preloaded, and it is the only place a group's expenses are walked
 
 ## Current user
 
-`Current.user` — an `ActiveSupport::CurrentAttributes` — is set once per request
-in `ApplicationController#set_current_user` from a session id. Nothing else in
-the app reads the session.
+`Current.user` — an `ActiveSupport::CurrentAttributes` — is set once per
+request in `ApplicationController#set_current_user`. Nothing else in the app
+reads the session or Devise's helpers directly.
 
-That single seam is the whole future-authentication story: replace the body of
-that method, leave the financial domain untouched.
+That seam was the whole point. Introducing real authentication changed one
+line — `Current.user = warden.user` — and nothing in the financial domain at
+all. It is worth keeping intact.
+
+## Two ledgers
+
+`BalanceCalculator` scopes to a group. `DirectLedger` handles expenses that
+belong to no group, between people who have added each other.
+
+They are separate because their scoping questions differ — one is "everything
+in this group", the other "everything between this pair" — but they apportion
+money with the same `MinorUnitAllocator`, so their answers agree.
+`DashboardCalculator` folds both into one figure per person.
 
 ## Frontend conventions
 

@@ -87,9 +87,15 @@ class DashboardCalculator
     MoneyAmount.new(personal_spend_minor, display_currency)
   end
 
+  # Expenses with no group that this person is on, whether they own them or
+  # are only sharing them.
   def personal_expenses
-    Expense.active.personal.where(owner_id: user.id)
+    Expense.active.personal
+           .where(owner_id: user.id)
+           .or(Expense.active.personal.where(id: ExpenseSplit.where(user_id: user.id).select(:expense_id)))
   end
+
+  def direct_ledger = @direct_ledger ||= DirectLedger.new(user)
 
   def owed_to_you = MoneyAmount.new(counterparties.select(&:owed?).sum(&:net_minor), display_currency)
   def you_owe = MoneyAmount.new(-counterparties.select(&:owing?).sum(&:net_minor), display_currency)
@@ -122,6 +128,17 @@ class DashboardCalculator
             end
           end
         end
+      end
+
+      # Debts from expenses that belong to no group sit outside every group
+      # summary, so they are folded in here or they would be invisible.
+      direct_ledger.debts_for_me.each do |debt|
+        amount = convert_to_display(debt.amount_minor, debt.currency.code)
+        next if amount.zero?
+
+        other, signed = debt.from_user.id == user.id ? [ debt.to_user, -amount ] : [ debt.from_user, amount ]
+        totals[other.id] += signed
+        breakdown[other.id] << BreakdownLine.new(group: nil, net_minor: signed, currency: display_currency)
       end
 
       people = User.where(id: totals.keys).index_by(&:id)

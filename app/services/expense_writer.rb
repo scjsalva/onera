@@ -86,7 +86,11 @@ class ExpenseWriter
   end
 
   def payer_rows
-    return @payer_rows ||= [ { user_id: owner.id, amount_minor: } ] if personal?
+    # No payers sent for a groupless expense means the owner paid for it
+    # themselves - the common case, and the one the simple form posts.
+    if personal? && rows(params[:payers]).empty?
+      return @payer_rows ||= [ { user_id: owner.id, amount_minor: } ]
+    end
 
     @payer_rows ||= rows(params[:payers]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
@@ -100,7 +104,9 @@ class ExpenseWriter
   end
 
   def participant_rows
-    return @participant_rows ||= [ { user_id: owner.id, split_value: nil } ] if personal?
+    if personal? && rows(params[:participants]).empty?
+      return @participant_rows ||= [ { user_id: owner.id, split_value: nil } ]
+    end
 
     @participant_rows ||= rows(params[:participants]).filter_map do |row|
       user_id = row[:user_id].presence&.to_i
@@ -111,7 +117,7 @@ class ExpenseWriter
   end
 
   def split_method
-    personal? ? "equal" : (params[:split_method].presence || "equal")
+    params[:split_method].presence || "equal"
   end
 
   def split_result
@@ -132,10 +138,8 @@ class ExpenseWriter
   def validate_inputs!
     errors << "Choose a currency" if currency.nil?
     errors << "Enter an amount greater than zero" if currency && !amount_minor.positive?
-    unless personal?
-      errors << "Choose who paid" if payer_rows.empty?
-      errors << "Choose who is sharing this expense" if participant_rows.empty?
-    end
+    errors << "Choose who paid" if payer_rows.empty?
+    errors << "Choose who is sharing this expense" if participant_rows.empty?
 
     return if errors.any?
 

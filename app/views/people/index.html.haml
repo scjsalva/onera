@@ -2,37 +2,79 @@
 - content_for :heading, "People"
 - content_for :back_path, profile_path
 
-.space-y-4
-  .flex.items-center.justify-between
-    %p.text-sm.text-ink-500= pluralize(@people.size, "person")
-    = link_to invitations_path, class: "btn-primary btn-sm" do
-      %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2.4", viewBox: "0 0 24 24" }
-        %path{ "stroke-linecap" => "round", d: "M12 5v14M5 12h14" }
-      Invite
+.space-y-5
+  %section.card.card-pad{ data: { reveal: true } }
+    %h2.text-sm.font-semibold.text-ink-900 Add someone
+    %p.mt-1.text-sm.text-ink-500
+      Enter their username or email. Once you're both connected you can split expenses without a group.
+    = form_with url: friendships_path, method: :post, class: "mt-3 flex gap-2" do |form|
+      = form.text_field :login, class: "input flex-1", placeholder: "username or email",
+                        autocapitalize: "none", autocorrect: "off", spellcheck: false
+      = form.submit "Add", class: "btn-primary shrink-0"
 
-  %ul.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
-    - @people.each do |person|
-      %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
-        = avatar_tag(person)
-        %span.min-w-0.flex-1
-          %span.flex.items-center.gap-2
-            %span.truncate.font-medium.text-ink-900= person.name
-            - if person.id == current_user.id
-              %span.pill.bg-brand-50.text-brand-700 you
-          %span.block.truncate.text-xs.text-ink-500
-            - details = [ person.email.presence, person.preferred_currency_code, pluralize(person.groups.size, "group") ].compact
-            = details.join(" · ")
-        - if person.id == current_user.id
-          -# Same pencil as the "Your profile" row in the switcher sheet.
-          = link_to edit_profile_path, class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700", "aria-label" => "Edit your profile" do
-            %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
-              %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M11 4H7a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z" }
+  - if @incoming.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900= "Waiting for you (#{@incoming.size})"
+      %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - @incoming.each do |request|
+          %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+            = avatar_tag(request.requester, size: :sm)
+            %span.min-w-0.flex-1
+              %span.block.truncate.font-medium.text-ink-900= request.requester.name
+              %span.block.truncate.text-xs.text-ink-500= "@#{request.requester.username}"
+            = button_to "Accept", accept_friendship_path(request), method: :patch, class: "btn-primary btn-sm shrink-0"
+            = button_to "Ignore", friendship_path(request), method: :delete, class: "btn-ghost btn-sm shrink-0"
+
+  %section
+    .mb-2.flex.items-baseline.justify-between
+      %h2.text-sm.font-semibold.text-ink-900= "Your people (#{@friends.size})"
+      - if @outgoing.any?
+        %span.text-xs.text-ink-400= "#{@outgoing.size} awaiting reply"
+
+    - if @friends.any?
+      %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - @friends.each do |person|
+          - owed = @ledger.debts_for_me.select { |d| [d.from_user.id, d.to_user.id].include?(person.id) }
+          %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+            = avatar_tag(person)
+            %span.min-w-0.flex-1
+              %span.block.truncate.font-medium.text-ink-900= person.name
+              %span.block.truncate.text-xs.text-ink-500
+                - if owed.any?
+                  - line = owed.first
+                  - mine = line.from_user.id == current_user.id
+                  %span{ class: mine ? "text-negative-600" : "text-positive-600" }
+                    = mine ? "you owe #{line.amount.format}" : "owes you #{line.amount.format}"
+                - else
+                  = "@#{person.username}"
+            - friendship = Friendship.between(current_user, person)
+            = button_to friendship_path(friendship), method: :delete,
+                        class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-negative-50 hover:text-negative-600",
+                        form: { data: { turbo_confirm: "Remove #{person.name}? Shared expenses stay as they are." } },
+                        "aria-label" => "Remove #{person.name}" do
+              %svg.icon-md{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+                %path{ "stroke-linecap" => "round", d: "M6 6l12 12M18 6L6 18" }
+    - else
+      = render "shared/empty_state", title: "Nobody yet",
+               body: "Add someone by username or email, or send them an invite link to join.",
+               icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m10-4a3 3 0 11-6 0 3 3 0 016 0z"
+
+  - if @outgoing.any?
+    %section
+      %h2.mb-2.text-sm.font-semibold.text-ink-900 Sent
+      %ul.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+        - @outgoing.each do |request|
+          %li.flex.items-center.gap-3.px-4.py-3{ data: { reveal: true } }
+            = avatar_tag(request.addressee, size: :sm)
+            %span.min-w-0.flex-1
+              %span.block.truncate.font-medium.text-ink-900= request.addressee.name
+              %span.block.text-xs.text-ink-500 Waiting for them to accept
+            = button_to "Cancel", friendship_path(request), method: :delete, class: "btn-ghost btn-sm shrink-0"
 
   %section.card.card-pad{ data: { reveal: true } }
-    %h2.text-sm.font-semibold.text-ink-900 Invite someone
-    %p.mt-1.text-sm.text-ink-500
-      People join by signing themselves up. Share this link with whoever should be here.
-    %invite-link{ url: @invitation.share_url(request.base_url), refresh_path: invitations_path }
+    %h2.text-sm.font-semibold.text-ink-900 Not on Onera yet?
+    %invite-link{ url: @invitation.share_url(request.base_url), "refresh-path" => invitations_path }
 
   %p.text-xs.text-ink-500
-    One person, one account. Adding someone to a group reuses them rather than making a copy, so their balances follow them everywhere.
+    You only see people you've added. Sharing a group lets you split with someone inside it without
+    adding them — outside that group, you still won't see each other.

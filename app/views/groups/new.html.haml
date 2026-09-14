@@ -18,9 +18,11 @@
 
   .card.card-pad{ data: { reveal: true } }
     %p.label Who's in?
-    %member-selector{ people: vue_json(UserPresenter.collection(User.active.ordered.where.not(id: current_user.id))),
-                      field: "member_ids[]",
-                      "new-person-path" => nil }
-    %p.mt-3.text-xs.text-ink-500 You're included automatically.
+    %member-selector{ people: vue_json(UserPresenter.collection(current_user.friends.ordered)),
+                      field: "member_ids[]" }
+    %p.mt-3.text-xs.text-ink-500
+      You're included automatically. Only people you've added appear here — you can add more from
+      = succeed "." do
+        = link_to "People", people_path, class: "font-medium text-brand-600"
 
   = form.submit "Create group", class: "btn-primary w-full"

@@ -271,9 +271,18 @@ export class Browser {
       if (document.documentElement.scrollWidth > vw + 1) {
         out.push('page scrolls horizontally (' + document.documentElement.scrollWidth + ' > ' + vw + ')');
       }
+      const inScroller = (el) => {
+        for (let node = el.parentElement; node; node = node.parentElement) {
+          const overflow = getComputedStyle(node).overflowX;
+          if (overflow === 'auto' || overflow === 'scroll') return true;
+        }
+        return false;
+      };
+
       document.querySelectorAll('button, a, input, select, textarea').forEach((el) => {
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) return;
+        if (inScroller(el)) return;
         if (r.right > vw + 1) out.push('offscreen right: ' + (el.innerText || el.name || el.tagName).trim().slice(0, 40));
         if (r.left < -1) out.push('offscreen left: ' + (el.innerText || el.name || el.tagName).trim().slice(0, 40));
       });

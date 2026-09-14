@@ -6,7 +6,7 @@ class MembershipsController < ApplicationController
   def index
     @memberships = @group.group_memberships.ordered.includes(:user)
     @calculator = BalanceCalculator.new(@group)
-    @candidates = User.active.ordered.where.not(id: @group.group_memberships.select(:user_id))
+    @candidates = current_user.friends.ordered.where.not(id: @group.group_memberships.select(:user_id))
     @invitation = Invitation.for(group: @group, creator: current_user)
 
     respond_to do |format|
@@ -21,7 +21,8 @@ class MembershipsController < ApplicationController
   end
 
   def create
-    users = User.active.where(id: Array(params[:user_ids]).reject(&:blank?))
+    # Scoped to friends, so a guessed id cannot pull a stranger into a group.
+    users = current_user.friends.where(id: Array(params[:user_ids]).reject(&:blank?))
     added = users.reject { |user| user.member_of?(@group) }
 
     added.each do |user|

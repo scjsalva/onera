@@ -18,7 +18,8 @@
                                   "group-name" => contextual_group&.name,
                                   "current-user-id" => current_user.id,
                                   "currencies" => vue_json(CurrencyPresenter.collection),
-                                  "categories" => vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }) }
+                                  "categories" => vue_json(Category.active.ordered.map { |c| { id: c.id, name: c.name } }),
+                                  "friends" => vue_json(UserPresenter.collection(current_user.friends.ordered)) }
 
     = nav_link_to "Balances", balances_path, controller_name == "balances" do
       %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M12 3v18M5 8l7-4 7 4M3 12l4-7 4 7a4 4 0 01-8 0zm10 0l4-7 4 7a4 4 0 01-8 0z" }

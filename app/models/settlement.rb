@@ -3,7 +3,8 @@
 # A real-world payment between two people. Settlements move balances but never
 # touch the expenses that created them.
 class Settlement < ApplicationRecord
-  belongs_to :group
+  # Null for a payment between two friends outside any group.
+  belongs_to :group, optional: true
   belongs_to :payer, class_name: "User", inverse_of: :settlements_made
   belongs_to :recipient, class_name: "User", inverse_of: :settlements_received
   belongs_to :created_by, class_name: "User", optional: true
@@ -29,6 +30,7 @@ class Settlement < ApplicationRecord
   validate :parties_belong_to_group
 
   scope :active, -> { where(voided_at: nil) }
+  scope :direct, -> { where(group_id: nil) }
   scope :recent_first, -> { order(settled_on: :desc, created_at: :desc, id: :desc) }
   scope :involving, ->(user_id) { where(payer_id: user_id).or(where(recipient_id: user_id)) }
   scope :in_period, ->(from, to) { where(settled_on: from..to) }
@@ -50,11 +52,20 @@ class Settlement < ApplicationRecord
   end
 
   def parties_belong_to_group
-    return if group.blank?
+    return parties_are_friends if group.blank?
 
     member_ids = group.group_memberships.pluck(:user_id).to_set
     return if [ payer_id, recipient_id ].compact.all? { |id| member_ids.include?(id) }
 
     errors.add(:base, "Both people must be members of the group")
+  end
+
+  # Outside a group the only thing connecting two people is that they added
+  # each other, so that is what makes the payment allowed.
+  def parties_are_friends
+    return if payer.blank? || recipient.blank?
+    return if payer.friends_with?(recipient)
+
+    errors.add(:base, "You can only settle up with people you've added")
   end
 end

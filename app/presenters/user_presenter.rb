@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
+# The single shape a person takes when handed to Vue. Every avatar in the app
+# comes through here, so none of them can quietly miss a field.
 class UserPresenter
-  TONES = ApplicationHelper::AVATAR_TONES
-
   def self.collection(users) = users.map { |user| new(user).as_json }
 
   def initialize(user)
@@ -14,7 +14,7 @@ class UserPresenter
       id: @user.id,
       name: @user.name,
       initials: @user.initials,
-      tone: TONES[@user.id % TONES.length],
+      tone: @user.tone_class,
       avatar: @user.avatar_url(size: 80)
     }
   end

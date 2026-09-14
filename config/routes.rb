@@ -28,6 +28,9 @@ Rails.application.routes.draw do
     patch :shuffle, on: :member
   end
   resources :people,  only: :index
+  resources :friendships, only: %i[create destroy] do
+    member { patch :accept }
+  end
 
   # Expenses live at the top level whether or not they belong to a group -
   # expense[group_id] decides, and a blank one means a personal expense.

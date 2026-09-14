@@ -15,10 +15,14 @@ class NotificationsController < ApplicationController
     end
   end
 
+  # Tapping a notification should take you to the thing it is about.
+  # redirect_back sent you to the page you were already on, which read as
+  # nothing happening at all.
   def update
     notification = current_user.notifications.find(params[:id])
     notification.mark_read!
-    redirect_back fallback_location: notification.url.presence || notifications_path
+
+    redirect_to notification.url.presence || notifications_path
   end
 
   def read_all

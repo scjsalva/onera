@@ -35,5 +35,9 @@
         %member-selector{ people: vue_json(UserPresenter.collection(@candidates)), field: "user_ids[]" }
         %button.btn-primary.mt-4.w-full{ type: "submit" } Add to group
     - else
-      %p.text-sm.text-ink-500 Everyone in Onera is already in this group.
+      %p.text-sm.text-ink-500
+        Everyone you've added is already here. Connect with more people on
+        = succeed ", " do
+          = link_to "People", people_path, class: "font-medium text-brand-600"
+        or share the invite link above.
 

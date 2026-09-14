@@ -17,6 +17,8 @@ const props = defineProps({
   groups: { type: [Array, String], default: () => [] },
   currencies: { type: [Array, String], default: () => [] },
   members: { type: [Array, String], default: () => [] },
+  // People you can split with when there is no group: the ones you've added.
+  friends: { type: [Array, String], default: () => [] },
   categories: { type: [Array, String], default: () => [] },
   groupId: { type: [Number, String], default: null },
   currentUserId: { type: [Number, String], default: null },
@@ -35,6 +37,7 @@ const groupList = parse(props.groups, []);
 const currencyList = parse(props.currencies, []);
 const categoryList = parse(props.categories, []);
 const existing = parse(props.expense, null);
+const friendList = parse(props.friends, []);
 const memberList = ref(parse(props.members, []));
 
 const step = ref(1);
@@ -56,6 +59,9 @@ const form = ref({
 });
 
 const personal = computed(() => !form.value.group_id);
+// A groupless expense shared with somebody. Solo means only you are on it.
+const sharedDirectly = computed(() => personal.value && form.value.participants.length > 1);
+const solo = computed(() => personal.value && !sharedDirectly.value);
 const activeCurrency = computed(() => currencyList.find((c) => c.code === form.value.currency_code));
 
 const payerIds = computed({
@@ -77,9 +83,12 @@ watch(
   () => form.value.group_id,
   async (groupId) => {
     if (!groupId) {
-      memberList.value = [];
-      form.value.payers = [];
-      form.value.participants = [];
+      // Outside a group you split with friends, and by default with nobody.
+      memberList.value = friendList;
+      if (!existing) {
+        form.value.payers = props.currentUserId ? [ { user_id: Number(props.currentUserId), amount: '' } ] : [];
+        form.value.participants = props.currentUserId ? [ { user_id: Number(props.currentUserId), split_value: null } ] : [];
+      }
       return;
     }
 
@@ -158,7 +167,7 @@ onMounted(() => {
 const conversion = computed(() => preview.value?.conversion);
 
 const canContinue = computed(() => form.value.description.trim() && Number(form.value.amount) > 0);
-const canSave = computed(() => canContinue.value && (personal.value || preview.value?.valid));
+const canSave = computed(() => canContinue.value && (solo.value || preview.value?.valid));
 
 const formEl = ref(null);
 function submit() {
@@ -262,7 +271,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
                 ]"
                 @click="form.group_id = null"
               >
-                Just me
+                No group
               </button>
               <button
                 v-for="group in groupList"
@@ -280,6 +289,23 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
               </button>
             </div>
           </div>
+
+          <!-- Splitting without a group: only people you've added appear, and
+               picking nobody leaves it as your own expense. -->
+          <Transition name="fade-slide">
+            <div v-if="personal && friendList.length">
+              <label class="label">Split with someone?</label>
+              <PersonPicker
+                :people="friendList"
+                :selected="form.participants.map((p) => p.user_id).filter((id) => id !== Number(currentUserId))"
+                @toggle="toggleParticipant"
+              />
+              <p class="mt-1.5 text-xs text-ink-500">
+                {{ sharedDirectly ? 'They can see this expense and it affects what you owe each other.'
+                                  : 'Leave empty and it stays your own expense.' }}
+              </p>
+            </div>
+          </Transition>
 
           <details class="group">
             <summary class="cursor-pointer list-none text-sm font-medium text-ink-500 transition hover:text-ink-700">
@@ -360,7 +386,7 @@ const sheetTitle = computed(() => (existing ? 'Edit expense' : step.value === 1 
         </button>
 
         <button
-          v-if="step === 1 && !personal"
+          v-if="step === 1 && !solo"
           type="button"
           class="sheet-action sheet-action-primary"
           :disabled="!canContinue"

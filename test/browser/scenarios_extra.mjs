@@ -74,13 +74,21 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
         const text = el.innerText?.trim();
         if (!text || el.children.length) return;
         const style = getComputedStyle(el);
+        // Anything sitting on a gradient or a translucent panel can't be
+        // judged from a single colour, so skip rather than guess.
         let bg = style.backgroundColor;
         let node = el;
-        while (bg === 'rgba(0, 0, 0, 0)' && node.parentElement) {
+        while (node) {
+          const s = getComputedStyle(node);
+          if (s.backgroundImage && s.backgroundImage !== 'none') return;
+          if (s.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            if (/rgba\([^)]+,\s*0?\.\d+\)/.test(s.backgroundColor)) return;
+            bg = s.backgroundColor;
+            break;
+          }
           node = node.parentElement;
-          bg = getComputedStyle(node).backgroundColor;
         }
-        if (bg === 'rgba(0, 0, 0, 0)') return;
+        if (!bg || bg === 'rgba(0, 0, 0, 0)') return;
         if (Math.abs(luminance(style.color) - luminance(bg)) < 0.12) {
           out.push(text.slice(0, 30));
         }
@@ -178,6 +186,94 @@ export default function register({ scenario, check, signIn, signOut, BASE, sleep
     await sleep(500);
     check(await b.has('All settled') || await b.has('square'),
           'empty balances should read as settled, not blank');
+  });
+
+  scenario('tapping a notification takes you to what it is about', async (b) => {
+    await signIn(b, 'cnasayao');
+    await b.goto(`${BASE}/notifications`);
+
+    if (!(await b.has('added you to'))) return; // nothing to tap in this run
+
+    await b.clickText('added you to');
+    await b.waitForLoad();
+    await sleep(700);
+
+    check(!(await b.url()).startsWith('/notifications'),
+          `tapping should navigate somewhere, still on ${await b.url()}`);
+    check((await b.url()).startsWith('/groups'), `expected the group, landed on ${await b.url()}`);
+  });
+
+  scenario('the people list shows only your own connections', async (b) => {
+    // Seeded so everyone is connected to scjsalva and to nobody else.
+    await signIn(b, 'cnasayao');
+    await b.goto(`${BASE}/people`);
+
+    check(await b.has('John Carlo Salva'), 'should list the person they are connected to');
+    check(!(await b.has('Lydia Valencia')), 'must not list someone they have not added');
+  });
+
+  scenario('adding someone by username sends a request they can accept', async (b) => {
+    await signIn(b, 'cnasayao');
+    await b.goto(`${BASE}/people`);
+    await b.fill('#login', 'ljvalencia');
+    await b.clickText('Add', { selector: 'input[type=submit]' });
+    await b.waitForLoad();
+    await sleep(600);
+    check(await b.has('Request sent'), `expected a sent request, saw ${(await b.text()).slice(0, 160)}`);
+
+    await signIn(b, 'ljvalencia');
+    await b.goto(`${BASE}/people`);
+    check(await b.has('Waiting for you'), 'the other person should see the request');
+    await b.clickText('Accept');
+    await b.waitForLoad();
+    await sleep(600);
+    check(await b.has('connected'), 'accepting should connect them');
+    check(await b.has('Christian Nasayao'), 'and they should now appear in the list');
+  });
+
+  scenario('a made-up username is refused kindly', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/people`);
+    await b.fill('#login', 'definitelynobody');
+    await b.clickText('Add', { selector: 'input[type=submit]' });
+    await b.waitForLoad();
+    await sleep(500);
+    check(await b.has('No account matches'), 'should say nobody matches');
+  });
+
+  scenario('you cannot add yourself', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/people`);
+    await b.fill('#login', 'scjsalva');
+    await b.clickText('Add', { selector: 'input[type=submit]' });
+    await b.waitForLoad();
+    await sleep(500);
+    check(await b.has("That's you"), 'should say so plainly');
+  });
+
+  scenario('the invite link can be replaced', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/invitations`);
+    const before = await b.evaluate("return document.querySelector('#invite-link-field').value");
+
+    await b.clickLabel('Get a new link');
+    await b.waitForLoad();
+    await sleep(800);
+
+    const after = await b.evaluate("return document.querySelector('#invite-link-field')?.value");
+    check(!!after, 'the page should still show a link');
+    check(before !== after, 'the link should actually change');
+  });
+
+  scenario('settlements appear in the expense list, not only on their own tab', async (b) => {
+    await signIn(b, 'scjsalva');
+    await b.goto(`${BASE}/expenses`);
+    const text = await b.text();
+
+    // Either there is a settlement line, or there are no settlements at all.
+    const hasSettlement = text.includes('settled up');
+    const hasAny = (await b.evaluate("return document.body.innerText.includes('paid')"));
+    check(hasSettlement || !hasAny, 'a recorded payment should show inline with the expenses');
   });
 
   scenario('notifications page is fine when there is nothing in it', async (b) => {

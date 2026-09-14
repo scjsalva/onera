@@ -8,6 +8,7 @@ const props = defineProps({
   groups: { type: [Array, String], default: () => [] },
   currencies: { type: [Array, String], default: () => [] },
   categories: { type: [Array, String], default: () => [] },
+  friends: { type: [Array, String], default: () => [] },
   currentUserId: { type: [Number, String], default: null },
   // Set when the page being viewed belongs to a group, so the composer opens
   // already pointed at it.
@@ -46,6 +47,7 @@ const open = ref(false);
       :groups="groups"
       :currencies="currencies"
       :categories="categories"
+      :friends="friends"
       :current-user-id="currentUserId"
       :group-id="groupId"
       @close="open = false"

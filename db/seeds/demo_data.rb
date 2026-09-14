@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "people"
+
 # Realistic data to explore the application with. Everything is created
 # through the real services, so the seeds exercise the same validation,
 # rounding and history paths the UI does.
@@ -24,21 +26,13 @@ module Seeds
            "#{Expense.count} expenses (#{Expense.personal.count} personal), #{Settlement.count} settlements"
     end
 
+    # Builds on the real accounts rather than inventing more. Demo data is for
+    # exploring the app as yourself, not for meeting four strangers.
     def create_people
-      {
-        john: find_person("John Salva", "john@example.com", Date.new(1998, 1, 15), "PHP"),
-        alice: find_person("Alice Cruz", "alice@example.com", Date.new(1995, 6, 2), "PHP"),
-        bob: find_person("Bob Santos", nil, Date.new(1992, 11, 30), "SGD"),
-        sarah: find_person("Sarah Reyes", "sarah@example.com", Date.new(1999, 3, 21), "PHP")
-      }
-    end
+      accounts = Seeds::People::PEOPLE.map { |attrs| User.find_by(username: attrs[:username]) }.compact
+      raise "Run Seeds::People.load! first - demo data needs accounts to attach to" if accounts.size < 4
 
-    def find_person(name, email, dob, currency)
-      User.find_or_create_by!(name:) do |user|
-        user.email = email
-        user.date_of_birth = dob
-        user.preferred_currency_code = currency
-      end
+      { john: accounts[0], alice: accounts[1], bob: accounts[2], sarah: accounts[3] }
     end
 
     def build_group(name, description, currency, members, creator)

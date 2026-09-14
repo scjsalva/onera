@@ -1,7 +1,6 @@
 -# Group-scoped invite: signing up through it also joins the group.
 %section.card.card-pad{ data: { reveal: true } }
   %h2.text-sm.font-semibold.text-ink-900 Invite someone new
-  %p.mt-1.text-sm.text-ink-500
-    Share this link. They'll create their own account and land in #{group.name}.
+  %p.mt-1.text-sm.text-ink-500= "They'll create an account and land in #{group.name}."
   %invite-link{ url: invitation.share_url(request.base_url),
-                refresh_path: invitations_path(group_id: group.id) }
+                "refresh-path" => invitations_path(group_id: group.id) }

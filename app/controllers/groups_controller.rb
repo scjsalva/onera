@@ -18,8 +18,10 @@ class GroupsController < ApplicationController
 
     if @group.save
       GroupMembership.create!(group: @group, user: current_user)
+      friend_ids = current_user.friends.ids.to_set
       Array(params[:member_ids]).reject(&:blank?).uniq.each do |user_id|
         next if user_id.to_i == current_user.id
+        next unless friend_ids.include?(user_id.to_i)
 
         membership = GroupMembership.find_or_create_by!(group: @group, user_id: user_id)
         Notifier.added_to_group(membership.user, group: @group, actor: current_user)
@@ -46,6 +48,12 @@ class GroupsController < ApplicationController
                             .recent_first
                             .includes(:category, :currency, :base_currency, :group,
                                       expense_payers: :user, expense_splits: :user)
+
+    @timeline = Timeline.new(
+      expenses: @expenses,
+      settlements: @group.settlements.active.recent_first.includes(:payer, :recipient, :currency),
+      include_settlements: Timeline.settlements_relevant?(@filter)
+    )
   end
 
   def balances

@@ -19,30 +19,57 @@ Requires Ruby 3.4.2, Node 22, and PostgreSQL.
 bundle install
 npm install
 bin/rails db:prepare   # creates, migrates, and seeds
-bin/dev                # Rails + Vite together
+bin/dev                # Rails + Vite together on :3000
 ```
 
-Then open http://localhost:3000 and pick who you are.
+Sign in with any of the seeded usernames — `scjsalva`, `cnasayao`,
+`ljvalencia`, `kaflores`, `egblance`, `aegonia` — and the password
+`password`.
 
-`db:prepare` loads reference data (currencies, categories, exchange rates) plus
-a demo dataset in development: four people, four groups, mixed currencies, every
-split type, an edited expense, a voided one, and partial settlements.
-
-To start clean:
+`db:prepare` loads reference data (currencies, categories, exchange rates) and
+the accounts. Demo groups and expenses are opt-in:
 
 ```bash
-SKIP_DEMO_DATA=1 bin/rails db:reset
+SEED_DEMO_DATA=1 bin/rails db:reset   # sample trips, mixed currencies, settlements
+SKIP_DEMO_DATA=1 bin/rails db:reset   # accounts and reference data only
 ```
 
-## Authentication
+## Accounts
 
-There isn't any, deliberately. You pick a person on first load and that choice
-lives in the session.
+Sign in with a **username**, or an email once you've added one. Email is
+optional for using Onera but required to recover an account — a username is
+visible to everyone in your groups, so allowing a reset against one would let
+any member start a recovery for anybody else. The app asks for an email once
+per sign-in until you give it.
 
-`User` is a real model and the domain identity — one person is one row across
-every group they appear in. Everything reads `Current.user`; nothing in the
-financial code touches the session. Adding real sign-in means changing
-`ApplicationController#set_current_user` and nothing else.
+**There is no public sign-up.** Someone already inside shares an invite link
+and the new person creates their own account. The link is built from the
+request, so it is correct on localhost, on a preview deploy and in production
+without anything to configure.
+
+**Password recovery is by offline codes**, not email. Ten single-use codes,
+shown once when generated, redeemed against your email address. This is why
+the app is useful the moment it's deployed: no mail service, no domain
+verification, no deliverability problems. Only digests are stored.
+
+Lost both password and codes? From a console:
+
+```ruby
+RecoveryCodes.list("scjsalva")     # what they have, and what is spent
+RecoveryCodes.reset!("scjsalva")   # issue a fresh set and print it
+RecoveryCodes.set_password!("scjsalva", "temporary-one")
+```
+
+**Closing an account** anonymizes rather than deletes. Expenses and
+settlements point at the user row, so removing it would either orphan
+financial history or cascade a delete through records the app promises never
+to destroy. Name, email and birthday are erased; the person becomes "Removed
+person 3", keeps their own number and colour so two of them are never alike,
+and can never sign in again.
+
+`Current.user` was the seam all of this hung on. Introducing real
+authentication changed one line — where it gets set — and nothing in the
+financial domain at all.
 
 ## How money works
 
@@ -91,6 +118,17 @@ There is no live rate feed. Rates come from the `exchange_rates` table and can
 be typed in by hand, so nothing in the UI claims they are live. Unseeded pairs
 are triangulated through PHP. Wiring up a provider means implementing one method
 in `ExchangeRateProvider`.
+
+## The timeline
+
+A group's Expenses tab and the global list interleave settlements with
+expenses, in one chronological list. The order is the story — two expenses,
+then somebody paying somebody back — and splitting them across tabs made you
+reconstruct it in your head. Settlement rows are tinted and inset so they read
+as something that happened *between* the expenses rather than as one of them.
+
+Filters that describe an expense (a category, a currency, who paid) hide the
+settlements, since those filters have no meaning for a payment.
 
 ## Nothing is deleted
 

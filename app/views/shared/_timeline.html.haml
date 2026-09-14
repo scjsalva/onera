@@ -1,0 +1,8 @@
+-# One list, two kinds of row. Settlements are inset and tinted so they read
+-# as something that happened between the expenses rather than as one of them.
+.card.divide-y.divide-ink-200.overflow-hidden{ data: { reveal_group: true } }
+  - timeline.entries.each do |entry|
+    - if entry.expense?
+      = render "shared/expense_row", expense: entry.record
+    - else
+      = render "shared/timeline_settlement", settlement: entry.record, show_group: (defined?(show_group) && show_group)

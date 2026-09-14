@@ -44,20 +44,29 @@ async function share() {
       @focus="$event.target.select()"
     />
 
-    <div class="mt-2 flex gap-2">
-      <button type="button" class="btn-primary flex-1" @click="copy">
-        {{ copied ? 'Copied' : 'Copy link' }}
+    <div class="mt-2 flex items-center gap-2">
+      <button type="button" class="btn-primary flex-1" @click="canShare ? share() : copy()">
+        {{ copied ? 'Copied' : canShare ? 'Share link' : 'Copy link' }}
       </button>
-      <button v-if="canShare" type="button" class="btn-secondary flex-1" @click="share">Share</button>
-    </div>
 
-    <form :action="refreshPath" method="post" class="mt-2">
-      <input type="hidden" name="authenticity_token" :value="token" />
-      <input type="hidden" name="refresh" value="1" />
-      <button type="submit" class="w-full py-2 text-xs font-medium text-ink-500 transition hover:text-ink-800">
-        Replace this link
-      </button>
-    </form>
+      <!-- Guarded: an empty action posts to whatever page this happens to be
+           on, which is how this quietly submitted the wrong form. -->
+      <form v-if="refreshPath" :action="refreshPath" method="post" class="shrink-0">
+        <input type="hidden" name="authenticity_token" :value="token" />
+        <input type="hidden" name="refresh" value="1" />
+        <button
+          type="submit"
+          class="press grid h-[42px] w-[42px] place-items-center rounded-lg border border-ink-300 text-ink-500 transition hover:text-ink-800"
+          title="Get a new link. The current one stops working."
+          aria-label="Get a new link"
+        >
+          <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 4v5h5M20 20v-5h-5M20 9A8 8 0 006.3 5.3L4 8m0 7a8 8 0 0013.7 3.7L20 16" />
+          </svg>
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 

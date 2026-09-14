@@ -55,6 +55,10 @@ class Expense < ApplicationRecord
 
   def personal? = group_id.nil?
 
+  # A direct expense is one without a group that is shared with somebody.
+  def direct? = group_id.nil? && expense_splits.map(&:user_id).uniq.size > 1
+  def solo? = group_id.nil? && !direct?
+
   def voided? = voided_at.present?
   def active? = voided_at.nil?
 
@@ -129,7 +133,7 @@ class Expense < ApplicationRecord
   end
 
   def people_belong_to_group
-    return personal_expense_involves_only_owner if group.blank?
+    return direct_expense_involves_only_friends if group.blank?
 
     member_ids = group.group_memberships.pluck(:user_id).to_set
     involved = (expense_payers.reject(&:marked_for_destruction?).map(&:user_id) +
@@ -140,13 +144,15 @@ class Expense < ApplicationRecord
     errors.add(:base, "Everyone on an expense must be a member of the group")
   end
 
-  def personal_expense_involves_only_owner
-    return errors.add(:base, "A personal expense needs an owner") if owner_id.blank?
+  def direct_expense_involves_only_friends
+    return errors.add(:base, "An expense outside a group needs an owner") if owner_id.blank?
 
     involved = (expense_payers.reject(&:marked_for_destruction?).map(&:user_id) +
                 expense_participants.reject(&:marked_for_destruction?).map(&:user_id)).compact.uniq
-    return if involved.all? { |id| id == owner_id }
+    allowed = ([ owner_id ] + owner.friends.ids).to_set
+    outsiders = involved.reject { |id| allowed.include?(id) }
+    return if outsiders.empty?
 
-    errors.add(:base, "A personal expense can only involve its owner")
+    errors.add(:base, "Outside a group you can only split with people you've added")
   end
 end
