@@ -22,6 +22,11 @@ class NotificationsController < ApplicationController
     notification = current_user.notifications.find(params[:id])
     notification.mark_read!
 
+    if notification.subject_missing?
+      return redirect_to notifications_path,
+                         notice: "That's been removed since you were told about it."
+    end
+
     redirect_to notification.url.presence || notifications_path
   end
 

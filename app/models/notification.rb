@@ -25,6 +25,12 @@ class Notification < ApplicationRecord
 
   def read? = read_at.present?
 
+  # The record this is about may have been removed since. Better to say so
+  # than to bounce someone off a "not available" redirect.
+  def subject_missing?
+    subject_type.present? && subject.nil?
+  end
+
   def mark_read!
     # An endless method with a trailing `unless` would conditionally *define*
     # the method rather than guard the body.

@@ -102,6 +102,34 @@ class NotifierTest < ActiveSupport::TestCase
     assert_equal 0, @bob.reload.notifications.count
   end
 
+  test "a settlement with no group still links somewhere real" do
+    Friendship.request(from: @john, to: @alice).accept!
+
+    settlement = Settlement.create!(payer: @alice, recipient: @john, currency_code: "PHP",
+                                    base_currency_code: "PHP", amount_minor: 5000,
+                                    base_amount_minor: 5000, settled_on: Date.current)
+    Notifier.settlement_created(settlement, actor: @alice)
+
+    notification = @john.notifications.last
+
+    assert_equal "/balances", notification.url
+    refute_match(/^\/groups\/\/?/, notification.url.to_s)
+  end
+
+  test "a notification knows when the thing it is about has gone" do
+    expense = add_expense(group: @group, actor: @john, amount: "900",
+                          payers: [ { user_id: @john.id, amount: "900" } ],
+                          participants: [ @john, @alice ].map { |u| { user_id: u.id } })
+    notification = @alice.notifications.first
+
+    refute notification.subject_missing?
+
+    expense.revisions.destroy_all
+    expense.destroy!
+
+    assert notification.reload.subject_missing?
+  end
+
   test "notifications start unread and can be marked read" do
     add_expense(group: @group, actor: @john, amount: "900",
                 payers: [ { user_id: @john.id, amount: "900" } ],

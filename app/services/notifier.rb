@@ -62,12 +62,18 @@ class Notifier
 
   # The person who received the money hears about it; the payer already knows.
   def self.settlement_created(settlement, actor:)
+    routes = Rails.application.routes.url_helpers
+    # A settlement between two friends has no group, so it has no group page
+    # to link to either.
+    url = settlement.group ? routes.group_settlements_path(settlement.group) : routes.balances_path
+    where = settlement.group ? "In #{settlement.group.name}." : "Just between the two of you."
+
     Notifier.deliver(
       user: settlement.recipient, actor:, group: settlement.group, subject: settlement,
       kind: "settlement.received",
       title: "#{settlement.payer.name} paid you #{settlement.amount.format}",
-      body: settlement.note.presence || "In #{settlement.group.name}.",
-      url: Rails.application.routes.url_helpers.group_settlements_path(settlement.group)
+      body: settlement.note.presence || where,
+      url:
     )
 
     # If someone recorded a payment on the payer's behalf, tell the payer too.
@@ -77,8 +83,8 @@ class Notifier
       user: settlement.payer, actor:, group: settlement.group, subject: settlement,
       kind: "settlement.recorded",
       title: "#{actor.name} recorded your #{settlement.amount.format} payment",
-      body: "To #{settlement.recipient.name} in #{settlement.group.name}.",
-      url: Rails.application.routes.url_helpers.group_settlements_path(settlement.group)
+      body: "To #{settlement.recipient.name}. #{where}",
+      url:
     )
   end
 

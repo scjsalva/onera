@@ -6,6 +6,15 @@
 # quietly edited real data along the way.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+
+# Only one run at a time. Two overlapping runs share a port, a database and a
+# log, and the interleaved output is worse than no output.
+LOCK=/tmp/onera-e2e.lock
+if ! mkdir "$LOCK" 2>/dev/null; then
+  echo "another bin/e2e is already running (remove $LOCK if that is wrong)"
+  exit 1
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT INT TERM
 export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH"
 export RAILS_ENV=test
 export E2E=1
@@ -19,7 +28,9 @@ bin/rails db:prepare > /tmp/onera-e2e-db.log 2>&1 || { tail -20 /tmp/onera-e2e-d
 bin/rails runner '
   require Rails.root.join("db/seeds/reference_data")
   require Rails.root.join("db/seeds/people")
-  [Notification, RecoveryCode, Invitation, ActivityEvent, Revision,
+  # Children first. A missing table here fails the purge and leaves the
+  # database half-reset, which then looks like application bugs.
+  [Notification, RecoveryCode, Invitation, Friendship, ActivityEvent, Revision,
    ExpenseSplit, ExpensePayer, ExpenseParticipant, Expense, Settlement,
    GroupMembership, Group].each(&:delete_all)
   User.delete_all
