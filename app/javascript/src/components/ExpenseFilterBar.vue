@@ -151,11 +151,11 @@ function setPeriod(value) {
 
     <BottomSheet :open="sheetOpen" title="Filters" @close="sheetOpen = false">
       <div class="space-y-4">
-        <div v-if="scope === 'global' && groupList.length">
+        <div v-if="scope === 'global'">
           <label class="label">Group</label>
           <select v-model="state.group_id" class="input">
             <option value="">Any group</option>
-            <option value="personal">Just me</option>
+            <option value="personal">Just me (no group)</option>
             <option v-for="group in groupList" :key="group.id" :value="group.id">{{ group.name }}</option>
           </select>
         </div>

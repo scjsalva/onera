@@ -1,6 +1,6 @@
 - page_title "Add a person"
 - content_for :heading, "Add a person"
-- content_for :back_path, (@group ? group_memberships_path(@group) : root_path)
+- content_for :back_path, (@group ? group_memberships_path(@group) : (signed_in? ? people_path : user_selection_path))
 
 = form_with model: @user, url: people_path(group_id: @group&.id), class: "space-y-5" do |form|
   .card.card-pad.space-y-4{ data: { reveal: true } }

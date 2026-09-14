@@ -4,6 +4,7 @@
 # Kept deliberately small: a handful of combinable filters, not a query builder.
 class ExpenseFilter
   PERIODS = %w[all today week month year custom].freeze
+  PERSONAL = "personal"
 
   attr_reader :query, :group_id, :person_id, :payer_id, :category_id,
               :currency_code, :period, :from, :to, :min_amount, :max_amount, :status
@@ -25,6 +26,11 @@ class ExpenseFilter
     @max_amount = parse_decimal(params[:max_amount])
     @status = %w[active voided all].include?(params[:status]) ? params[:status] : "active"
   end
+
+  # "personal" is a scope, not an id: expenses with no group at all.
+  def personal? = group_id == PERSONAL
+
+  def group_scope_id = personal? ? nil : group_id
 
   def date_range
     case period

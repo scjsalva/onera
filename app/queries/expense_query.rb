@@ -57,7 +57,11 @@ class ExpenseQuery
   end
 
   def apply_associations(relation)
-    relation = relation.where(expenses: { group_id: filter.group_id }) if filter.group_id.present?
+    if filter.personal?
+      relation = relation.where(expenses: { group_id: nil })
+    elsif filter.group_scope_id.present?
+      relation = relation.where(expenses: { group_id: filter.group_scope_id })
+    end
     relation = relation.where(expenses: { category_id: filter.category_id }) if filter.category_id.present?
     relation = relation.where(expenses: { currency_code: filter.currency_code }) if filter.currency_code.present?
     relation = relation.merge(Expense.involving(filter.person_id)) if filter.person_id.present?

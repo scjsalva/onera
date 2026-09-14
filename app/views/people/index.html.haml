@@ -23,7 +23,10 @@
             - details = [ person.email.presence, person.preferred_currency_code, pluralize(person.groups.size, "group") ].compact
             = details.join(" · ")
         - if person.id == current_user.id
-          = link_to "Edit", edit_profile_path, class: "btn-secondary btn-sm shrink-0"
+          -# Same pencil as the "Your profile" row in the switcher sheet.
+          = link_to edit_profile_path, class: "press grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-400 transition hover:bg-ink-100 hover:text-ink-700", "aria-label" => "Edit your profile" do
+            %svg.h-4.w-4{ fill: "none", stroke: "currentColor", "stroke-width" => "2", viewBox: "0 0 24 24" }
+              %path{ "stroke-linecap" => "round", "stroke-linejoin" => "round", d: "M11 4H7a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z" }
 
   %p.text-xs.text-ink-500
     One person, one record. Adding someone to a group reuses them rather than making a copy, so their balances follow them everywhere.
