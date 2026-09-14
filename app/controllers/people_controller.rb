@@ -14,7 +14,7 @@ class PeopleController < ApplicationController
     # Looked up once and indexed, rather than a query per row for the
     # friendship and a full ledger walk per row for the balance.
     @friendships = Friendship.accepted.involving(current_user).index_by do |friendship|
-      friendship.other_than(current_user).id
+      friendship.other_id(current_user)
     end
     @debts = @ledger.debts_by_person
   end

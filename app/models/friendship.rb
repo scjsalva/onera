@@ -42,7 +42,10 @@ class Friendship < ApplicationRecord
     update!(status: "accepted", responded_at: Time.current)
   end
 
-  def other_than(user) = user == requester ? addressee : requester
+  # Compares ids rather than records: `user == requester` loads the requester
+  # to answer, which on a list of friends is a query per row.
+  def other_id(user) = user.id == requester_id ? addressee_id : requester_id
+  def other_than(user) = user.id == requester_id ? addressee : requester
 
   private
 

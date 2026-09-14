@@ -1,6 +1,7 @@
 %span.flex.shrink-0.items-center.-space-x-2
-  - group.users.ordered.first(4).each do |member|
+  - people = defined?(members) ? members : group.users.ordered.to_a
+  - people.first(4).each do |member|
     = avatar_tag(member, size: :sm, ring: true)
-  - overflow = group.users.size - 4
+  - overflow = people.size - 4
   - if overflow.positive?
     %span.inline-flex.h-8.w-8.items-center.justify-center.rounded-full.bg-ink-200.text-xs.font-semibold.text-ink-600.ring-2.ring-surface= "+#{overflow}"

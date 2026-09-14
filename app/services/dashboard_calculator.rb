@@ -15,6 +15,7 @@ class DashboardCalculator
     def share_minor = sum_positions(&:share_minor)
 
     def net_minor = consolidation.entry_for(viewer_id)&.net_minor.to_i
+    def members = calculator.members
     def paid = MoneyAmount.new(paid_minor, display_currency)
     def share = MoneyAmount.new(share_minor, display_currency)
     def net = MoneyAmount.new(net_minor, display_currency)
@@ -66,15 +67,19 @@ class DashboardCalculator
   end
 
   def group_summaries
-    @group_summaries ||= groups.map do |group|
-      calculator = BalanceCalculator.new(group)
-      summary = GroupSummary.new(
-        group:, calculator:,
-        consolidation: calculator.consolidated(display_currency),
-        display_currency:
-      )
-      summary.viewer_id = user.id
-      summary
+    @group_summaries ||= begin
+      batch = BalanceCalculator::Batch.new(groups)
+
+      groups.map do |group|
+        calculator = batch.for(group)
+        summary = GroupSummary.new(
+          group:, calculator:,
+          consolidation: calculator.consolidated(display_currency),
+          display_currency:
+        )
+        summary.viewer_id = user.id
+        summary
+      end
     end
   end
 

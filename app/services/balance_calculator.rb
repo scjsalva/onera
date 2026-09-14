@@ -37,8 +37,107 @@ class BalanceCalculator
     def amount = MoneyAmount.new(amount_minor, currency)
   end
 
-  def initialize(group)
+  # Loading a dashboard used to mean one calculator per group, each running the
+  # same eight aggregates against a different group_id - so the query count
+  # followed the group count. Batch runs each aggregate once for every group at
+  # a time and hands each calculator its slice.
+  class Batch
+    def initialize(groups)
+      @groups = groups.to_a
+    end
+
+    def for(group) = calculators.fetch(group.id)
+    def all = calculators.values
+
+    private
+
+    attr_reader :groups
+
+    def ids = @ids ||= groups.map(&:id)
+
+    def calculators
+      @calculators ||= groups.index_by(&:id).transform_values do |group|
+        BalanceCalculator.new(group, preloaded: slice_for(group.id))
+      end
+    end
+
+    def slice_for(id)
+      {
+        members: members.fetch(id, []),
+        expense_totals: expense_totals.fetch(id, {}),
+        settlement_totals: settlement_totals.fetch(id, {}),
+        paid_totals: paid_totals.fetch(id, {}),
+        share_totals: share_totals.fetch(id, {}),
+        settlements_paid: settlements_paid.fetch(id, {}),
+        settlements_received: settlements_received.fetch(id, {})
+      }
+    end
+
+    # Ordered by the database rather than in Ruby, so the batch cannot disagree
+    # with User.ordered about where an accent or a capital sorts.
+    def members
+      @members ||= GroupMembership.where(group_id: ids)
+                                  .eager_load(:user).merge(User.ordered)
+                                  .group_by(&:group_id)
+                                  .transform_values { |rows| rows.map(&:user) }
+    end
+
+    def expense_totals
+      @expense_totals ||= by_group(
+        Expense.active.where(group_id: ids).group(:group_id, :currency_code).sum(:amount_minor)
+      )
+    end
+
+    def settlement_totals
+      @settlement_totals ||= by_group(
+        Settlement.active.where(group_id: ids).group(:group_id, :currency_code).sum(:amount_minor)
+      )
+    end
+
+    def paid_totals
+      @paid_totals ||= nest_by_group(
+        ExpensePayer.joins(:expense).merge(Expense.active).where(expenses: { group_id: ids })
+                    .group("expenses.group_id", "expenses.currency_code", :user_id).sum(:amount_minor)
+      )
+    end
+
+    def share_totals
+      @share_totals ||= nest_by_group(
+        ExpenseSplit.joins(:expense).merge(Expense.active).where(expenses: { group_id: ids })
+                    .group("expenses.group_id", "expenses.currency_code", :user_id).sum(:amount_minor)
+      )
+    end
+
+    def settlements_paid
+      @settlements_paid ||= nest_by_group(
+        Settlement.active.where(group_id: ids).group(:group_id, :currency_code, :payer_id).sum(:amount_minor)
+      )
+    end
+
+    def settlements_received
+      @settlements_received ||= nest_by_group(
+        Settlement.active.where(group_id: ids).group(:group_id, :currency_code, :recipient_id).sum(:amount_minor)
+      )
+    end
+
+    # { [group, code] => amount } becomes { group => { code => amount } }.
+    def by_group(grouped)
+      grouped.each_with_object({}) do |((group_id, code), amount), memo|
+        (memo[group_id] ||= {})[code] = amount.to_i
+      end
+    end
+
+    # And the three-key version, { group => { code => { user => amount } } }.
+    def nest_by_group(grouped)
+      grouped.each_with_object({}) do |((group_id, code, user_id), amount), memo|
+        ((memo[group_id] ||= {})[code] ||= {})[user_id] = amount.to_i
+      end
+    end
+  end
+
+  def initialize(group, preloaded: nil)
     @group = group
+    @preloaded = preloaded || {}
   end
 
   # Every currency the group has actually transacted in, group primary first.
@@ -125,11 +224,11 @@ class BalanceCalculator
     Consolidation.new(group:, calculator: self, target_currency:, rates:)
   end
 
+  def members = @members ||= preloaded[:members] || group.users.ordered.to_a
+
   private
 
-  attr_reader :group
-
-  def members = @members ||= group.users.ordered.to_a
+  attr_reader :group, :preloaded
   def expenses = @expenses ||= group.expenses.active
   def settlements = @settlements ||= group.settlements
 
@@ -149,14 +248,20 @@ class BalanceCalculator
   end
 
   def expense_totals
+    return @expense_totals ||= preloaded[:expense_totals] if preloaded.key?(:expense_totals)
+
     @expense_totals ||= expenses.group(:currency_code).sum(:amount_minor)
   end
 
   def settlement_totals
+    return @settlement_totals ||= preloaded[:settlement_totals] if preloaded.key?(:settlement_totals)
+
     @settlement_totals ||= settlements.active.group(:currency_code).sum(:amount_minor)
   end
 
   def paid_totals
+    return @paid_totals ||= preloaded[:paid_totals] if preloaded.key?(:paid_totals)
+
     @paid_totals ||= nest(
       ExpensePayer.joins(:expense).merge(expenses)
                   .group("expenses.currency_code", :user_id).sum(:amount_minor)
@@ -164,6 +269,8 @@ class BalanceCalculator
   end
 
   def share_totals
+    return @share_totals ||= preloaded[:share_totals] if preloaded.key?(:share_totals)
+
     @share_totals ||= nest(
       ExpenseSplit.joins(:expense).merge(expenses)
                   .group("expenses.currency_code", :user_id).sum(:amount_minor)
@@ -171,10 +278,14 @@ class BalanceCalculator
   end
 
   def settlements_paid
+    return @settlements_paid ||= preloaded[:settlements_paid] if preloaded.key?(:settlements_paid)
+
     @settlements_paid ||= nest(settlements.active.group(:currency_code, :payer_id).sum(:amount_minor))
   end
 
   def settlements_received
+    return @settlements_received ||= preloaded[:settlements_received] if preloaded.key?(:settlements_received)
+
     @settlements_received ||= nest(settlements.active.group(:currency_code, :recipient_id).sum(:amount_minor))
   end
 

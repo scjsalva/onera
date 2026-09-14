@@ -6,8 +6,8 @@
       %p.truncate.font-semibold.text-ink-900= summary.group.name
       %p.text-xs.text-ink-500{ class: "mt-0.5" }
         = summary.group.base_currency_code
-        = "· #{pluralize(summary.group.users.size, 'person')}"
-    = render "groups/member_avatars", group: summary.group
+        = "· #{pluralize(summary.members.size, 'person')}"
+    = render "groups/member_avatars", members: summary.members
 
   .mt-4.flex.items-end.justify-between
     %div
