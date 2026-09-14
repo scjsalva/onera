@@ -62,6 +62,17 @@ module ApplicationHelper
     tag.span(category.name, class: class_names("pill", tones.fetch(category.color, tones["ink"])))
   end
 
+  # Who can appear in the global filters: the people you've added, plus anyone
+  # you share a group with, since their expenses are already visible to you.
+  def filterable_people
+    return User.none if current_user.nil?
+
+    shared = User.joins(:group_memberships)
+                 .where(group_memberships: { group_id: current_user.groups.select(:id) })
+
+    User.active.where(id: current_user.friends.ids + shared.ids).ordered
+  end
+
   def currency_options
     Currency.active.ordered.map { |currency| [ "#{currency.code} · #{currency.symbol}", currency.code ] }
   end

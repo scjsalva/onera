@@ -104,6 +104,24 @@ class FriendVisibilityTest < ActionDispatch::IntegrationTest
     assert_empty DashboardCalculator.new(@c).counterparties
   end
 
+  test "the global filters list only people you can already see" do
+    sign_in_as @b
+    get "/expenses"
+
+    # Ann is a connection; Cal is only a co-member, which is enough to see his
+    # expenses in that group and so to filter by him.
+    assert_includes response.body, "Ann"
+    assert_includes response.body, "Cal"
+  end
+
+  test "the filters do not list strangers" do
+    stranger = create_user(name: "Zed", username: "zedv")
+    sign_in_as @b
+    get "/expenses"
+
+    refute_includes response.body, stranger.name
+  end
+
   test "a direct expense is invisible to everyone else" do
     result = direct_expense(owner: @a, with: @b)
     sign_in_as @c

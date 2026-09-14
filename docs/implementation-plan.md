@@ -1,69 +1,62 @@
-# Implementation plan and status
+# What is built, and what is not
 
-## Done
+## Built
 
 **Foundation** — Rails 8 monolith, PostgreSQL, HAML, Vite, Vue 3, Tailwind,
 structured after the larger Rails app this is modelled on (`app/services`,
-`app/queries`, `app/presenters`) but without its accumulated complexity.
+`app/queries`, `app/presenters`) without its accumulated complexity.
 
-**Domain** — users, groups, memberships, categories, currencies, exchange rates,
-expenses with separate payer/participant/split tables, settlements, activity
-events, revisions. Constraints and indexes in the database, not only the models.
+**Money** — integer minor units throughout, `MoneyAmount` as the value object,
+four split methods with largest-remainder rounding that always reconciles, and
+one allocator shared by splitting and currency conversion.
 
-**Money** — `MoneyAmount` over integer minor units; `SplitCalculator` with four
-methods and largest-remainder rounding; `MinorUnitAllocator` shared by splitting
-and conversion; per-currency `BalanceCalculator`; `Consolidation`; `RateLocker`.
+**Currencies** — balances held per currency, never silently merged. An
+indicative conversion at entry time for the "about ₱3,276" guide, and one
+binding conversion at settle-up that freezes a rate onto the expense, its
+payers and its splits. Consolidating is optional.
 
-**Identity** — global `User`, session-based picker, `Current.user`, profile with
-a personal primary currency.
+**Accounts** — username or email sign-in, optional email asked for once per
+sign-in, invite-link signup, offline recovery codes, and account closure by
+anonymizing rather than deleting.
 
-**Interface** — mobile-first app shell (bottom tab bar with a centre action,
-sidebar from `md`), bottom sheets for compose/settle/filter/switch, staggered
-reveals, count-up figures, animated charts, reduced-motion support.
+**Visibility** — friendships gate who you can see and split with outside a
+group. A shared group connects two strangers inside it and nowhere else.
 
-**Screens** — global dashboard, groups list, group overview/expenses/balances/
-payments/people/activity, expense detail with history, settle-up, cross-group
-balances, activity, insights, profile, person creation.
+**Two ledgers** — `BalanceCalculator` per group, `DirectLedger` per pair with
+no group. Both apportion the same way; the dashboard folds them together.
 
-**Deployment** — Dockerfile that builds the Vite bundle, `render.yaml`,
-`fly.toml`, health check, migrations and reference seeds on boot, demo data
-opt-in.
+**Interface** — mobile-first app shell, bottom sheets for every compose flow,
+glass materials, light and dark themes, staggered reveals, illustrated avatars
+with initials as fallback, one icon scale, and a timeline that interleaves
+settlements with expenses.
 
-## Verified by hand
+**Notifications** — in-app, on the bell, for the events that affect someone's
+money or membership.
 
-Run against the seeded data and over HTTP:
+**Testing** — 260 Ruby tests, Vitest over the Vue layer, a route crawl, and a
+browser suite driving real Chrome. `bin/check` and `bin/e2e`.
 
-- net positions sum to zero in every currency, before and after consolidation
-- pairwise and simplified debts agree on totals
-- ₱100 ÷ 3 and ¥8,401 ÷ 3 reconcile exactly
-- creating a grouped expense and a personal one
-- editing a rate-locked expense reuses the locked rate rather than re-converting
-- voiding removes an expense from balances while keeping it visible
-- rate locking rewrites expense, payer and split base amounts consistently
-- every route renders; the production image boots and serves compiled assets
+**Deployment** — Dockerfile that builds the frontend, `render.yaml`,
+`fly.toml`, CI workflow, health check, migrations and reference seeds on boot.
 
-## Not done yet
+## Deliberately not built
 
-**Tests.** Agreed to come after the application worked end to end. The domain is
-arranged for them: the calculators are plain objects with no Rails coupling, and
-the seeds already drive every path.
+**Email and SMS delivery.** Both need a paid service and a verified sender.
+Recovery works offline instead, which is why the app is usable the moment it
+is deployed. `Notifier.deliver` is the one seam a channel would be added to.
 
-Worth covering first, in rough order of risk:
+**A live exchange-rate feed.** Rates come from a table and can be typed in.
+Nothing claims they are live. `ExchangeRateProvider` is where a provider goes.
 
-1. `SplitCalculator` — the four methods, rounding, invalid totals
-2. `MinorUnitAllocator` — reconciliation, negative residues, single bucket
-3. `BalanceCalculator` — multi-payer, payer-not-participant, settlements, voids
-4. `Consolidation` — zero-sum after conversion, locked versus estimated rates
-5. `RateLocker` — locks once, never re-converts, keeps children consistent
-6. `ExpenseWriter` — rejects client-supplied totals that don't add up
-7. Request specs for the create/edit/void/settle paths
+## Known gaps
 
-**Smaller gaps**
-
-- The global expense filter accepts `group_id=personal` in the UI but the query
-  object treats it as an id; personal-only filtering needs a branch.
-- Amount range filters compare against the converted figure, which is
-  indicative for unlocked foreign expenses.
-- Settlement editing exists; settlement voiding is wired but has no UI entry
-  point outside the edit screen.
-- No pagination. The global expense list caps at 200 rows.
+- **No pagination.** The global expense list caps at 200 rows and the group
+  list is unbounded. Fine for a personal app, wrong for a large one.
+- **`DashboardCalculator#counterparties` walks each group's expenses in Ruby**
+  to apportion debts exactly. Bounded by group size and preloaded, but it is
+  the heaviest query path and the first thing to cache if it ever matters.
+- **Amount filters compare the converted figure**, which is indicative for
+  expenses whose rate is not yet locked.
+- **Voiding a settlement has no UI entry point** outside its edit screen.
+- **Group archiving is one-way** in the interface; unarchiving needs a console.
+- **The browser suite runs one Chrome.** Safari and Firefox are unexercised.

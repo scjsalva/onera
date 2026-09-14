@@ -33,7 +33,7 @@
       = render "shared/stat", label: "Your share", money: @dashboard.total_share, size: :base
 
   %nav.card.divide-y.divide-ink-100.overflow-hidden{ data: { reveal_group: true } }
-    - [["People", people_path, "Everyone in Onera, and your invite link"], ["Insights", insights_path, "Where your money goes"], ["Activity", activity_path, "Everything that happened"], ["All expenses", expenses_path, "Search and filter"], ["Change password", edit_password_path, "Requires your current one"], ["Recovery codes", recovery_codes_path, "#{current_user.unused_recovery_codes} left"]].each do |label, path, hint|
+    - [["People", people_path, "The people you have added, and your invite link"], ["Insights", insights_path, "Where your money goes"], ["Activity", activity_path, "Everything that happened"], ["All expenses", expenses_path, "Search and filter"], ["Change password", edit_password_path, "Requires your current one"], ["Recovery codes", recovery_codes_path, "#{current_user.unused_recovery_codes} left"]].each do |label, path, hint|
       = link_to path, class: "press flex items-center gap-3 px-4 py-3.5 transition hover:bg-ink-50", data: { reveal: true } do
         %span.min-w-0.flex-1
           %span.block.font-medium.text-ink-900= label
