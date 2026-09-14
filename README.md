@@ -190,18 +190,35 @@ Controllers hold no money logic. See `docs/architecture.md` and
 
 ## Deploying
 
-Any host that runs a Dockerfile and reaches a Postgres database.
+Any host that runs a container and reaches a Postgres database. What is set up
+here is an Oracle Cloud always-free VM running the image behind Caddy, with the
+database on Neon — free, and neither of them idles the app out.
 
-The included `render.yaml` and `fly.toml` both build the Dockerfile, run
-migrations and reference seeds on boot, and health-check `/up`. Point
-`DATABASE_URL` at a free Neon or Supabase database rather than a host's own free
-tier — those tend to expire, and the whole point is that the data persists.
+`deploy/` holds the compose file, the Caddyfile and a setup script that turns a
+fresh Ubuntu box into the server. GitHub Actions builds the image and pushes it
+to the registry; the box only pulls. Full walkthrough in
+`docs/deployment.md`.
+
+The database is deliberately not a host's own free tier — those expire, and the
+point is that the records outlive the trial.
 
 Required environment: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_HOST`. See
-`.env.example`. Demo data is opt-in via `SEED_DEMO_DATA`.
+`.env.example`. No accounts are seeded outside development; the first one is
+made with `bin/rails onera:owner`. Demo data is opt-in via `SEED_DEMO_DATA`.
 
 ## Tests
 
-Not written yet — a deliberate choice to get the application working end to end
-first. The domain is structured for them: the calculators are plain objects with
-no Rails coupling, and the seeds already exercise every path through them.
+    bin/check    # autoload, build, rubocop, brakeman, route crawl, Ruby + JS tests
+    bin/e2e      # 50 browser journeys against a throwaway server and database
+
+325 Ruby tests over the calculators, models, queries and request paths; 39
+Vitest specs over the Vue layer; a route crawl; and a browser suite driving
+real Chrome through the things a person actually does.
+
+Three of those are worth knowing about. `money_conservation_test` throws
+randomised awkward shapes at the ledger — totals that divide evenly by nothing,
+a currency with no subunit, more payers than participants — and asserts what
+must never stop being true. `query_budget_test` holds every list page to a
+query count at twelve groups, so a per-group query cannot creep back in.
+`foreign_key_ownership_test` walks the schema and fails if a foreign key has no
+owning association, which is a delete waiting to break in somebody's hands.
