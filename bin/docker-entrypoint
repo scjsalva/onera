@@ -10,7 +10,17 @@ fi
 # creates and migrates when needed and is a no-op afterwards, and the seeds
 # only load reference data (currencies, categories, rates) - demo data is
 # skipped unless SEED_DEMO_DATA is set.
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+# Matched by scanning the arguments rather than by position: the command grew
+# a -b flag on the end and the old check, which looked at the last two words,
+# silently stopped running the migrations.
+starting_server=false
+for arg in "$@"; do
+  case "$arg" in
+    server) starting_server=true ;;
+  esac
+done
+
+if [ "$starting_server" = true ]; then
   ./bin/rails db:prepare
   ./bin/rails db:seed
 fi

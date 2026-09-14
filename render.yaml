@@ -1,4 +1,6 @@
-# One-click deploy: https://render.com/deploy?repo=https://github.com/scjsalva/onera
+# The repository is private, so Render's one-click deploy URL will not reach
+# it. Create the service the ordinary way instead - New > Web Service, connect
+# GitHub, pick scjsalva/onera - and Render reads the rest of this file.
 #
 # Web service on Render's free instance type, database on Neon's free tier.
 # Deliberately not a Render Postgres: theirs expires after a month, and the

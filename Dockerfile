@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
-# docker build -t onera .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name onera onera
+# Production image. Build and run it by hand to check a deploy before making it:
+#
+#   docker build -t onera .
+#   docker run -p 3200:80 -e SECRET_KEY_BASE=$(openssl rand -hex 64) \
+#     -e DATABASE_URL=postgres://... -e APP_HOST=localhost:3200 onera
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
@@ -82,6 +84,10 @@ USER 1000:1000
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
+# Puma directly. The Rails template starts it behind Thruster, but that gem is
+# not in this Gemfile and the container died on boot trying to run it - and a
+# host that terminates TLS and gzips for us has nothing for it to do anyway.
+# The port comes from the host: PORT is what Render, Fly and Koyeb all set.
 EXPOSE 80
-CMD ["./bin/thrust", "./bin/rails", "server"]
+ENV PORT=80
+CMD ["./bin/rails", "server", "-b", "0.0.0.0"]

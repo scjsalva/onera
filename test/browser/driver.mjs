@@ -12,8 +12,10 @@ import WebSocket from 'ws';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 export class Browser {
-  constructor({ port = 9400, width = 430, height = 932, profile = '/tmp/onera-e2e', headless = true } = {}) {
+  constructor({ port = 9400, width = 430, height = 932, profile = '/tmp/onera-e2e', headless = true, headers = null, insecure = false } = {}) {
     this.port = port;
+    this.headers = headers;
+    this.insecure = insecure;
     this.width = width;
     this.height = height;
     this.profile = profile;
@@ -60,6 +62,13 @@ export class Browser {
     await this.send('Runtime.enable');
     await this.send('Network.enable');
     await this.send('Log.enable');
+    if (this.headers) await this.send('Network.setExtraHTTPHeaders', { headers: this.headers });
+    // The command-line flag is ignored under headless=new, so the certificate
+    // has to be waved through over the protocol instead.
+    if (this.insecure) {
+      await this.send('Security.enable');
+      await this.send('Security.setIgnoreCertificateErrors', { ignore: true });
+    }
     await this.send('Emulation.setDeviceMetricsOverride', {
       width: this.width, height: this.height, deviceScaleFactor: 2, mobile: this.width < 700,
     });
